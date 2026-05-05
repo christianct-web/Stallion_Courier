@@ -1,0 +1,239 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ACE Replacement - Trinidad & Tobago Customs Declaration System
+   Enterprise-grade design system for data-correctness and speed
+   Professional, utilitarian aesthetic optimized for brokers
+*/
+
+@layer base {
+  :root {
+    /* Core backgrounds */
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    /* Cards and containers */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    /* Popovers and dropdowns */
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Primary - Professional deep slate blue */
+    --primary: 215 45% 25%;
+    --primary-foreground: 210 40% 98%;
+
+    /* Secondary - Neutral gray */
+    --secondary: 210 15% 93%;
+    --secondary-foreground: 215 25% 25%;
+
+    /* Muted - Subtle backgrounds */
+    --muted: 210 15% 95%;
+    --muted-foreground: 215 15% 45%;
+
+    /* Accent - Interaction highlight */
+    --accent: 210 100% 96%;
+    --accent-foreground: 215 45% 25%;
+
+    /* Destructive - Clear error red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Status colors */
+    --status-draft: 45 93% 47%;
+    --status-draft-foreground: 45 100% 15%;
+    --status-ready: 142 76% 36%;
+    --status-ready-foreground: 0 0% 100%;
+    --status-exported: 215 85% 50%;
+    --status-exported-foreground: 0 0% 100%;
+
+    /* Validation states */
+    --validation-error: 0 72% 51%;
+    --validation-warning: 38 92% 50%;
+    --validation-success: 142 76% 36%;
+
+    /* Borders and inputs */
+    --border: 214 20% 85%;
+    --input: 214 20% 85%;
+    --ring: 215 45% 25%;
+
+    --radius: 0.375rem;
+
+    /* Sidebar - darker professional look */
+    --sidebar-background: 215 30% 18%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 25%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 210 100% 60%;
+
+    /* Table styling */
+    --table-header: 210 15% 96%;
+    --table-row-hover: 210 20% 97%;
+    --table-border: 214 15% 90%;
+
+    /* Data entry focus */
+    --focus-ring: 215 85% 55%;
+    --focus-ring-offset: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 215 30% 10%;
+    --foreground: 210 20% 95%;
+
+    --card: 215 28% 13%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 215 28% 13%;
+    --popover-foreground: 210 20% 95%;
+
+    --primary: 210 100% 60%;
+    --primary-foreground: 215 30% 10%;
+
+    --secondary: 215 25% 20%;
+    --secondary-foreground: 210 20% 90%;
+
+    --muted: 215 25% 18%;
+    --muted-foreground: 215 15% 60%;
+
+    --accent: 215 30% 22%;
+    --accent-foreground: 210 20% 95%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --status-draft: 45 93% 55%;
+    --status-draft-foreground: 45 100% 10%;
+    --status-ready: 142 65% 45%;
+    --status-ready-foreground: 0 0% 100%;
+    --status-exported: 215 85% 60%;
+    --status-exported-foreground: 0 0% 100%;
+
+    --border: 215 25% 25%;
+    --input: 215 25% 25%;
+    --ring: 210 100% 60%;
+
+    --sidebar-background: 215 35% 8%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-primary: 210 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 15%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 25% 18%;
+    --sidebar-ring: 210 100% 60%;
+
+    --table-header: 215 28% 15%;
+    --table-row-hover: 215 28% 16%;
+    --table-border: 215 25% 22%;
+
+    --focus-ring: 210 100% 60%;
+    --focus-ring-offset: 215 30% 10%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Enterprise form styling */
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    @apply transition-colors duration-150;
+  }
+
+  /* Focus states for data entry */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply outline-none ring-2 ring-offset-1;
+    --tw-ring-color: hsl(var(--focus-ring));
+    --tw-ring-offset-color: hsl(var(--focus-ring-offset));
+  }
+
+  /* Status pill base styles */
+  .status-pill {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .status-draft {
+    background-color: hsl(var(--status-draft) / 0.15);
+    color: hsl(var(--status-draft));
+    border: 1px solid hsl(var(--status-draft) / 0.3);
+  }
+
+  .status-ready {
+    background-color: hsl(var(--status-ready));
+    color: hsl(var(--status-ready-foreground));
+  }
+
+  .status-exported {
+    background-color: hsl(var(--status-exported));
+    color: hsl(var(--status-exported-foreground));
+  }
+
+  /* Table enhancements */
+  .data-table th {
+    @apply bg-[hsl(var(--table-header))] font-semibold text-left;
+  }
+
+  .data-table tr:hover {
+    @apply bg-[hsl(var(--table-row-hover))];
+  }
+
+  /* Section navigation */
+  .section-nav-item {
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors;
+  }
+
+  .section-nav-item.active {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .section-nav-item:not(.active):hover {
+    @apply bg-muted;
+  }
+
+  /* Validation indicator */
+  .field-error {
+    @apply border-destructive focus:ring-destructive;
+  }
+
+  .field-error-message {
+    @apply text-xs text-destructive mt-1;
+  }
+
+  /* JSON preview styling */
+  .json-preview {
+    @apply font-mono text-sm bg-muted p-4 rounded-lg overflow-auto;
+    max-height: 400px;
+  }
+
+  /* Grid item row */
+  .item-row {
+    @apply grid gap-3 p-3 border-b border-border items-start;
+    grid-template-columns: 1fr 2fr 1fr 0.5fr auto;
+  }
+
+  .item-row:last-child {
+    @apply border-b-0;
+  }
+}
+
+/* Keyboard navigation hints */
+@layer utilities {
+  .kbd {
+    @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono bg-muted border rounded;
+  }
+}

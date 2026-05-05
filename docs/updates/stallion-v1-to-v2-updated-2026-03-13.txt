@@ -1,0 +1,474 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                        ║
+║   S T A L L I O N  ─  V 1  →  V 2   M I G R A T I O N   ( U P D A T E D )                           ║
+║                                                                                                        ║
+║   Starting point: post-Claude-Code audit + fixes (March 12, 2026)                                      ║
+║                                                                                                        ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ CURRENT STATE (as of Claude Code session, March 12)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  WHAT CLAUDE CODE CONFIRMED + FIXED
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  ✅ FIXED (live on port 8022, tested end-to-end)                         │
+  │  ├── HS code dot-notation       pack_service.py:224   .replace(".",""  │
+  │  ├── FOB always $0 in LB01     pack_service.py:36    fallback chain    │
+  │  ├── FOB $0 in XML CIF calc    declaration_service.py:192  same fix    │
+  │  ├── C82 schema None→0         declaration_service.py:146  int default │
+  │  ├── worksheet missing keys    worksheet_service.py   returns fob etc  │
+  │  ├── New Decl → workbench      DeclarationsList.tsx   not localStorage │
+  │  └── README port 8021→8022     README.md                               │
+  │                                                                          │
+  │  ✅ CONFIRMED WORKING (better than review said)                          │
+  │  ├── CBTT rate lookup          REAL ─ hits central-bank.org.tt, cached │
+  │  ├── Register CSV export       /declarations/register-csv is deployed  │
+  │  ├── Frontend production build dist/ exists, not stuck in dev mode     │
+  │  └── /pack/generate            status: "generated" ─ XML + LB01 both  │
+  │                                                                          │
+  │  ⚠️  STILL BROKEN                                                        │
+  │  ├── Two-system problem        declarationStore.ts + DeclarationEditor │
+  │  │                              still exist, still use localStorage     │
+  │  │                              workbench → backend, editor → local    │
+  │  ├── No auth                   Anyone with URL sees everything         │
+  │  ├── JSON file store           data/declarations.json, no locking      │
+  │  └── Two backend instances     port 8022 (keiraops) + 8020 (root)     │
+  │                                                                          │
+  │  ❌ STILL NOT BUILT                                                      │
+  │  ├── Extraction tested on real docs                                     │
+  │  ├── Spreadsheet ingestion                                              │
+  │  ├── HS code search/lookup                                              │
+  │  ├── Receipt number UI                                                  │
+  │  ├── Printable approval summary                                         │
+  │  ├── WhatsApp alerts                                                    │
+  │  ├── Auth / login page                                                  │
+  │  └── Multi-tenancy / org isolation                                      │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+  WHAT THE GENERATE TEST PROVED
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  curl -X POST localhost:8022/pack/generate                               │
+  │  with HS code "9021.29.00.00" and invoice_value_foreign: 1250.00        │
+  │                                                                          │
+  │  RESULT: {                                                               │
+  │    "status": "generated",           ◄── preflight passed                │
+  │    "c82Validation": {"status": "passed"},  ◄── XML valid                │
+  │    "documents": [                                                        │
+  │      {"name": "worksheet_lb01"},    ◄── LB01 PDF generated             │
+  │      {"name": "c82_sad_xml"}        ◄── ASYCUDA XML generated          │
+  │    ]                                                                     │
+  │  }                                                                       │
+  │                                                                          │
+  │  THE CORE ENGINE WORKS. End to end. Confirmed.                           │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ REVISED PHASES ─ STARTING FROM HERE
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  Phases 0 and 1 from the previous map are mostly DONE.
+  The remaining work starts at what was Phase 1.5.
+
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 1 (REMAINING): DEMO PREP (2─3 days)                              │
+  │  ══════════════════════════════════════════                               │
+  │                                                                          │
+  │  The engine works. The bugs are fixed. What's left is:                   │
+  │  seed demo data, kill the parallel store for the demo path,              │
+  │  serve the frontend properly, and dry run.                               │
+  │                                                                          │
+  │                                                                          │
+  │  ┌─ 1A: Kill the two-system problem FOR THE DEMO PATH ────────────┐   │
+  │  │                                                                   │   │
+  │  │  You do NOT need to delete DeclarationEditor yet.                 │   │
+  │  │  You just need the demo path to be coherent:                      │   │
+  │  │                                                                   │   │
+  │  │  Home page → Workbench → BrokerReview → Generate                  │   │
+  │  │  All reading/writing to the BACKEND, not localStorage.            │   │
+  │  │                                                                   │   │
+  │  │  Claude Code already fixed: "New Declaration" → /workbench ✅    │   │
+  │  │                                                                   │   │
+  │  │  STILL NEEDED:                                                    │   │
+  │  │  ┌────────────────────────────────────────────────────────┐      │   │
+  │  │  │  DeclarationsList.tsx:                                  │      │   │
+  │  │  │  ─ Currently reads from declarationStore (localStorage)│      │   │
+  │  │  │  ─ Change to: listDeclarations() from stallionApi.ts   │      │   │
+  │  │  │  ─ This makes seeded declarations visible on home page │      │   │
+  │  │  │                                                         │      │   │
+  │  │  │  StallionWorkbench.tsx:                                  │      │   │
+  │  │  │  ─ Must call POST /declarations (upsert) before         │      │   │
+  │  │  │    calling /pack/generate                                │      │   │
+  │  │  │  ─ This makes workbench-created declarations visible    │      │   │
+  │  │  │    in BrokerReview                                       │      │   │
+  │  │  └────────────────────────────────────────────────────────┘      │   │
+  │  │                                                                   │   │
+  │  │  TEST: Create in workbench → appears in home page list            │   │
+  │  │        → appears in broker review → approve → generate → download │   │
+  │  └──────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─ 1B: Seed demo declarations ────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  UPSL-DEMO-001: HECA Medical Technologies (full, correct)         │   │
+  │  │  ├── HS: 9021.29.00.00                                           │   │
+  │  │  ├── CIF: 105,297.15 USD                                         │   │
+  │  │  ├── All fields populated from real C82                           │   │
+  │  │  └── status: pending_review                                       │   │
+  │  │                                                                   │   │
+  │  │  UPSL-DEMO-002: Same data but vessel name BLANK                   │   │
+  │  │  └── status: pending_review (will block on approve)              │   │
+  │  │                                                                   │   │
+  │  │  Seed via: POST /declarations with full payloads                  │   │
+  │  │  or: python seed_demo.py http://localhost:8022                     │   │
+  │  │                                                                   │   │
+  │  │  TEST: Home page shows 2 declarations. Broker review shows 2.    │   │
+  │  └──────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─ 1C: Serve frontend properly ──────────────────────────────────┐    │
+  │  │                                                                   │    │
+  │  │  dist/ already exists (Claude Code confirmed build works).        │    │
+  │  │  But is it being SERVED? Need to confirm.                         │    │
+  │  │                                                                   │    │
+  │  │  If not served:                                                    │    │
+  │  │  ┌────────────────────────────────────────────────────────┐      │    │
+  │  │  │  Option A (quick):                                      │      │    │
+  │  │  │  npx serve -s dist -l 3000 &                            │      │    │
+  │  │  │                                                         │      │    │
+  │  │  │  Option B (proper):                                     │      │    │
+  │  │  │  pm2 serve dist/ 3000 --name stallion-web --spa         │      │    │
+  │  │  │  (PM2 not available per audit ─ install or use Option A)│      │    │
+  │  │  │                                                         │      │    │
+  │  │  │  Option C (already done?):                              │      │    │
+  │  │  │  Check if nginx or another process serves dist/         │      │    │
+  │  │  │  ss -tlnp | grep ':80\|:3000\|:5173'                   │      │    │
+  │  │  └────────────────────────────────────────────────────────┘      │    │
+  │  │                                                                   │    │
+  │  │  TEST: Open browser → Stallion loads → click through all pages   │    │
+  │  └──────────────────────────────────────────────────────────────────┘    │
+  │                                                                          │
+  │  ┌─ 1D: Kill the second backend instance ─────────────────────────┐    │
+  │  │                                                                   │    │
+  │  │  Port 8020 (root's instance) is still running.                    │    │
+  │  │  Port 8022 (keiraops) is the fixed one.                           │    │
+  │  │                                                                   │    │
+  │  │  sudo kill $(sudo lsof -ti:8020) or find the process and stop it │    │
+  │  │                                                                   │    │
+  │  │  Having two backends with different code versions                  │    │
+  │  │  is a silent disaster waiting to happen.                           │    │
+  │  └──────────────────────────────────────────────────────────────────┘    │
+  │                                                                          │
+  │  ┌─ 1E: Dry run + demo ───────────────────────────────────────────┐    │
+  │  │                                                                   │    │
+  │  │  Full click-through 3 times:                                      │    │
+  │  │  Home → see 2 declarations                                        │    │
+  │  │  Review → DEMO-001 pending → approve → generate → download        │    │
+  │  │  Review → DEMO-002 pending → try approve → BLOCKED (no vessel) ✓ │    │
+  │  │  Open XML in text editor → structure looks right                  │    │
+  │  │  Open LB01 PDF → FOB shows real value, not $0                    │    │
+  │  │                                                                   │    │
+  │  │  Then: DEMO DAY                                                   │    │
+  │  └──────────────────────────────────────────────────────────────────┘    │
+  │                                                                          │
+  │  ┌─ 1F: Push to GitHub ───────────────────────────────────────────┐    │
+  │  │                                                                   │    │
+  │  │  cd /home/keiraops/.openclaw/workspace/stallion                    │    │
+  │  │  git add -A                                                        │    │
+  │  │  git commit -m "v1: all P0 bugs fixed, demo-ready"                │    │
+  │  │  git push origin main                                              │    │
+  │  │  git tag v1-demo-ready                                             │    │
+  │  │  git push --tags                                                   │    │
+  │  └──────────────────────────────────────────────────────────────────┘    │
+  │                                                                          │
+  │                                                                          │
+  │  GATE: Full E2E passes 3 times in a row.                                │
+  │        Both demo declarations visible, reviewable, generatable.          │
+  │        UPSL demo happens.                                                │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 2: SUPABASE MIGRATION (5─7 days)                                 │
+  │  ══════════════════════════════════════                                   │
+  │                                                                          │
+  │  PURPOSE: Replace data/declarations.json + localStorage with             │
+  │           Supabase Postgres. This is the V2 foundation.                  │
+  │                                                                          │
+  │  UNCHANGED FROM PREVIOUS MAP. Summarized:                                │
+  │                                                                          │
+  │  ┌───────────────────────────────────────────────────────────────┐      │
+  │  │                                                                 │      │
+  │  │  STEP 2.1: Create Supabase project + run schema SQL            │      │
+  │  │            (schema already written in earlier session)          │      │
+  │  │                                                                 │      │
+  │  │  STEP 2.2: Backend ─ replace load/save JSON with               │      │
+  │  │            supabase.table("declarations").select/upsert        │      │
+  │  │            Replace disk file saves with Supabase Storage       │      │
+  │  │            Add declaration_events insert on every status change │      │
+  │  │                                                                 │      │
+  │  │  STEP 2.3: Migrate existing data                                │      │
+  │  │            python migrate_v1_to_supabase.py                     │      │
+  │  │            Verify counts. Delete data/ directory.               │      │
+  │  │                                                                 │      │
+  │  │  STEP 2.4: Frontend ─ kill the parallel store                   │      │
+  │  │            DELETE declarationStore.ts                            │      │
+  │  │            DELETE DeclarationEditor.tsx                          │      │
+  │  │            Every page reads from stallionApi.ts → backend only  │      │
+  │  │                                                                 │      │
+  │  └───────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  GATE: E2E works exactly as before but data lives in Supabase.          │
+  │        localStorage is empty. JSON file is deleted.                      │
+  │        git tag: v2-supabase                                              │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 3: AUTH + MULTI-TENANCY (3─5 days)                               │
+  │  ═════════════════════════════════════════                                │
+  │                                                                          │
+  │  UNCHANGED FROM PREVIOUS MAP. Summarized:                                │
+  │                                                                          │
+  │  ┌───────────────────────────────────────────────────────────────┐      │
+  │  │                                                                 │      │
+  │  │  STEP 3.1: Enable Supabase Auth, create seed users             │      │
+  │  │  STEP 3.2: Backend JWT middleware (Depends(get_current_user))  │      │
+  │  │  STEP 3.3: RLS policies (org_id isolation)                     │      │
+  │  │  STEP 3.4: Login page (Login.tsx)                               │      │
+  │  │  STEP 3.5: App.tsx AuthProvider wrapper                        │      │
+  │  │  STEP 3.6: stallionApi.ts attaches JWT to every request        │      │
+  │  │                                                                 │      │
+  │  └───────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  GATE: Unauthenticated /declarations returns 401.                       │
+  │        Broker sees only their org's declarations.                        │
+  │        git tag: v2-auth                                                  │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 4: COMPLETE INCOMPLETE FEATURES (7─10 days)                      │
+  │  ══════════════════════════════════════════════════                       │
+  │                                                                          │
+  │  UPDATED ─ removed items Claude Code confirmed are already done:         │
+  │                                                                          │
+  │  ┌──────────────┬───────────────────────────────────┬──────────────┐   │
+  │  │  ITEM        │  STATUS AFTER CLAUDE CODE          │  REMAINING   │   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  CBTT rate   │  ✅ DONE (real API, cached)        │  NONE        │   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  Register CSV│  ✅ DONE (endpoint deployed)       │  Add button  │   │
+  │  │              │                                    │  to Dashboard│   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  Receipt #   │  Backend supports 'receipted'      │  Build UI in │   │
+  │  │  entry       │  action. No frontend input.        │  BrokerReview│   │
+  │  │              │                                    │  ~1 hour     │   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  Approval    │  Not built                         │  ReportLab   │   │
+  │  │  summary PDF │                                    │  one-pager   │   │
+  │  │              │                                    │  ~3 hours    │   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  HS code     │  Not built                         │  Search API  │   │
+  │  │  search      │                                    │  + frontend  │   │
+  │  │              │                                    │  ~4 hours    │   │
+  │  ├──────────────┼───────────────────────────────────┼──────────────┤   │
+  │  │  WhatsApp    │  Not built                         │  OpenClaw    │   │
+  │  │  alerts      │                                    │  webhook     │   │
+  │  │              │                                    │  ~4 hours    │   │
+  │  └──────────────┴───────────────────────────────────┴──────────────┘   │
+  │                                                                          │
+  │  TOTAL REMAINING: ~12─15 hours of work (down from ~25 in previous map)  │
+  │                                                                          │
+  │  GATE: Every feature from the UPSL proposal is delivered.               │
+  │        git tag: v2-features-complete                                      │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 5: EXTRACTION PIPELINE (7─10 days)                               │
+  │  ═════════════════════════════════════════                                │
+  │                                                                          │
+  │  UPDATED ─ extraction_router.py exists but was NEVER TESTED.             │
+  │  DocumentUpload.tsx exists but was NEVER TESTED.                          │
+  │  The code is there. The question is whether it works on real docs.       │
+  │                                                                          │
+  │  ┌───────────────────────────────────────────────────────────────┐      │
+  │  │                                                                 │      │
+  │  │  STEP 5.0: PREREQ ─ get 5 real UPSL documents                  │      │
+  │  │            DO NOT proceed without these.                        │      │
+  │  │                                                                 │      │
+  │  │  STEP 5.1: Test existing extraction code on ONE real doc        │      │
+  │  │            ─ If it works: tune and move to 5.2                  │      │
+  │  │            ─ If it fails: rewrite prompt, retest                │      │
+  │  │            ─ DO NOT assume it works because the code exists     │      │
+  │  │                                                                 │      │
+  │  │  STEP 5.2: Test DocumentUpload.tsx                              │      │
+  │  │            ─ Does it render?                                    │      │
+  │  │            ─ Does file upload work?                              │      │
+  │  │            ─ Does "Send to Review" create a real declaration?   │      │
+  │  │                                                                 │      │
+  │  │  STEP 5.3: Build spreadsheet ingestion                         │      │
+  │  │            (no code exists ─ build from scratch)                │      │
+  │  │                                                                 │      │
+  │  │  STEP 5.4: Process 25 UPSL declarations                        │      │
+  │  │            Write Phase 1 outcome report                         │      │
+  │  │                                                                 │      │
+  │  └───────────────────────────────────────────────────────────────┘      │
+  │                                                                          │
+  │  GATE: 25 declarations processed. Outcome report delivered.              │
+  │        git tag: v2-extraction                                            │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 6: PRODUCTION DEPLOYMENT (3─5 days)                              │
+  │  ══════════════════════════════════════════                               │
+  │                                                                          │
+  │  UNCHANGED FROM PREVIOUS MAP:                                            │
+  │  Render deploy, onboard-client.sh, DNS, SSL, training.                   │
+  │                                                                          │
+  │  GATE: upsl.stallion.tt is live. UPSL team trained. Retainer begins.    │
+  │        git tag: v2-production                                            │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 7: TESTS + HARDENING (ongoing)                                   │
+  │  ═════════════════════════════════════                                    │
+  │                                                                          │
+  │  UNCHANGED FROM PREVIOUS MAP:                                            │
+  │  test_xml_against_reference, test_worksheet_math,                        │
+  │  test_lifecycle, test_preflight, test_extraction,                         │
+  │  bundle optimization, error monitoring, backups.                          │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ REVISED TIMELINE
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │                                                                        │
+  │  ░░░░░░░░░░ DONE ░░░░░░░░░░                                           │
+  │  PHASE 0  Audit + snapshot             │  DONE   │  Claude Code did it│
+  │  PHASE 1  Bug fixes (P0)               │  DONE   │  7 fixes deployed  │
+  │                                                                        │
+  │  ████████ REMAINING ████████                                           │
+  │                                                                        │
+  │  PHASE 1  Demo prep (remaining)        │  2─3 days  │  THIS WEEK     │
+  │  (1A─1F)  ├── Home page → backend read │             │                │
+  │           ├── Workbench → upsert       │             │                │
+  │           ├── Seed 2 demo declarations │             │                │
+  │           ├── Serve frontend           │             │                │
+  │           ├── Kill port 8020 instance  │             │                │
+  │           ├── Dry run × 3              │             │                │
+  │           └── UPSL DEMO                │             │                │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 2  Supabase migration           │  5─7 days  │  WEEK 2       │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 3  Auth + multi-tenancy         │  3─5 days  │  WEEK 3       │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 4  Complete features            │  5─7 days  │  WEEK 3─4     │
+  │           (down from 7─10, CBTT + CSV  │             │               │
+  │            already done)               │             │               │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 5  Extraction pipeline          │  7─10 days │  WEEK 5─6     │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 6  Production deployment        │  3─5 days  │  WEEK 6─7     │
+  │           ─────────────────────────────────────────────────────────── │
+  │  PHASE 7  Tests + hardening            │  ongoing   │  WEEK 7+      │
+  │                                                                        │
+  │  ════════════════════════════════════════════════════════════════════  │
+  │  TOTAL REMAINING TO V2:   ~5─6 weeks (down from ~7)                   │
+  │  NEXT MILESTONE:          UPSL demo in 2─3 days                       │
+  │  ════════════════════════════════════════════════════════════════════  │
+  │                                                                        │
+  └────────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ WHAT CHANGED FROM THE PREVIOUS MAP
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌───────────────────────────────┬──────────────────────────────────────────┐
+  │  PREVIOUS MAP SAID            │  ACTUAL STATE                            │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │  CBTT lookup: placeholder     │  ✅ Real API, cached, deployed           │
+  │  Register CSV: not built      │  ✅ Endpoint exists, deployed            │
+  │  Frontend build: unknown      │  ✅ dist/ exists, builds clean           │
+  │  HS dot bug: unconfirmed      │  ✅ Fixed + tested by Claude Code       │
+  │  FOB $0 bug: unconfirmed      │  ✅ Fixed in BOTH pack + declaration    │
+  │  C82 schema None: unknown     │  ✅ Fixed (previous_doc → 0)            │
+  │  worksheet keys: unknown      │  ✅ Now returns fob_foreign etc         │
+  │  New Decl routing: unknown    │  ✅ Fixed → workbench not editor        │
+  │  README port: 8021            │  ✅ Corrected to 8022                    │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │  Phase 0: 1 day               │  ✅ DONE (Claude Code audit)             │
+  │  Phase 1 bugs: 4 days         │  ✅ MOSTLY DONE (7 fixes deployed)      │
+  │  Phase 4 features: 7─10 days  │  Reduced to 5─7 days (2 items done)    │
+  │  Total timeline: ~7 weeks     │  Reduced to ~5─6 weeks                  │
+  └───────────────────────────────┴──────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ YOUR IMMEDIATE NEXT ACTIONS (today/tomorrow)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  1. Open Claude Code again and run:                                      │
+  │                                                                          │
+  │     "In DeclarationsList.tsx, replace the declarationStore               │
+  │      reads with listDeclarations() from stallionApi.ts.                  │
+  │      The home page must show declarations from the backend               │
+  │      API, not localStorage."                                             │
+  │                                                                          │
+  │  2. Then:                                                                │
+  │                                                                          │
+  │     "In StallionWorkbench.tsx, before calling /pack/generate,            │
+  │      call POST /declarations (upsert) with a stable UUID so             │
+  │      the declaration is saved to the backend. BrokerReview               │
+  │      reads from the backend, so this makes workbench-created             │
+  │      declarations visible in the review queue."                          │
+  │                                                                          │
+  │  3. Then:                                                                │
+  │                                                                          │
+  │     "Kill the root backend instance on port 8020:                        │
+  │      sudo kill $(sudo lsof -ti:8020)                                     │
+  │      Only port 8022 should be running."                                  │
+  │                                                                          │
+  │  4. Then:                                                                │
+  │                                                                          │
+  │     "Seed two demo declarations via curl to localhost:8022               │
+  │      and rebuild the frontend. Then test the full flow."                 │
+  │                                                                          │
+  │  5. Then:                                                                │
+  │                                                                          │
+  │     git add -A && git commit -m "demo-ready" && git push                │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+

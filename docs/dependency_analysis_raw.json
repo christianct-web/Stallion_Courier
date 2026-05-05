@@ -1,0 +1,70 @@
+{
+  "project_path": "/home/keiraops/.openclaw/workspace/stallion",
+  "package_manager": "unknown",
+  "summary": {
+    "direct_dependencies": 0,
+    "dev_dependencies": 0,
+    "internal_modules": 3,
+    "coupling_score": 0,
+    "circular_dependencies": 0,
+    "issues": 0
+  },
+  "dependencies": {
+    "direct": {},
+    "dev": {}
+  },
+  "internal_modules": {
+    "root": [
+      "json",
+      "xml",
+      "requests",
+      "sys"
+    ],
+    "backend": [
+      "",
+      "requests",
+      "pathlib",
+      "os",
+      "json",
+      "xml",
+      "datetime",
+      "__future__",
+      "typing",
+      "pydantic",
+      "fastapi",
+      "supabase",
+      "reportlab",
+      "jsonschema",
+      "uuid",
+      "sys"
+    ],
+    "frontend": [
+      "globals",
+      "useEmblaCarousel",
+      "reactRefresh",
+      "index.css",
+      "ItemsSection",
+      "IdentificationSection",
+      "js",
+      "App",
+      "re",
+      "DeclarantSection",
+      "ValuationSection",
+      "NotFound",
+      "path",
+      "TradersSection",
+      "ReviewExportSection",
+      "type",
+      "StallionWorkbench",
+      "tseslint",
+      "DeclarationEditor",
+      "reactHooks",
+      "DeclarationsList",
+      "sys",
+      "react"
+    ]
+  },
+  "circular_dependencies": [],
+  "issues": [],
+  "recommendations": []
+}

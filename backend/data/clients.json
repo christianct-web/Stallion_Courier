@@ -1,0 +1,67 @@
+[
+  {
+    "id": "cli_basco_food",
+    "name": "Basco Food Distributors Ltd",
+    "consigneeCode": "N108974",
+    "tin": "BR0286",
+    "address": "#31 Henry Street, Gasparillo, Trinidad",
+    "contactName": "Anthony Chow",
+    "contactEmail": "anthony.chow@basco.tt",
+    "contactPhone": "868-355-9012",
+    "defaultBrokerageFee": 1250,
+    "notes": "Regular frozen poultry importer. Usually IM4/CIF via Port of Spain.",
+    "createdAt": "2026-03-17T03:55:00Z"
+  },
+  {
+    "id": "cli_isl_caribe",
+    "name": "Island Caribe Wholesale",
+    "consigneeCode": "ISL4421",
+    "tin": "TIN-442109",
+    "address": "42 Eastern Main Road, Barataria, Trinidad",
+    "contactName": "Keisha Ramdial",
+    "contactEmail": "keisha@islandcaribe.com",
+    "contactPhone": "868-714-6621",
+    "defaultBrokerageFee": 950,
+    "notes": "Mixed dry goods + beverages. Often requires quick turn on declarations.",
+    "createdAt": "2026-03-17T03:55:00Z"
+  },
+  {
+    "id": "cli_portside",
+    "name": "Portside Industrial Supplies",
+    "consigneeCode": "PORT993",
+    "tin": "TIN-993114",
+    "address": "Lot 12 Sea Lots, Port of Spain, Trinidad",
+    "contactName": "Dylan Baptiste",
+    "contactEmail": "dbaptiste@portside.co.tt",
+    "contactPhone": "868-496-7734",
+    "defaultBrokerageFee": 1400,
+    "notes": "Industrial equipment and spares. Higher documentation checks.",
+    "createdAt": "2026-03-17T03:55:00Z"
+  },
+  {
+    "id": "cli_agriworld",
+    "name": "AgriWorld Distribution Co.",
+    "consigneeCode": "AGR220",
+    "tin": "TIN-220771",
+    "address": "Monroe Road, Cunupia, Trinidad",
+    "contactName": "Sasha Mohan",
+    "contactEmail": "sasha.mohan@agriworld.tt",
+    "contactPhone": "868-303-1128",
+    "defaultBrokerageFee": 1100,
+    "notes": "Feed, supplements, and agri additives. Seasonal spikes in Q2/Q4.",
+    "createdAt": "2026-03-17T03:55:00Z"
+  },
+  {
+    "id": "cli_northstar",
+    "name": "Northstar Retail Imports",
+    "consigneeCode": "NST557",
+    "tin": "TIN-557390",
+    "address": "45 Saddle Road, San Juan, Trinidad",
+    "contactName": "Riya Persad",
+    "contactEmail": "riya@northstarretail.tt",
+    "contactPhone": "868-620-8840",
+    "defaultBrokerageFee": 875,
+    "notes": "Consumer packaged goods. Prefers weekly consolidated invoicing.",
+    "createdAt": "2026-03-17T03:55:00Z"
+  }
+]

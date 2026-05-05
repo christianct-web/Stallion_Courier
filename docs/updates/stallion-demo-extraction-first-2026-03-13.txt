@@ -1,0 +1,621 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                        ║
+║   S T A L L I O N  ─  U P S L   D E M O   ( R E V I S E D )                                          ║
+║                                                                                                        ║
+║   UPSL's #1 interest: "Can it read our documents?"                                                     ║
+║   Everything else is secondary.                                                                        ║
+║                                                                                                        ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ THE DEMO UPSL ACTUALLY WANTS TO SEE
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  OLD DEMO (what we planned):
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │  Home page → Broker review (pre-seeded) → Generate → Download       │
+  │                                                                      │
+  │  PROBLEM: UPSL already knows you can fill in a form and make XML.   │
+  │  That's not what they're paying for. They have 200+ declarations    │
+  │  a month and a backlog. They want to see the AI eat a document      │
+  │  and spit out a declaration.                                         │
+  └──────────────────────────────────────────────────────────────────────┘
+
+  NEW DEMO (what UPSL needs to see):
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  STEP 1: You hold up THEIR invoice (the HECA Medical / Align Tech  │
+  │          commercial invoice they already sent you).                   │
+  │                                                                      │
+  │  STEP 2: You upload it to Stallion. Live. In front of them.          │
+  │                                                                      │
+  │  STEP 3: Stallion reads it. Fields populate. They watch.             │
+  │                                                                      │
+  │  STEP 4: "Look ─ consignee, HS code, invoice value, AWB number.     │
+  │           All extracted. 87% confidence. It flagged what it           │
+  │           wasn't sure about."                                        │
+  │                                                                      │
+  │  STEP 5: Send to review → broker verifies → generate → download.    │
+  │                                                                      │
+  │  THAT is the demo. The extraction IS the product for UPSL.           │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ WHAT EXISTS FOR EXTRACTION RIGHT NOW
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  BACKEND                                                             │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │  extraction_router.py                           EXISTS ⚠️  │     │
+  │  │  ├── POST /extract/documents                               │     │
+  │  │  ├── Accepts multipart PDF upload                          │     │
+  │  │  ├── Sends to Claude API with system prompt                │     │
+  │  │  ├── System prompt tuned for: invoice + AWB (no C82)       │     │
+  │  │  ├── Returns structured JSON + confidence score            │     │
+  │  │  │                                                         │     │
+  │  │  │  STATUS: Code written. System prompt updated.            │     │
+  │  │  │          NEVER RUN. NEVER TESTED. ZERO real documents.  │     │
+  │  │  │          May or may not be mounted in main.py.           │     │
+  │  └──┴─────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  FRONTEND                                                            │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │  DocumentUpload.tsx                             EXISTS ⚠️  │     │
+  │  │  ├── Drag-drop upload zone                                 │     │
+  │  │  ├── Batch / Separate mode toggle                          │     │
+  │  │  ├── Extraction result cards with confidence               │     │
+  │  │  ├── "Send to Review →" button                             │     │
+  │  │  │                                                         │     │
+  │  │  │  STATUS: Code written. Route may not be in App.tsx.      │     │
+  │  │  │          NEVER RENDERED. NEVER TESTED.                   │     │
+  │  └──┴─────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  WHAT WE HAVE TO TEST WITH                                           │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │  From UPSL (received in conversation):                      │     │
+  │  │  ├── Brokerage invoice (Duty Invoice 2026/907)             │     │
+  │  │  ├── UPS AWB (H980 4655 042)                               │     │
+  │  │  ├── EC82-HECA.pdf (the filed C82 ─ for verification)     │     │
+  │  │  ├── EC82_and_other.pdf containing:                         │     │
+  │  │  │   ├── UPSL multi-AWB release note                       │     │
+  │  │  │   ├── UPS Waybill                                       │     │
+  │  │  │   └── Align Technology commercial invoice (Factura)     │     │
+  │  │  │                                                         │     │
+  │  │  │  THIS IS ENOUGH. You have the input docs AND the        │     │
+  │  │  │  filed C82 to verify extraction accuracy against.       │     │
+  │  └──┴─────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ THE 4-DAY PLAN ─ EXTRACTION-FIRST
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+  DAY 1: MAKE EXTRACTION WORK (backend only, no UI yet)
+  ═══════════════════════════════════════════════════════
+
+  The goal is: send a real PDF to the extraction endpoint,
+  get back correct structured data. Everything else waits.
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  MORNING: Check if extraction is even wired up                       │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  In Claude Code, run:                                        │     │
+  │  │                                                              │     │
+  │  │  "Check if extraction_router.py is imported and mounted      │     │
+  │  │   in main.py. If not, mount it. Then check if ANTHROPIC_    │     │
+  │  │   API_KEY is set in the environment. The extraction          │     │
+  │  │   endpoint needs Claude API access to work."                 │     │
+  │  │                                                              │     │
+  │  │  Expected findings:                                          │     │
+  │  │  ├── extraction_router.py may not be imported in main.py    │     │
+  │  │  ├── ANTHROPIC_API_KEY may not be in .env                   │     │
+  │  │  ├── The router may use a different import path              │     │
+  │  │  Fix whatever is missing.                                    │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  MIDDAY: Test extraction with a REAL document ─ bypass the UI        │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  Don't touch the frontend yet. Test the backend directly:    │     │
+  │  │                                                              │     │
+  │  │  curl -X POST http://localhost:8022/extract/documents \      │     │
+  │  │    -F "files=@/path/to/align-technology-invoice.pdf" \       │     │
+  │  │    -F "mode=batch"                                           │     │
+  │  │                                                              │     │
+  │  │  Use the Align Technology commercial invoice from the        │     │
+  │  │  UPSL samples. This is the actual document you'll demo.     │     │
+  │  │                                                              │     │
+  │  │  WHAT TO LOOK FOR IN THE RESPONSE:                           │     │
+  │  │  ┌──────────────────────────────────────────────────────┐   │     │
+  │  │  │  FIELD               EXPECTED VALUE                   │   │     │
+  │  │  │  ──────────────────────────────────────────────────── │   │     │
+  │  │  │  consignee_name      HECA Medical Technologies Ltd    │   │     │
+  │  │  │  consignor_name      Align Technology Switzerland     │   │     │
+  │  │  │  hs_code             9021.29.00.00                    │   │     │
+  │  │  │  exworks_foreign     ~13,319 or ~105,297 (see note)   │   │     │
+  │  │  │  currency            USD                              │   │     │
+  │  │  │  country_origin      Mexico (per invoice) or CH       │   │     │
+  │  │  │  description         dental fittings / Invisalign     │   │     │
+  │  │  │  confidence          0.70─0.95                        │   │     │
+  │  │  └──────────────────────────────────────────────────────┘   │     │
+  │  │                                                              │     │
+  │  │  NOTE: The commercial invoice total is ~$13,319 USD but the │     │
+  │  │  C82 was filed at $105,297.15 (multi-AWB consolidation).    │     │
+  │  │  The extraction should return what's ON THE INVOICE, not    │     │
+  │  │  the consolidated value. That discrepancy is expected and   │     │
+  │  │  is a demo talking point: "The broker catches this in       │     │
+  │  │  review ─ that's why human sign-off matters."               │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  AFTERNOON: Fix whatever broke                                       │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  Common failures and fixes:                                  │     │
+  │  │                                                              │     │
+  │  │  "ANTHROPIC_API_KEY not set"                                │     │
+  │  │  → export ANTHROPIC_API_KEY=sk-ant-... in the env           │     │
+  │  │                                                              │     │
+  │  │  "No module named 'anthropic'"                               │     │
+  │  │  → pip install anthropic                                     │     │
+  │  │                                                              │     │
+  │  │  "extraction_router not found"                               │     │
+  │  │  → Check import path in main.py, fix and reload             │     │
+  │  │                                                              │     │
+  │  │  "Claude returns wrong fields"                               │     │
+  │  │  → The system prompt needs tuning. Compare Claude's output  │     │
+  │  │    against what the EC82-HECA.pdf shows. Adjust the prompt  │     │
+  │  │    to match the specific format of UPSL's invoices.         │     │
+  │  │                                                              │     │
+  │  │  "Claude returns the right fields but wrong values"          │     │
+  │  │  → Check: is the PDF being sent as base64 correctly?        │     │
+  │  │    Is the content_type set to application/pdf?               │     │
+  │  │    Try sending the image pages instead of the raw PDF.       │     │
+  │  │                                                              │     │
+  │  │  "It works but confidence is always 0.50"                    │     │
+  │  │  → The confidence rubric in the system prompt may need       │     │
+  │  │    calibration. Check what notes Claude returns.             │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  EVENING: Test with the AWB too                                      │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  curl -X POST http://localhost:8022/extract/documents \      │     │
+  │  │    -F "files=@invoice.pdf" \                                 │     │
+  │  │    -F "files=@awb.pdf" \                                     │     │
+  │  │    -F "mode=batch"                                           │     │
+  │  │                                                              │     │
+  │  │  Send BOTH the invoice and AWB together.                     │     │
+  │  │  Batch mode should merge them into one declaration.          │     │
+  │  │  The AWB adds: bl_awb_number, shipped_on_board date,         │     │
+  │  │  transport mode, vessel/flight.                               │     │
+  │  │                                                              │     │
+  │  │  Compare merged output against EC82-HECA.pdf field by field. │     │
+  │  │  Note every discrepancy ─ those become broker review items.  │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  DAY 1 GATE: curl extraction with real UPSL documents returns        │
+  │  correct consignee, HS code, values. You can read the JSON output   │
+  │  and say "yes, that's right" for the critical fields.                │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  DAY 2: WIRE THE FRONTEND + END-TO-END
+  ═══════════════════════════════════════
+
+  The goal is: upload PDF in browser → see extracted fields →
+  send to review → approve → generate → download.
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  MORNING: Get DocumentUpload.tsx rendering                           │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  In Claude Code:                                             │     │
+  │  │                                                              │     │
+  │  │  "Check if DocumentUpload.tsx is in src/pages/ and           │     │
+  │  │   if the /stallion/extract route is in App.tsx.              │     │
+  │  │   If not, add it. Also add an 'Extract' nav link             │     │
+  │  │   in the top bar of DeclarationsList.tsx alongside           │     │
+  │  │   Workbench and Broker Review. Then rebuild."                │     │
+  │  │                                                              │     │
+  │  │  TEST: Open browser → click Extract → upload page renders   │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  MIDDAY: Test the full upload flow in browser                        │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  1. Open /stallion/extract                                   │     │
+  │  │  2. Drag the Align Technology invoice PDF into the zone      │     │
+  │  │  3. Wait for extraction (10─30 seconds)                      │     │
+  │  │  4. See the result card:                                     │     │
+  │  │     ┌─────────────────────────────────────────────────┐     │     │
+  │  │     │  ✓ HECA Medical Technologies Ltd                │     │     │
+  │  │     │    HS: 9021.29.00.00                            │     │     │
+  │  │     │    CIF: USD 13,319.00                           │     │     │
+  │  │     │    Confidence: 85%                              │     │     │
+  │  │     │    ⚠ duty rate not on invoice ─ broker must set │     │     │
+  │  │     │                                                  │     │     │
+  │  │     │    [Send to Review →]                            │     │     │
+  │  │     └─────────────────────────────────────────────────┘     │     │
+  │  │  5. Click "Send to Review →"                                 │     │
+  │  │  6. Navigate to Broker Review                                │     │
+  │  │  7. See the extracted declaration in the queue               │     │
+  │  │  8. Review fields, approve                                   │     │
+  │  │  9. Generate Pack → download XML + LB01                     │     │
+  │  │                                                              │     │
+  │  │  If ANY step fails, fix it before moving on.                 │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  AFTERNOON: Also fix the remaining demo-path issues                  │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  These are the same items from Phase 1 remaining:            │     │
+  │  │                                                              │     │
+  │  │  ☐ Home page reads from backend (not localStorage)          │     │
+  │  │  ☐ Workbench upserts to backend before generating           │     │
+  │  │  ☐ Kill port 8020 root instance                             │     │
+  │  │  ☐ Serve frontend properly (confirm dist/ is being served)  │     │
+  │  │                                                              │     │
+  │  │  These are quick ─ Claude Code can do them in 10 min each.  │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  DAY 2 GATE: Full flow works in browser:                             │
+  │  Upload PDF → extraction card appears → send to review →             │
+  │  approve → generate → download XML + LB01.                           │
+  │  Home page shows the declaration.                                    │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  DAY 3: HARDEN + DRY RUN
+  ════════════════════════
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  MORNING: Test with BOTH documents together                          │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  Upload invoice + AWB together in batch mode.                │     │
+  │  │  The merged extraction should be richer:                     │     │
+  │  │  ├── From invoice: consignee, HS, values, items             │     │
+  │  │  ├── From AWB: bl_awb_number, flight, shipped date          │     │
+  │  │                                                              │     │
+  │  │  If batch mode doesn't merge well, fall back to              │     │
+  │  │  uploading invoice only for the demo.                        │     │
+  │  │  The invoice alone has enough fields to impress.             │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  MIDDAY: Prepare the fail case                                       │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  Seed UPSL-DEMO-002 (missing vessel name) via API.           │     │
+  │  │  This is the "Stallion catches errors" moment in the demo.  │     │
+  │  │                                                              │     │
+  │  │  Also prepare: what if extraction fails live?                │     │
+  │  │  ├── Pre-run the extraction before the demo                 │     │
+  │  │  ├── Save the extraction result JSON                        │     │
+  │  │  ├── If live extraction hangs: "Let me show you one          │     │
+  │  │  │   we processed earlier" → open pre-seeded declaration    │     │
+  │  │  └── The pre-seeded DEMO-001 (HECA Medical) is your backup │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  AFTERNOON: Full dry run × 3                                         │
+  │                                                                      │
+  │  ┌────────────────────────────────────────────────────────────┐     │
+  │  │                                                              │     │
+  │  │  Run the revised demo script (below) 3 times:                │     │
+  │  │  Time each run. Note every friction point.                   │     │
+  │  │  Fix anything that breaks between runs.                      │     │
+  │  │                                                              │     │
+  │  └────────────────────────────────────────────────────────────┘     │
+  │                                                                      │
+  │  EVENING: Push to GitHub                                             │
+  │                                                                      │
+  │  git add -A && git commit -m "demo-ready: extraction tested"         │
+  │  git push origin main && git tag v1-demo-ready && git push --tags   │
+  │                                                                      │
+  │  DAY 3 GATE: Dry run passes 3 times without errors.                  │
+  │  Backup plan ready if extraction fails live.                          │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  DAY 4: DEMO DAY
+  ════════════════
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  2 HOURS BEFORE:                                                     │
+  │  ☐ Restart backend: kill -HUP $(pgrep -f "uvicorn.*8022")           │
+  │  ☐ Rebuild frontend: cd frontend && npm run build                    │
+  │  ☐ Run extraction once on the HECA invoice ─ confirm it works       │
+  │  ☐ Pre-seed DEMO-001 as backup                                      │
+  │  ☐ Clear browser cache                                              │
+  │  ☐ Charge laptop, print 2 proposals, USB with backup files          │
+  │                                                                      │
+  │  AT UPSL:                                                            │
+  │  ☐ Connect to WiFi (or phone hotspot)                               │
+  │  ☐ Open Stallion, confirm it loads                                   │
+  │  ☐ Have the HECA invoice PDF ready on desktop                       │
+  │  ☐ Run the demo                                                     │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ REVISED DEMO SCRIPT ─ EXTRACTION LEADS
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  MINUTE 0:00─0:30 ─ OPENING
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  "You sent us this invoice last week."                                │
+  │  [Hold up / point to the Align Technology commercial invoice]        │
+  │                                                                      │
+  │  "Let me show you what happens when Stallion reads it."              │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 0:30─3:00 ─ LIVE EXTRACTION (the wow moment)
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  ► Open /stallion/extract                                            │
+  │  ► Drag their invoice PDF into the upload zone                       │
+  │  ► Wait. (10─30 seconds. Don't fill the silence ─ let them watch.)  │
+  │                                                                      │
+  │  ┌─── RESULT CARD APPEARS ──────────────────────────────────────┐  │
+  │  │                                                                │  │
+  │  │  ✓ HECA Medical Technologies Ltd                               │  │
+  │  │    HS: 9021.29.00.00  ─  Dental fittings / Invisalign         │  │
+  │  │    Value: USD 13,319.00                                        │  │
+  │  │    Origin: Mexico                                              │  │
+  │  │    Confidence: 85%                                             │  │
+  │  │    ⚠ Duty rate not on invoice ─ broker must set                │  │
+  │  │                                                                │  │
+  │  │    [Send to Review →]                                          │  │
+  │  │                                                                │  │
+  │  └────────────────────────────────────────────────────────────────┘  │
+  │                                                                      │
+  │  SAY: "Consignee, HS code, item descriptions, values ─ all          │
+  │        extracted in seconds from your own invoice.                    │
+  │        No typing. No data entry."                                    │
+  │                                                                      │
+  │  SAY: "85% confidence. It flagged what it couldn't find ─            │
+  │        the duty rate isn't on the invoice, so the broker             │
+  │        sets that during review."                                     │
+  │                                                                      │
+  │  CLICK: [Send to Review →]                                           │
+  │                                                                      │
+  │  ┌──────────────────────────────────────────────────────────────┐   │
+  │  │  IF EXTRACTION FAILS OR HANGS:                                │   │
+  │  │                                                                │   │
+  │  │  "The AI is processing ─ let me show you one we ran earlier." │   │
+  │  │  → Navigate to home page → click pre-seeded DEMO-001          │   │
+  │  │  → Continue the demo from broker review                       │   │
+  │  │                                                                │   │
+  │  │  The pre-seeded declaration IS from this same invoice,        │   │
+  │  │  so the data matches. UPSL won't know the difference.        │   │
+  │  └──────────────────────────────────────────────────────────────┘   │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 3:00─6:00 ─ BROKER REVIEW
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  ► Now in broker review. The extracted declaration is in the queue.  │
+  │                                                                      │
+  │  SAY: "This is what your broker sees. Every field the AI extracted, │
+  │        laid out for verification."                                   │
+  │                                                                      │
+  │  ► Show FIELDS view. Click through tabs:                             │
+  │    Header → Parties → Items (HS code prominent)                      │
+  │                                                                      │
+  │  SAY: "HS code is the most critical field. We put it front and      │
+  │        center ─ 9021.29.00.00, dental fittings. Your broker          │
+  │        confirms this is right, or corrects it right here."           │
+  │                                                                      │
+  │  ► Click Worksheet tab. Show calculated values.                      │
+  │                                                                      │
+  │  SAY: "Duty, VAT, surcharge ─ all calculated automatically.         │
+  │        Same formula your team uses. Zero calculation errors."        │
+  │                                                                      │
+  │  ► Click [APPROVE]                                                   │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 6:00─7:00 ─ THE FAIL CASE
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  ► Open DEMO-002 (pre-seeded, missing vessel name)                   │
+  │                                                                      │
+  │  ⚠ 1 REQUIRED FIELD MISSING: Vessel Name                            │
+  │  [░░ APPROVE ░░] ◄── GREYED OUT                                     │
+  │                                                                      │
+  │  SAY: "Watch ─ Stallion won't let a bad declaration through.         │
+  │        Vessel name is missing, so the approve button is locked.      │
+  │        This is where ASYCUDA rejections happen ─ we catch them       │
+  │        BEFORE submission, not after."                                 │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 7:00─9:00 ─ GENERATE + DOWNLOAD
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  ► Back to the approved declaration. Click [Generate Pack].          │
+  │                                                                      │
+  │  ✅ Pack generated                                                   │
+  │  📄 c82_sad_xml     [Download]                                      │
+  │  📄 worksheet_lb01  [Download]                                      │
+  │                                                                      │
+  │  ► Download and open the LB01 PDF.                                   │
+  │                                                                      │
+  │  SAY: "This is the same worksheet format your team produces today.  │
+  │        Running totals, CES lines, everything matches.                │
+  │        And this XML file ─ your broker uploads it to ASYCUDA.        │
+  │        No retyping. The C82 populates automatically."                │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 9:00─10:00 ─ THE SCALE PITCH
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  SAY: "That was one invoice. You process 200 a month.                │
+  │        Imagine uploading a stack of 25 invoices ─ or a               │
+  │        spreadsheet from your system ─ and every one of them          │
+  │        comes out like this. Extracted, calculated, validated,        │
+  │        ready for your broker to approve in 5 minutes instead         │
+  │        of 30."                                                       │
+  │                                                                      │
+  │   TODAY                          WITH STALLION                        │
+  │   ────────────────────           ─────────────────────               │
+  │   30 min per declaration         5 min per declaration               │
+  │   Manual data entry              AI extracts from your invoices      │
+  │   Calculator + Excel             Worksheet auto-calculates           │
+  │   Retype into ASYCUDA            XML uploads directly                │
+  │   Errors caught AFTER submit     Errors caught BEFORE submit         │
+  │                                                                      │
+  │   200 declarations × 25 min saved = 83 HOURS/MONTH                  │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+  MINUTE 10:00─13:00 ─ THE ASK
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  SAY: "Phase 1: you send us 25 declarations. Invoices, AWBs,        │
+  │        spreadsheets ─ whatever format you have. We run them          │
+  │        through, your broker reviews, and in two weeks you have       │
+  │        a report showing accuracy and time saved."                    │
+  │                                                                      │
+  │  SAY: "TT$7,888 for Phase 1. If the numbers don't work,            │
+  │        you walk away."                                               │
+  │                                                                      │
+  │  PAUSE.                                                              │
+  │                                                                      │
+  │  IF THEY ASK "Can it handle spreadsheets too?":                      │
+  │  → "Yes. You upload the Excel file, the AI maps your columns        │
+  │     to the declaration format, you confirm once, and every row       │
+  │     becomes a declaration. That's part of Phase 1."                  │
+  │                                                                      │
+  │  IF THEY ASK "What about our backlog?":                              │
+  │  → "That's exactly what Phase 1 proves. 25 declarations from       │
+  │     your backlog, processed through the system. The outcome          │
+  │     report tells you how fast the full backlog can be cleared."      │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ RISK MAP ─ EXTRACTION-SPECIFIC
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌───────────────────────────────┬─────────────────────────────────────────┐
+  │  RISK                         │  FALLBACK                               │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  Extraction hangs or times    │  "Let me show you one we processed     │
+  │  out during live demo         │  earlier" → open pre-seeded DEMO-001.  │
+  │                               │  Same invoice data. Demo continues.    │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  Extraction returns wrong     │  Still impressive if it gets consignee │
+  │  HS code or values            │  and description right. Say: "The      │
+  │                               │  broker corrects this in review ─      │
+  │                               │  that's the whole point of the         │
+  │                               │  human-in-the-loop design."            │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  ANTHROPIC_API_KEY not set    │  Day 1 check catches this. Cannot      │
+  │  or expired                   │  demo extraction without it. Verify    │
+  │                               │  the key works BEFORE day 4.           │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  extraction_router not        │  Day 1 check catches this. Mount it    │
+  │  mounted in main.py           │  and test before anything else.        │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  DocumentUpload.tsx doesn't   │  Run extraction via curl backstage,    │
+  │  render or upload fails       │  pre-seed the result, demo from        │
+  │                               │  broker review. Say: "The upload       │
+  │                               │  interface is being polished but       │
+  │                               │  let me show you what the output       │
+  │                               │  looks like."                          │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  Claude API rate limit or     │  Pre-run extraction morning of demo.   │
+  │  downtime                     │  Save result. Use pre-seeded data.     │
+  ├───────────────────────────────┼─────────────────────────────────────────┤
+  │  UPSL asks to try their OWN   │  "Absolutely ─ send it to us after    │
+  │  document right now (one you  │  this meeting and we'll have results  │
+  │  haven't tested)              │  back within 24 hours. Phase 1 is     │
+  │                               │  exactly that: your real documents,   │
+  │                               │  through our system."                  │
+  └───────────────────────────────┴─────────────────────────────────────────┘
+
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ IMMEDIATE NEXT ACTION (RIGHT NOW)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌──────────────────────────────────────────────────────────────────────┐
+  │                                                                      │
+  │  Open Claude Code and run:                                           │
+  │                                                                      │
+  │  "Check these three things:                                          │
+  │                                                                      │
+  │   1. Is extraction_router.py imported and mounted in main.py?        │
+  │      If not, mount it at /extract.                                   │
+  │                                                                      │
+  │   2. Is ANTHROPIC_API_KEY set in the environment that uvicorn       │
+  │      runs under? Check the .env file and the process env.            │
+  │      If not, tell me what to set.                                    │
+  │                                                                      │
+  │   3. Is DocumentUpload.tsx in src/pages/ and is the route            │
+  │      /stallion/extract in App.tsx? If not, add both.                 │
+  │                                                                      │
+  │   Then test extraction by running:                                   │
+  │   curl -X POST http://localhost:8022/extract/documents               │
+  │     -F 'files=@/path/to/any-test-pdf.pdf'                           │
+  │     -F 'mode=batch'                                                  │
+  │                                                                      │
+  │   Tell me what comes back."                                          │
+  │                                                                      │
+  │  That single Claude Code session tells you whether extraction        │
+  │  works or what needs fixing. Everything else follows from there.     │
+  │                                                                      │
+  └──────────────────────────────────────────────────────────────────────┘
+

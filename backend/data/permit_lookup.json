@@ -1,0 +1,905 @@
+{
+  "_note": "TTBizLink Import Permit lookup — expanded 2026-03-17. Seed data derived from TTBIZLINK_IMPORT_PERMIT_LISTING categories. Validate against authoritative TTBIZLINK_IMPORT_PERMIT_LISTING.xlsx before production use.",
+  "entries": [
+    {
+      "invoiceName": "PROVOLONE SLICED CHEESE",
+      "searchTerm": "ASSORTED CHEESE",
+      "ttbizlinkName": "ASSORTED CHEESE PRODUCTS",
+      "category": "A1",
+      "sequence": 9,
+      "permitType": "Cheese",
+      "keywords": ["assorted", "assorted cheese", "assorted cheese products", "cheese", "provolone", "provolone sliced cheese", "sliced"]
+    },
+    {
+      "invoiceName": "PARMESAN OREGANO BREAD TOPPING",
+      "searchTerm": "CHEESE PARMESAN",
+      "ttbizlinkName": "CHEESE PARMESAN",
+      "category": "A1",
+      "sequence": 74,
+      "permitType": "Cheese",
+      "keywords": ["bread", "cheese", "cheese parmesan", "oregano", "parmesan", "parmesan oregano bread topping", "topping"]
+    },
+    {
+      "invoiceName": "MOZZ BREADED",
+      "searchTerm": "BREADED MOZ",
+      "ttbizlinkName": "BREADED MOZZARELLA ASIAGO CHEESE PLANK",
+      "category": "A1",
+      "sequence": 31,
+      "permitType": "Cheese",
+      "keywords": ["asiago", "breaded", "breaded moz", "breaded mozzarella asiago cheese plank", "cheese", "mozz", "mozz breaded", "mozzarella", "plank"]
+    },
+    {
+      "invoiceName": "KFC DAIRY & EGG MIX",
+      "searchTerm": "DAIRY & EGG MIX",
+      "ttbizlinkName": "DAIRY & EGG MIX",
+      "category": "A3",
+      "sequence": 11,
+      "permitType": "Egg Based Products",
+      "keywords": ["dairy", "dairy & egg mix", "kfc dairy & egg mix", "egg mix"]
+    },
+    {
+      "invoiceName": "WHITE AMERICAN SLICED CHEESE",
+      "searchTerm": "AM WHITE",
+      "ttbizlinkName": "AM WHITE SLICED CHEESE",
+      "category": "A1",
+      "sequence": 4,
+      "permitType": "Cheese",
+      "keywords": ["am white", "am white sliced cheese", "american", "american sliced", "sliced cheese", "white american"]
+    },
+    {
+      "invoiceName": "CHEDDAR SHREDDED CHEESE",
+      "searchTerm": "CHEDDAR SHREDDED",
+      "ttbizlinkName": "CHEDDAR SHREDDED CHEESE",
+      "category": "A1",
+      "sequence": 15,
+      "permitType": "Cheese",
+      "keywords": ["cheddar", "cheddar shredded", "shredded", "shredded cheese", "cheddar cheese"]
+    },
+    {
+      "invoiceName": "MOZZARELLA CHEESE BLOCK",
+      "searchTerm": "MOZZARELLA BLOCK",
+      "ttbizlinkName": "MOZZARELLA CHEESE BLOCK",
+      "category": "A1",
+      "sequence": 22,
+      "permitType": "Cheese",
+      "keywords": ["block", "mozzarella", "mozzarella block", "mozzarella cheese", "cheese block"]
+    },
+    {
+      "invoiceName": "CREAM CHEESE",
+      "searchTerm": "CREAM CHEESE",
+      "ttbizlinkName": "CREAM CHEESE",
+      "category": "A1",
+      "sequence": 35,
+      "permitType": "Cheese",
+      "keywords": ["cream cheese", "cream", "philadelphia", "spreadable cheese"]
+    },
+    {
+      "invoiceName": "GOUDA CHEESE",
+      "searchTerm": "GOUDA",
+      "ttbizlinkName": "GOUDA CHEESE",
+      "category": "A1",
+      "sequence": 41,
+      "permitType": "Cheese",
+      "keywords": ["gouda", "gouda cheese", "smoked gouda"]
+    },
+    {
+      "invoiceName": "RICOTTA CHEESE",
+      "searchTerm": "RICOTTA",
+      "ttbizlinkName": "RICOTTA CHEESE",
+      "category": "A1",
+      "sequence": 52,
+      "permitType": "Cheese",
+      "keywords": ["ricotta", "ricotta cheese"]
+    },
+    {
+      "invoiceName": "FETA CHEESE",
+      "searchTerm": "FETA",
+      "ttbizlinkName": "FETA CHEESE",
+      "category": "A1",
+      "sequence": 58,
+      "permitType": "Cheese",
+      "keywords": ["feta", "feta cheese"]
+    },
+    {
+      "invoiceName": "UHT WHOLE MILK",
+      "searchTerm": "UHT MILK",
+      "ttbizlinkName": "UHT WHOLE MILK",
+      "category": "A1",
+      "sequence": 101,
+      "permitType": "Milk/Dairy",
+      "keywords": ["uht", "uht milk", "uht whole milk", "long life milk", "shelf stable milk", "whole milk"]
+    },
+    {
+      "invoiceName": "EVAPORATED MILK",
+      "searchTerm": "EVAPORATED MILK",
+      "ttbizlinkName": "EVAPORATED MILK",
+      "category": "A1",
+      "sequence": 102,
+      "permitType": "Milk/Dairy",
+      "keywords": ["evaporated", "evaporated milk", "carnation", "condensed", "condensed milk"]
+    },
+    {
+      "invoiceName": "POWDERED WHOLE MILK",
+      "searchTerm": "POWDERED MILK",
+      "ttbizlinkName": "POWDERED WHOLE MILK",
+      "category": "A1",
+      "sequence": 103,
+      "permitType": "Milk/Dairy",
+      "keywords": ["powdered milk", "milk powder", "whole milk powder", "dried milk", "skimmed milk powder", "skim milk powder"]
+    },
+    {
+      "invoiceName": "BUTTER UNSALTED",
+      "searchTerm": "BUTTER",
+      "ttbizlinkName": "BUTTER UNSALTED/SALTED",
+      "category": "A1",
+      "sequence": 104,
+      "permitType": "Milk/Dairy",
+      "keywords": ["butter", "unsalted butter", "salted butter", "butter unsalted"]
+    },
+    {
+      "invoiceName": "HEAVY CREAM",
+      "searchTerm": "CREAM",
+      "ttbizlinkName": "HEAVY WHIPPING CREAM",
+      "category": "A1",
+      "sequence": 105,
+      "permitType": "Milk/Dairy",
+      "keywords": ["cream", "heavy cream", "whipping cream", "sour cream", "double cream"]
+    },
+    {
+      "invoiceName": "YOGURT PLAIN",
+      "searchTerm": "YOGURT",
+      "ttbizlinkName": "YOGURT PRODUCTS",
+      "category": "A1",
+      "sequence": 106,
+      "permitType": "Milk/Dairy",
+      "keywords": ["yogurt", "yoghurt", "plain yogurt", "flavoured yogurt", "greek yogurt", "probiotic yogurt"]
+    },
+    {
+      "invoiceName": "ICE CREAM MIX",
+      "searchTerm": "ICE CREAM",
+      "ttbizlinkName": "ICE CREAM AND FROZEN DAIRY",
+      "category": "A1",
+      "sequence": 107,
+      "permitType": "Milk/Dairy",
+      "keywords": ["ice cream", "ice cream mix", "frozen yogurt", "gelato", "sorbet with milk", "dairy frozen dessert"]
+    },
+    {
+      "invoiceName": "BONELESS SKINLESS CHICKEN BREAST FILETS",
+      "searchTerm": "CHICKEN BREAST",
+      "ttbizlinkName": "CHICKEN BREAST PORTIONS",
+      "category": "A2",
+      "sequence": 201,
+      "permitType": "Meat/Poultry",
+      "keywords": ["chicken breast", "boneless", "skinless", "chicken filet", "breast filet", "chicken breast filet"]
+    },
+    {
+      "invoiceName": "CHICKEN THIGHS BONE-IN",
+      "searchTerm": "CHICKEN THIGHS",
+      "ttbizlinkName": "CHICKEN THIGH PORTIONS",
+      "category": "A2",
+      "sequence": 202,
+      "permitType": "Meat/Poultry",
+      "keywords": ["chicken thigh", "thighs", "bone-in thigh", "boneless thigh", "chicken thighs"]
+    },
+    {
+      "invoiceName": "CHICKEN DRUMSTICKS",
+      "searchTerm": "CHICKEN DRUMSTICK",
+      "ttbizlinkName": "CHICKEN DRUMSTICK PORTIONS",
+      "category": "A2",
+      "sequence": 203,
+      "permitType": "Meat/Poultry",
+      "keywords": ["drumstick", "drumsticks", "chicken drumstick", "chicken leg"]
+    },
+    {
+      "invoiceName": "CHICKEN WINGS",
+      "searchTerm": "CHICKEN WINGS",
+      "ttbizlinkName": "CHICKEN WING PORTIONS",
+      "category": "A2",
+      "sequence": 204,
+      "permitType": "Meat/Poultry",
+      "keywords": ["chicken wing", "wings", "wing portions", "winglets", "chicken wings"]
+    },
+    {
+      "invoiceName": "WHOLE FROZEN CHICKEN",
+      "searchTerm": "WHOLE CHICKEN",
+      "ttbizlinkName": "WHOLE FROZEN CHICKEN",
+      "category": "A2",
+      "sequence": 205,
+      "permitType": "Meat/Poultry",
+      "keywords": ["whole chicken", "frozen chicken", "broiler", "whole frozen chicken", "roaster"]
+    },
+    {
+      "invoiceName": "CHICKEN BACK",
+      "searchTerm": "CHICKEN BACK",
+      "ttbizlinkName": "CHICKEN BACK AND NECK",
+      "category": "A2",
+      "sequence": 206,
+      "permitType": "Meat/Poultry",
+      "keywords": ["chicken back", "chicken neck", "backs and necks", "chicken frames"]
+    },
+    {
+      "invoiceName": "TURKEY BREAST ROLL",
+      "searchTerm": "TURKEY",
+      "ttbizlinkName": "TURKEY PRODUCTS",
+      "category": "A2",
+      "sequence": 207,
+      "permitType": "Meat/Poultry",
+      "keywords": ["turkey", "turkey breast", "turkey roll", "whole turkey", "turkey portions"]
+    },
+    {
+      "invoiceName": "PORK SHOULDER BLADE BUTT",
+      "searchTerm": "PORK SHOULDER",
+      "ttbizlinkName": "PORK SHOULDER CUTS",
+      "category": "A2",
+      "sequence": 208,
+      "permitType": "Meat/Poultry",
+      "keywords": ["pork shoulder", "pork butt", "pork blade", "shoulder butt", "pork"]
+    },
+    {
+      "invoiceName": "PORK BELLY SLICED",
+      "searchTerm": "PORK BELLY",
+      "ttbizlinkName": "PORK BELLY",
+      "category": "A2",
+      "sequence": 209,
+      "permitType": "Meat/Poultry",
+      "keywords": ["pork belly", "bacon slab", "pork side", "belly pork"]
+    },
+    {
+      "invoiceName": "BEEF CHUCK ROLL",
+      "searchTerm": "BEEF CHUCK",
+      "ttbizlinkName": "BEEF CUTS",
+      "category": "A2",
+      "sequence": 210,
+      "permitType": "Meat/Poultry",
+      "keywords": ["beef chuck", "chuck roll", "beef", "beef steak", "beef striploin", "beef tenderloin", "beef brisket", "beef ribs", "beef cuts"]
+    },
+    {
+      "invoiceName": "GROUND BEEF",
+      "searchTerm": "GROUND BEEF",
+      "ttbizlinkName": "GROUND BEEF / MINCED BEEF",
+      "category": "A2",
+      "sequence": 211,
+      "permitType": "Meat/Poultry",
+      "keywords": ["ground beef", "minced beef", "beef mince", "hamburger meat"]
+    },
+    {
+      "invoiceName": "LAMB LEG",
+      "searchTerm": "LAMB",
+      "ttbizlinkName": "LAMB AND MUTTON PRODUCTS",
+      "category": "A2",
+      "sequence": 212,
+      "permitType": "Meat/Poultry",
+      "keywords": ["lamb", "mutton", "lamb leg", "lamb chop", "lamb shoulder", "lamb rack"]
+    },
+    {
+      "invoiceName": "SAUSAGES PORK",
+      "searchTerm": "SAUSAGES",
+      "ttbizlinkName": "SAUSAGES AND PROCESSED MEAT",
+      "category": "A2",
+      "sequence": 213,
+      "permitType": "Meat/Poultry",
+      "keywords": ["sausage", "sausages", "pork sausage", "hot dog", "frankfurter", "wiener", "chorizo"]
+    },
+    {
+      "invoiceName": "PEPPERONI",
+      "searchTerm": "PEPPERONI",
+      "ttbizlinkName": "PEPPERONI AND SALAMI PRODUCTS",
+      "category": "A2",
+      "sequence": 214,
+      "permitType": "Meat/Poultry",
+      "keywords": ["pepperoni", "salami", "deli meat", "cured meat", "processed pork", "bologna"]
+    },
+    {
+      "invoiceName": "CORNED BEEF",
+      "searchTerm": "CORNED BEEF",
+      "ttbizlinkName": "CORNED BEEF / CANNED MEAT",
+      "category": "A2",
+      "sequence": 215,
+      "permitType": "Meat/Poultry",
+      "keywords": ["corned beef", "canned beef", "canned meat", "luncheon meat", "spam", "canned corned beef"]
+    },
+    {
+      "invoiceName": "FROZEN SHRIMP PEELED AND DEVEINED",
+      "searchTerm": "SHRIMP",
+      "ttbizlinkName": "SHRIMP AND PRAWNS",
+      "category": "A4",
+      "sequence": 301,
+      "permitType": "Fish/Seafood",
+      "keywords": ["shrimp", "prawns", "frozen shrimp", "peeled shrimp", "deveined shrimp", "shell-on shrimp"]
+    },
+    {
+      "invoiceName": "TILAPIA FILLETS FROZEN",
+      "searchTerm": "TILAPIA",
+      "ttbizlinkName": "TILAPIA FISH PRODUCTS",
+      "category": "A4",
+      "sequence": 302,
+      "permitType": "Fish/Seafood",
+      "keywords": ["tilapia", "tilapia fillet", "frozen tilapia", "tilapia fish"]
+    },
+    {
+      "invoiceName": "SALMON FILLETS",
+      "searchTerm": "SALMON",
+      "ttbizlinkName": "SALMON FISH PRODUCTS",
+      "category": "A4",
+      "sequence": 303,
+      "permitType": "Fish/Seafood",
+      "keywords": ["salmon", "salmon fillet", "atlantic salmon", "smoked salmon", "frozen salmon"]
+    },
+    {
+      "invoiceName": "FROZEN FISH FILLETS",
+      "searchTerm": "FISH FILLETS",
+      "ttbizlinkName": "FROZEN FISH FILLETS",
+      "category": "A4",
+      "sequence": 304,
+      "permitType": "Fish/Seafood",
+      "keywords": ["fish fillet", "frozen fish", "fish fillets", "cod fillet", "haddock", "pollock", "basa fillet", "pangasius"]
+    },
+    {
+      "invoiceName": "CANNED TUNA",
+      "searchTerm": "CANNED TUNA",
+      "ttbizlinkName": "CANNED FISH PRODUCTS",
+      "category": "A4",
+      "sequence": 305,
+      "permitType": "Fish/Seafood",
+      "keywords": ["canned tuna", "tuna", "canned fish", "tuna in brine", "tuna in oil", "sardines", "mackerel in can"]
+    },
+    {
+      "invoiceName": "FROZEN SQUID",
+      "searchTerm": "SQUID",
+      "ttbizlinkName": "SQUID AND CALAMARI",
+      "category": "A4",
+      "sequence": 306,
+      "permitType": "Fish/Seafood",
+      "keywords": ["squid", "calamari", "frozen squid", "squid rings"]
+    },
+    {
+      "invoiceName": "WHOLE EGGS FRESH",
+      "searchTerm": "FRESH EGGS",
+      "ttbizlinkName": "FRESH WHOLE EGGS",
+      "category": "A3",
+      "sequence": 401,
+      "permitType": "Egg Based Products",
+      "keywords": ["fresh eggs", "whole eggs", "table eggs", "chicken eggs", "dozen eggs"]
+    },
+    {
+      "invoiceName": "LIQUID WHOLE EGGS",
+      "searchTerm": "LIQUID EGGS",
+      "ttbizlinkName": "LIQUID EGG PRODUCTS",
+      "category": "A3",
+      "sequence": 402,
+      "permitType": "Egg Based Products",
+      "keywords": ["liquid eggs", "liquid egg", "pasteurised egg", "egg product", "liquid whole egg"]
+    },
+    {
+      "invoiceName": "DRIED EGG ALBUMEN",
+      "searchTerm": "EGG ALBUMEN",
+      "ttbizlinkName": "DRIED EGG ALBUMEN",
+      "category": "A3",
+      "sequence": 403,
+      "permitType": "Egg Based Products",
+      "keywords": ["egg albumen", "dried egg", "egg white powder", "albumen powder", "dried albumin"]
+    },
+    {
+      "invoiceName": "FROZEN WHOLE CORN",
+      "searchTerm": "CORN",
+      "ttbizlinkName": "FRESH/FROZEN VEGETABLES AND PRODUCE",
+      "category": "A5",
+      "sequence": 501,
+      "permitType": "Agricultural Produce",
+      "keywords": ["corn", "sweet corn", "frozen corn", "whole kernel corn", "corn on the cob"]
+    },
+    {
+      "invoiceName": "FROZEN BROCCOLI",
+      "searchTerm": "FROZEN VEGETABLES",
+      "ttbizlinkName": "FROZEN VEGETABLE PRODUCTS",
+      "category": "A5",
+      "sequence": 502,
+      "permitType": "Agricultural Produce",
+      "keywords": ["frozen vegetables", "broccoli", "frozen broccoli", "mixed vegetables", "frozen peas", "frozen carrots", "green beans"]
+    },
+    {
+      "invoiceName": "FRESH APPLES",
+      "searchTerm": "FRESH FRUIT",
+      "ttbizlinkName": "FRESH FRUIT PRODUCTS",
+      "category": "A5",
+      "sequence": 503,
+      "permitType": "Agricultural Produce",
+      "keywords": ["fresh fruit", "apples", "fresh apples", "pears", "grapes", "oranges", "fresh citrus"]
+    },
+    {
+      "invoiceName": "WHITE RICE LONG GRAIN",
+      "searchTerm": "WHITE RICE",
+      "ttbizlinkName": "WHITE RICE",
+      "category": "A6",
+      "sequence": 601,
+      "permitType": "Rice/Grain",
+      "keywords": ["white rice", "long grain rice", "rice", "parboiled rice", "milled rice", "polished rice"]
+    },
+    {
+      "invoiceName": "BASMATI RICE",
+      "searchTerm": "BASMATI RICE",
+      "ttbizlinkName": "BASMATI RICE",
+      "category": "A6",
+      "sequence": 602,
+      "permitType": "Rice/Grain",
+      "keywords": ["basmati", "basmati rice", "jasmine rice", "fragrant rice"]
+    },
+    {
+      "invoiceName": "BROWN RICE",
+      "searchTerm": "BROWN RICE",
+      "ttbizlinkName": "BROWN RICE",
+      "category": "A6",
+      "sequence": 603,
+      "permitType": "Rice/Grain",
+      "keywords": ["brown rice", "whole grain rice", "unmilled rice"]
+    },
+    {
+      "invoiceName": "ALL PURPOSE WHEAT FLOUR",
+      "searchTerm": "WHEAT FLOUR",
+      "ttbizlinkName": "WHEAT FLOUR",
+      "category": "A6",
+      "sequence": 604,
+      "permitType": "Rice/Grain",
+      "keywords": ["wheat flour", "all purpose flour", "flour", "bread flour", "plain flour", "self raising flour"]
+    },
+    {
+      "invoiceName": "YELLOW CORNMEAL",
+      "searchTerm": "CORNMEAL",
+      "ttbizlinkName": "CORNMEAL / CORN FLOUR",
+      "category": "A6",
+      "sequence": 605,
+      "permitType": "Rice/Grain",
+      "keywords": ["cornmeal", "corn meal", "yellow cornmeal", "corn flour", "cornflour", "polenta"]
+    },
+    {
+      "invoiceName": "CIGARETTES KING SIZE",
+      "searchTerm": "CIGARETTES",
+      "ttbizlinkName": "CIGARETTES AND TOBACCO PRODUCTS",
+      "category": "B2",
+      "sequence": 701,
+      "permitType": "Tobacco",
+      "keywords": ["cigarettes", "cigarette", "king size", "tobacco", "smoking tobacco", "tobacco products"]
+    },
+    {
+      "invoiceName": "CIGARS PREMIUM",
+      "searchTerm": "CIGARS",
+      "ttbizlinkName": "CIGARS AND CIGARILLOS",
+      "category": "B2",
+      "sequence": 702,
+      "permitType": "Tobacco",
+      "keywords": ["cigar", "cigars", "cigarillo", "cigarillos", "premium cigars", "little cigars"]
+    },
+    {
+      "invoiceName": "PIPE TOBACCO",
+      "searchTerm": "PIPE TOBACCO",
+      "ttbizlinkName": "PIPE TOBACCO AND SHISHA",
+      "category": "B2",
+      "sequence": 703,
+      "permitType": "Tobacco",
+      "keywords": ["pipe tobacco", "shisha", "hookah tobacco", "waterpipe tobacco", "loose tobacco"]
+    },
+    {
+      "invoiceName": "RUM DARK 750ML",
+      "searchTerm": "RUM",
+      "ttbizlinkName": "RUM AND SPIRITS",
+      "category": "B1",
+      "sequence": 801,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["rum", "dark rum", "white rum", "aged rum", "rum 750", "spirits", "distilled spirits"]
+    },
+    {
+      "invoiceName": "VODKA",
+      "searchTerm": "VODKA",
+      "ttbizlinkName": "VODKA",
+      "category": "B1",
+      "sequence": 802,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["vodka", "flavoured vodka"]
+    },
+    {
+      "invoiceName": "WHISKY SCOTCH",
+      "searchTerm": "WHISKY",
+      "ttbizlinkName": "WHISKY AND WHISKEY",
+      "category": "B1",
+      "sequence": 803,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["whisky", "whiskey", "scotch", "scotch whisky", "bourbon", "rye whiskey", "blended scotch"]
+    },
+    {
+      "invoiceName": "GIN",
+      "searchTerm": "GIN",
+      "ttbizlinkName": "GIN",
+      "category": "B1",
+      "sequence": 804,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["gin", "london dry gin", "flavoured gin"]
+    },
+    {
+      "invoiceName": "BRANDY COGNAC",
+      "searchTerm": "BRANDY",
+      "ttbizlinkName": "BRANDY AND COGNAC",
+      "category": "B1",
+      "sequence": 805,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["brandy", "cognac", "armagnac", "brandy cognac"]
+    },
+    {
+      "invoiceName": "RED WINE CABERNET",
+      "searchTerm": "WINE",
+      "ttbizlinkName": "WINE PRODUCTS",
+      "category": "B1",
+      "sequence": 806,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["wine", "red wine", "white wine", "rose wine", "rosé", "sparkling wine", "champagne", "merlot", "cabernet", "chardonnay", "sauvignon"]
+    },
+    {
+      "invoiceName": "BEER LAGER",
+      "searchTerm": "BEER",
+      "ttbizlinkName": "BEER AND MALT BEVERAGES",
+      "category": "B1",
+      "sequence": 807,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["beer", "lager", "ale", "stout", "malt beverage", "craft beer", "imported beer"]
+    },
+    {
+      "invoiceName": "LIQUEUR TRIPLE SEC",
+      "searchTerm": "LIQUEUR",
+      "ttbizlinkName": "LIQUEURS AND CORDIALS",
+      "category": "B1",
+      "sequence": 808,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["liqueur", "liqueur", "cordial", "triple sec", "baileys", "kahlua", "amaretto"]
+    },
+    {
+      "invoiceName": "AMOXICILLIN CAPSULES",
+      "searchTerm": "PHARMACEUTICAL DRUGS",
+      "ttbizlinkName": "PHARMACEUTICAL PRODUCTS",
+      "category": "C1",
+      "sequence": 901,
+      "permitType": "Pharmaceutical",
+      "keywords": ["pharmaceutical", "medicine", "drug", "medication", "capsule", "tablet", "amoxicillin", "antibiotic", "prescription drug", "over the counter", "otc", "dosage form"]
+    },
+    {
+      "invoiceName": "IBUPROFEN TABLETS",
+      "searchTerm": "ANALGESICS",
+      "ttbizlinkName": "ANALGESICS AND PAIN RELIEF",
+      "category": "C1",
+      "sequence": 902,
+      "permitType": "Pharmaceutical",
+      "keywords": ["ibuprofen", "paracetamol", "acetaminophen", "analgesic", "pain relief", "aspirin", "naproxen"]
+    },
+    {
+      "invoiceName": "VITAMINS AND DIETARY SUPPLEMENTS",
+      "searchTerm": "VITAMINS",
+      "ttbizlinkName": "VITAMINS AND DIETARY SUPPLEMENTS",
+      "category": "C1",
+      "sequence": 903,
+      "permitType": "Pharmaceutical",
+      "keywords": ["vitamin", "vitamins", "supplement", "dietary supplement", "multivitamin", "omega 3", "fish oil", "mineral supplement", "health supplement"]
+    },
+    {
+      "invoiceName": "INSULIN INJECTION",
+      "searchTerm": "INSULIN",
+      "ttbizlinkName": "BIOLOGICAL AND STERILE PRODUCTS",
+      "category": "C1",
+      "sequence": 904,
+      "permitType": "Pharmaceutical",
+      "keywords": ["insulin", "vaccine", "biological", "biologics", "sterile solution", "injectable", "vial"]
+    },
+    {
+      "invoiceName": "MEDICAL SYRINGES",
+      "searchTerm": "MEDICAL DEVICES",
+      "ttbizlinkName": "MEDICAL DEVICES AND EQUIPMENT",
+      "category": "C2",
+      "sequence": 1001,
+      "permitType": "Medical Equipment",
+      "keywords": ["medical device", "syringe", "medical equipment", "surgical", "diagnostic", "medical instrument", "clinical equipment", "hospital equipment"]
+    },
+    {
+      "invoiceName": "BANDAGES STERILE",
+      "searchTerm": "MEDICAL CONSUMABLES",
+      "ttbizlinkName": "MEDICAL CONSUMABLES AND DRESSINGS",
+      "category": "C2",
+      "sequence": 1002,
+      "permitType": "Medical Equipment",
+      "keywords": ["bandage", "dressing", "wound care", "sterile gauze", "medical consumable", "plaster", "antiseptic dressing"]
+    },
+    {
+      "invoiceName": "GLYPHOSATE HERBICIDE",
+      "searchTerm": "HERBICIDE",
+      "ttbizlinkName": "HERBICIDES AND WEEDKILLERS",
+      "category": "D1",
+      "sequence": 1101,
+      "permitType": "Pesticides/Chemicals",
+      "keywords": ["herbicide", "weedkiller", "glyphosate", "roundup", "weed control", "selective herbicide", "non-selective herbicide"]
+    },
+    {
+      "invoiceName": "INSECTICIDE CONCENTRATE",
+      "searchTerm": "INSECTICIDE",
+      "ttbizlinkName": "INSECTICIDES AND PEST CONTROL",
+      "category": "D1",
+      "sequence": 1102,
+      "permitType": "Pesticides/Chemicals",
+      "keywords": ["insecticide", "pesticide", "pest control", "roach spray", "termite control", "mosquito repellent", "fumigant"]
+    },
+    {
+      "invoiceName": "FUNGICIDE POWDER",
+      "searchTerm": "FUNGICIDE",
+      "ttbizlinkName": "FUNGICIDES AND PLANT PROTECTION",
+      "category": "D1",
+      "sequence": 1103,
+      "permitType": "Pesticides/Chemicals",
+      "keywords": ["fungicide", "plant protection", "fungal control", "mancozeb", "copper fungicide"]
+    },
+    {
+      "invoiceName": "NPK FERTILISER 15-15-15",
+      "searchTerm": "FERTILISER",
+      "ttbizlinkName": "FERTILISERS",
+      "category": "D2",
+      "sequence": 1104,
+      "permitType": "Pesticides/Chemicals",
+      "keywords": ["fertiliser", "fertilizer", "npk", "urea", "ammonium sulphate", "potassium nitrate", "compound fertiliser", "granular fertiliser"]
+    },
+    {
+      "invoiceName": "USED PASSENGER VEHICLE",
+      "searchTerm": "USED VEHICLES",
+      "ttbizlinkName": "USED MOTOR VEHICLES",
+      "category": "E1",
+      "sequence": 1201,
+      "permitType": "Vehicles",
+      "keywords": ["used vehicle", "used car", "second hand vehicle", "motor vehicle", "pre-owned", "used automobile"]
+    },
+    {
+      "invoiceName": "USED MOTORCYCLE",
+      "searchTerm": "USED MOTORCYCLE",
+      "ttbizlinkName": "USED MOTORCYCLES AND SCOOTERS",
+      "category": "E1",
+      "sequence": 1202,
+      "permitType": "Vehicles",
+      "keywords": ["motorcycle", "used motorcycle", "scooter", "moped", "motorbike"]
+    },
+    {
+      "invoiceName": "USED COMMERCIAL TRUCK",
+      "searchTerm": "USED TRUCK",
+      "ttbizlinkName": "USED COMMERCIAL VEHICLES",
+      "category": "E1",
+      "sequence": 1203,
+      "permitType": "Vehicles",
+      "keywords": ["truck", "used truck", "commercial vehicle", "lorry", "used bus", "minibus", "van used"]
+    },
+    {
+      "invoiceName": "VEHICLE PARTS USED",
+      "searchTerm": "USED VEHICLE PARTS",
+      "ttbizlinkName": "USED VEHICLE PARTS AND ACCESSORIES",
+      "category": "E1",
+      "sequence": 1204,
+      "permitType": "Vehicles",
+      "keywords": ["used parts", "second hand parts", "rebuilt engine", "reconditioned", "used auto parts", "used tyres", "used tires"]
+    },
+    {
+      "invoiceName": "EXPLOSIVES COMMERCIAL",
+      "searchTerm": "EXPLOSIVES",
+      "ttbizlinkName": "EXPLOSIVES AND PYROTECHNICS",
+      "category": "F1",
+      "sequence": 1301,
+      "permitType": "Explosives/Controlled",
+      "keywords": ["explosive", "explosives", "detonator", "blasting", "pyrotechnic", "fireworks", "commercial explosives"]
+    },
+    {
+      "invoiceName": "FIREARM PISTOL",
+      "searchTerm": "FIREARMS",
+      "ttbizlinkName": "FIREARMS AND AMMUNITION",
+      "category": "F2",
+      "sequence": 1302,
+      "permitType": "Explosives/Controlled",
+      "keywords": ["firearm", "gun", "pistol", "rifle", "shotgun", "ammunition", "bullets", "cartridges"]
+    },
+    {
+      "invoiceName": "SODIUM HYPOCHLORITE",
+      "searchTerm": "INDUSTRIAL CHEMICALS",
+      "ttbizlinkName": "INDUSTRIAL CHEMICALS",
+      "category": "D3",
+      "sequence": 1401,
+      "permitType": "Industrial Chemicals",
+      "keywords": ["industrial chemical", "sodium hypochlorite", "bleach", "caustic soda", "sodium hydroxide", "hydrochloric acid", "sulphuric acid", "chemical reagent"]
+    },
+    {
+      "invoiceName": "REFRIGERANT R22",
+      "searchTerm": "REFRIGERANTS",
+      "ttbizlinkName": "REFRIGERANTS AND OZONE DEPLETING SUBSTANCES",
+      "category": "D3",
+      "sequence": 1402,
+      "permitType": "Industrial Chemicals",
+      "keywords": ["refrigerant", "r22", "r134a", "freon", "coolant gas", "ozone depleting", "hcfc"]
+    },
+    {
+      "invoiceName": "PAINT SOLVENT BASED",
+      "searchTerm": "PAINT AND COATINGS",
+      "ttbizlinkName": "PAINT AND CHEMICAL COATINGS",
+      "category": "D3",
+      "sequence": 1403,
+      "permitType": "Industrial Chemicals",
+      "keywords": ["paint", "solvent paint", "enamel paint", "coating", "primer", "varnish", "lacquer", "industrial paint"]
+    },
+    {
+      "invoiceName": "WASTE ELECTRICAL EQUIPMENT",
+      "searchTerm": "WASTE AND SCRAP",
+      "ttbizlinkName": "WASTE AND RECYCLABLE MATERIALS",
+      "category": "G1",
+      "sequence": 1501,
+      "permitType": "Waste/Scrap",
+      "keywords": ["waste", "scrap", "e-waste", "used electronics", "recyclable", "scrap metal", "waste paper", "plastic waste"]
+    },
+    {
+      "invoiceName": "LIVE ANIMALS",
+      "searchTerm": "LIVE ANIMALS",
+      "ttbizlinkName": "LIVE ANIMALS AND BIRDS",
+      "category": "H1",
+      "sequence": 1601,
+      "permitType": "CITES/Endangered Species",
+      "keywords": ["live animal", "live bird", "livestock", "poultry live", "ornamental fish", "exotic animal", "cites", "wildlife"]
+    },
+    {
+      "invoiceName": "PLANT MATERIAL CUTTINGS",
+      "searchTerm": "PLANT MATERIAL",
+      "ttbizlinkName": "PLANTS AND PLANT MATERIAL",
+      "category": "H2",
+      "sequence": 1602,
+      "permitType": "CITES/Endangered Species",
+      "keywords": ["plant material", "plant cuttings", "seedlings", "live plants", "bulbs", "seeds regulated", "planting material", "botanical"]
+    },
+    {
+      "invoiceName": "CRUDE PALM OIL",
+      "searchTerm": "EDIBLE OILS",
+      "ttbizlinkName": "EDIBLE OILS AND FATS",
+      "category": "A7",
+      "sequence": 1701,
+      "permitType": "Edible Oils",
+      "keywords": ["palm oil", "edible oil", "crude oil", "vegetable oil", "soybean oil", "canola oil", "sunflower oil", "cooking oil", "refined oil"]
+    },
+    {
+      "invoiceName": "MARGARINE",
+      "searchTerm": "MARGARINE",
+      "ttbizlinkName": "MARGARINE AND SHORTENING",
+      "category": "A7",
+      "sequence": 1702,
+      "permitType": "Edible Oils",
+      "keywords": ["margarine", "shortening", "vegetable fat", "lard", "cooking fat", "baking fat"]
+    },
+    {
+      "invoiceName": "REFINED WHITE SUGAR",
+      "searchTerm": "SUGAR",
+      "ttbizlinkName": "REFINED SUGAR PRODUCTS",
+      "category": "A8",
+      "sequence": 1801,
+      "permitType": "Sugar/Confectionery",
+      "keywords": ["sugar", "white sugar", "refined sugar", "cane sugar", "brown sugar", "icing sugar", "raw sugar", "sugar products"]
+    },
+    {
+      "invoiceName": "CHOCOLATE BLOCK",
+      "searchTerm": "CHOCOLATE",
+      "ttbizlinkName": "CHOCOLATE AND CONFECTIONERY",
+      "category": "A8",
+      "sequence": 1802,
+      "permitType": "Sugar/Confectionery",
+      "keywords": ["chocolate", "cocoa", "chocolate block", "confectionery", "candy", "sweets", "dark chocolate", "milk chocolate"]
+    },
+    {
+      "invoiceName": "INFANT FORMULA POWDER",
+      "searchTerm": "INFANT FORMULA",
+      "ttbizlinkName": "INFANT FORMULA AND BABY FOOD",
+      "category": "A1",
+      "sequence": 110,
+      "permitType": "Milk/Dairy",
+      "keywords": ["infant formula", "baby formula", "baby milk", "infant milk", "follow on formula", "toddler formula", "similac", "enfamil"]
+    },
+    {
+      "invoiceName": "SOY MILK",
+      "searchTerm": "SOY MILK",
+      "ttbizlinkName": "SOY MILK AND PLANT BASED BEVERAGES",
+      "category": "A1",
+      "sequence": 111,
+      "permitType": "Milk/Dairy",
+      "keywords": ["soy milk", "soymilk", "almond milk", "oat milk", "plant milk", "plant based milk", "non dairy milk"]
+    },
+    {
+      "invoiceName": "BEEF LIVER",
+      "searchTerm": "OFFAL",
+      "ttbizlinkName": "OFFAL AND VARIETY MEATS",
+      "category": "A2",
+      "sequence": 216,
+      "permitType": "Meat/Poultry",
+      "keywords": ["liver", "offal", "variety meat", "beef liver", "chicken liver", "tripe", "ox tail", "pig ears", "pig feet", "cow heel"]
+    },
+    {
+      "invoiceName": "CANNED PORK",
+      "searchTerm": "CANNED PORK",
+      "ttbizlinkName": "CANNED PORK AND HAM",
+      "category": "A2",
+      "sequence": 217,
+      "permitType": "Meat/Poultry",
+      "keywords": ["canned pork", "canned ham", "ham", "pork luncheon", "luncheon meat pork"]
+    },
+    {
+      "invoiceName": "SMOKED HERRING",
+      "searchTerm": "SMOKED FISH",
+      "ttbizlinkName": "SMOKED AND DRIED FISH",
+      "category": "A4",
+      "sequence": 307,
+      "permitType": "Fish/Seafood",
+      "keywords": ["smoked fish", "smoked herring", "dried fish", "salted fish", "saltfish", "smoked salmon dried", "stockfish"]
+    },
+    {
+      "invoiceName": "LOBSTER TAILS FROZEN",
+      "searchTerm": "LOBSTER",
+      "ttbizlinkName": "LOBSTER AND CRAB PRODUCTS",
+      "category": "A4",
+      "sequence": 308,
+      "permitType": "Fish/Seafood",
+      "keywords": ["lobster", "lobster tail", "crab", "crab meat", "king crab", "snow crab", "frozen lobster"]
+    },
+    {
+      "invoiceName": "COTTON SEED OIL",
+      "searchTerm": "COTTONSEED OIL",
+      "ttbizlinkName": "COTTONSEED OIL",
+      "category": "A7",
+      "sequence": 1703,
+      "permitType": "Edible Oils",
+      "keywords": ["cottonseed oil", "cotton seed oil", "cotton oil"]
+    },
+    {
+      "invoiceName": "TEQUILA",
+      "searchTerm": "TEQUILA",
+      "ttbizlinkName": "TEQUILA AND MEZCAL",
+      "category": "B1",
+      "sequence": 809,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["tequila", "mezcal", "agave spirit"]
+    },
+    {
+      "invoiceName": "HARD CIDER",
+      "searchTerm": "CIDER",
+      "ttbizlinkName": "CIDER AND PERRY",
+      "category": "B1",
+      "sequence": 810,
+      "permitType": "Alcohol/Spirits",
+      "keywords": ["cider", "hard cider", "perry", "apple cider", "alcoholic cider"]
+    },
+    {
+      "invoiceName": "NITROGEN GAS",
+      "searchTerm": "INDUSTRIAL GAS",
+      "ttbizlinkName": "INDUSTRIAL GASES",
+      "category": "D3",
+      "sequence": 1404,
+      "permitType": "Industrial Chemicals",
+      "keywords": ["nitrogen gas", "oxygen gas", "industrial gas", "compressed gas", "acetylene", "propane", "butane", "lpg"]
+    },
+    {
+      "invoiceName": "VETERINARY VACCINE",
+      "searchTerm": "VETERINARY PRODUCTS",
+      "ttbizlinkName": "VETERINARY MEDICINES AND BIOLOGICS",
+      "category": "C1",
+      "sequence": 905,
+      "permitType": "Pharmaceutical",
+      "keywords": ["veterinary", "vet medicine", "animal vaccine", "veterinary drug", "animal medication", "vet product"]
+    },
+    {
+      "invoiceName": "DENTAL EQUIPMENT",
+      "searchTerm": "DENTAL EQUIPMENT",
+      "ttbizlinkName": "DENTAL AND OPHTHALMIC EQUIPMENT",
+      "category": "C2",
+      "sequence": 1003,
+      "permitType": "Medical Equipment",
+      "keywords": ["dental equipment", "dental chair", "dental drill", "ophthalmic", "eye equipment", "surgical equipment"]
+    },
+    {
+      "invoiceName": "DIAGNOSTIC REAGENTS",
+      "searchTerm": "DIAGNOSTIC KITS",
+      "ttbizlinkName": "DIAGNOSTIC AND LABORATORY EQUIPMENT",
+      "category": "C2",
+      "sequence": 1004,
+      "permitType": "Medical Equipment",
+      "keywords": ["diagnostic", "laboratory", "reagent", "test kit", "rapid test", "diagnostic kit", "clinical analyzer", "lab equipment"]
+    }
+  ]
+}

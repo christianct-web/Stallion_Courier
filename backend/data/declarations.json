@@ -1,0 +1,2069 @@
+[
+  {
+    "id": "UPSL-001",
+    "status": "submitted",
+    "source": {
+      "type": "INVOICE",
+      "filename": "INV-446506-CENTRAL.pdf"
+    },
+    "confidence": 94,
+    "header": {
+      "declarationRef": "LB01/23",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "blAwbNumber": "TSCW16401583",
+      "blAwbDate": "2023-07-29",
+      "consignorName": "CENTRAL INTERNATIONAL CO. LLC",
+      "consignorStreet": "ONE WHITMAN ROAD, P.O BOX 525",
+      "consignorCity": "CANTON, MASSACHUSETTS",
+      "consignorCountry": "US",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS LTD",
+      "consigneeCode": "N108974",
+      "consigneeAddress": "#31 HENRY STREET, GASPARILLO",
+      "declarantName": "ANTHONY CHOW",
+      "declarantTIN": "BR0286",
+      "port": "TTPTS",
+      "customsRegime": "C4",
+      "vesselName": "TROPIC ISLAND",
+      "term": "CIF",
+      "currency": "USD",
+      "etaDate": "2023-08-02"
+    },
+    "worksheet": {
+      "exchange_rate": 6.77608,
+      "fob_foreign": 60220.8,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "grossWeight": 26245
+    },
+    "items": [
+      {
+        "hsCode": "02071490",
+        "description": "BONELESS SKINLESS CHICKEN BREAST FILETS",
+        "countryOfOrigin": "US",
+        "qty": 1394,
+        "packageType": "CT",
+        "grossKg": 26245,
+        "netKg": 23620.5,
+        "itemValue": 60220.8
+      }
+    ],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-12T16:57:15.487Z"
+  },
+  {
+    "id": "UPSL-002",
+    "status": "approved",
+    "source": {
+      "type": "AWB",
+      "filename": "AWB-81025944660.pdf"
+    },
+    "confidence": 88,
+    "header": {
+      "declarationRef": "AZI01-0726",
+      "invoiceNumber": "36702",
+      "invoiceDate": "2025-12-29",
+      "blAwbNumber": "81025944660",
+      "blAwbDate": "2026-01-05",
+      "consignorName": "GENEL-LANDEC INC.",
+      "consignorStreet": "10845 NW 29 STREET",
+      "consignorCity": "DORAL",
+      "consignorCountry": "US",
+      "consigneeName": "KAYVANIC TRADING LIMITED",
+      "consigneeCode": "V123073",
+      "consigneeAddress": "84 POWDHARIE ROAD, PREYSAL, COUVA",
+      "declarantName": "KENNETH MEDINA",
+      "declarantTIN": "BR0293",
+      "port": "TTPIA",
+      "customsRegime": "C4",
+      "vesselName": "AIRFREIGHT",
+      "term": "CFR",
+      "currency": "USD",
+      "etaDate": "2026-01-06"
+    },
+    "worksheet": {
+      "exchange_rate": 6.7732,
+      "fob_foreign": 44446.39,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "grossWeight": 15
+    },
+    "items": [
+      {
+        "hsCode": "84713000",
+        "description": "APPLE IPAD 11-INCH M4 WI-FI 256GB",
+        "countryOfOrigin": "US",
+        "qty": 1,
+        "packageType": "CT",
+        "grossKg": 15,
+        "netKg": 13.5,
+        "itemValue": 44446.39
+      }
+    ],
+    "review_notes": "[{\"id\":\"legacy\",\"author\":\"Broker\",\"at\":\"2026-03-16T17:34:33.767Z\",\"text\":\"Verified against AWB. Approved.\"},{\"id\":\"1773682565512-3c9a932ebaa19\",\"author\":\"Broker\",\"at\":\"2026-03-16T17:36:05.512Z\",\"text\":\"this was not good\"}]",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-16T17:36:05.512Z",
+    "export_events": [
+      {
+        "at": "2026-03-13T02:57:09.372746Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-16T17:34:19.628132Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-16T17:34:29.708526Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-f40a27d8cb",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-17T06:51:01.104408Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-6497305887",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-19T02:49:51.687745Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 0
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-19T02:49:51.687745Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 1,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "id": "UPSL-003",
+    "status": "needs_correction",
+    "source": {
+      "type": "INVOICE",
+      "filename": "INV-887234-MIAMI.pdf"
+    },
+    "confidence": 71,
+    "header": {
+      "declarationRef": "",
+      "invoiceNumber": "887234",
+      "invoiceDate": "2026-02-14",
+      "blAwbNumber": "MIA2026021488",
+      "blAwbDate": "2026-02-18",
+      "consignorName": "MIAMI TRADING CORP",
+      "consignorStreet": "2200 NW 102 AVE",
+      "consignorCity": "MIAMI",
+      "consignorCountry": "US",
+      "consigneeName": "RICHLAND DISTRIBUTORS",
+      "consigneeCode": "",
+      "consigneeAddress": "LOT 5 SOUTH QUAY, PORT OF SPAIN",
+      "declarantName": "",
+      "declarantTIN": "",
+      "port": "TTPTS",
+      "customsRegime": "C4",
+      "vesselName": "",
+      "term": "FOB",
+      "currency": "USD",
+      "etaDate": ""
+    },
+    "worksheet": {
+      "exchange_rate": 6.79,
+      "fob_foreign": 18500,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "grossWeight": 4200
+    },
+    "items": [
+      {
+        "hsCode": "21069090",
+        "description": "ASSORTED FOOD PREPARATIONS",
+        "countryOfOrigin": "US",
+        "qty": 240,
+        "packageType": "CT",
+        "grossKg": 4200,
+        "netKg": 3800,
+        "itemValue": 18500
+      }
+    ],
+    "review_notes": "Consignee code missing. Declarant missing. Vessel missing."
+  },
+  {
+    "id": "UPSL-004",
+    "status": "submitted",
+    "source": {
+      "type": "INVOICE",
+      "filename": "INV-334521-BOSTON.pdf"
+    },
+    "confidence": 96,
+    "header": {
+      "declarationRef": "POS04/23",
+      "invoiceNumber": "334521",
+      "invoiceDate": "2023-09-10",
+      "blAwbNumber": "BOST334521",
+      "blAwbDate": "2023-09-12",
+      "consignorName": "BOSTON SEAFOOD EXPORTS LTD",
+      "consignorStreet": "44 HARBOR VIEW BLVD",
+      "consignorCity": "BOSTON",
+      "consignorCountry": "US",
+      "consigneeName": "PREMIER FOODS TT LTD",
+      "consigneeCode": "N204311",
+      "consigneeAddress": "12 EASTERN MAIN ROAD, LAVENTILLE",
+      "declarantName": "CAMILLE PIERRE",
+      "declarantTIN": "BR0412",
+      "port": "TTPTS",
+      "customsRegime": "C4",
+      "vesselName": "SEA SPIRIT",
+      "term": "CIF",
+      "currency": "USD",
+      "etaDate": "2023-09-28"
+    },
+    "worksheet": {
+      "exchange_rate": 6.7891,
+      "fob_foreign": 38900,
+      "freight_foreign": 1200,
+      "insurance_foreign": 420,
+      "grossWeight": 18600
+    },
+    "items": [
+      {
+        "hsCode": "03037900",
+        "description": "FROZEN ATLANTIC COD FILLETS",
+        "countryOfOrigin": "US",
+        "qty": 880,
+        "packageType": "CT",
+        "grossKg": 18600,
+        "netKg": 17200,
+        "itemValue": 38900
+      }
+    ],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-12T20:16:42.815Z"
+  },
+  {
+    "id": "PERSIST-TEST-001",
+    "status": "submitted",
+    "header": {
+      "declarationRef": "LB01/23-PERSIST",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "C4",
+      "consigneeCode": "N108974",
+      "consignorName": "CENTRAL INTERNATIONAL CO .LLC",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "vesselName": "TROPIC ISLAND",
+      "etaDate": "2023-08-02",
+      "blAwbNumber": "TSCW16401583",
+      "declarantTIN": "BR0286"
+    },
+    "worksheet": {
+      "exchange_rate": 6.77608,
+      "fob_foreign": 60220.8,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "extra_fees_local": 0,
+      "customs_user_fee": 40,
+      "ces_fees": 0,
+      "cf2_fee": 525,
+      "duty": 163224.38,
+      "surcharge": 61209.14,
+      "vat": 0,
+      "total_assessed": 224998.52
+    },
+    "items": [
+      {
+        "hsCode": "02071490000",
+        "description": "BONELESS SKINLESS CHICKEN BREAST FILETS",
+        "itemValue": 408060.96,
+        "qty": 1394,
+        "grossKg": 26245,
+        "netKg": 23620.5
+      }
+    ],
+    "containers": [],
+    "export_events": [
+      {
+        "at": "2026-03-13T02:57:09.381327Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-13T02:57:09.381327Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 11,
+        "warnings": 0
+      }
+    },
+    "review_notes": "[]",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-15T00:10:04.753Z"
+  },
+  {
+    "id": "PERSIST-TEST-002",
+    "status": "approved",
+    "header": {
+      "declarationRef": "LB01/23-PERSIST2",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "C4",
+      "consigneeCode": "N108974",
+      "consignorName": "CENTRAL INTERNATIONAL CO .LLC",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "vesselName": "TROPIC ISLAND",
+      "etaDate": "2023-08-02",
+      "blAwbNumber": "TSCW16401583",
+      "declarantTIN": "BR0286"
+    },
+    "worksheet": {
+      "exchange_rate": 6.77608,
+      "fob_foreign": 60220.8,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "extra_fees_local": 0,
+      "customs_user_fee": 40,
+      "ces_fees": 0,
+      "cf2_fee": 525,
+      "duty": 163224.38,
+      "surcharge": 61209.14,
+      "vat": 0,
+      "total_assessed": 224998.52
+    },
+    "items": [
+      {
+        "hsCode": "02071490000",
+        "description": "BONELESS SKINLESS CHICKEN BREAST FILETS",
+        "itemValue": 408060.96,
+        "qty": 1394,
+        "grossKg": 26245,
+        "netKg": 23620.5
+      }
+    ],
+    "containers": [],
+    "export_events": [
+      {
+        "at": "2026-03-10T04:40:08.496830Z",
+        "status": "blocked",
+        "ref": "worksheet-lb01-b669abb17a",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-13T02:57:09.383687Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-16T17:30:38.800843Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-f48b95cf5d",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-19T02:50:08.196524Z",
+        "status": "blocked",
+        "ref": "worksheet-lb01-f1c776860c",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-19T02:51:58.206285Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-8c72506113",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-19T02:51:58.206285Z",
+      "status": "generated",
+      "ref": "worksheet-lb01-8c72506113",
+      "preflight": {
+        "errors": 0,
+        "warnings": 0
+      }
+    }
+  },
+  {
+    "id": "SMOKE-WB-001",
+    "status": "approved",
+    "updated_at": "2026-03-10T06:00:00Z",
+    "header": {
+      "declarationRef": "SMOKE-WB-001",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "C4",
+      "consigneeCode": "N108974",
+      "consignorName": "CENTRAL INTERNATIONAL",
+      "invoiceNumber": "INV-1",
+      "invoiceDate": "2026-03-10",
+      "vesselName": "TEST VESSEL",
+      "etaDate": "2026-03-12",
+      "blAwbNumber": "BLAWB-1",
+      "declarantTIN": "BR0286"
+    },
+    "worksheet": {
+      "exchange_rate": 6.7732,
+      "fob_foreign": 1000,
+      "freight_foreign": 10,
+      "insurance_foreign": 0,
+      "extra_fees_local": 40,
+      "customs_user_fee": 40,
+      "cf2_fee": 0,
+      "ces_fees": 0,
+      "duty": 100,
+      "surcharge": 20,
+      "vat": 0,
+      "total_assessed": 160
+    },
+    "items": [
+      {
+        "hsCode": "02071490000",
+        "description": "TEST ITEM",
+        "itemValue": 1000,
+        "qty": 10,
+        "grossKg": 100,
+        "netKg": 90
+      }
+    ],
+    "containers": [],
+    "export_events": [
+      {
+        "at": "2026-03-10T06:46:39.161817Z",
+        "status": "blocked",
+        "ref": "worksheet-lb01-e5e4d972b7",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-10T06:46:39.161817Z",
+      "status": "blocked",
+      "ref": "worksheet-lb01-e5e4d972b7",
+      "preflight": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T06:47:56.360Z"
+  },
+  {
+    "id": "UAT-SMOKE-001",
+    "status": "receipted",
+    "updated_at": "2026-03-10T06:50:46.675974Z",
+    "reference_number": "UAT-SMOKE-001",
+    "header": {
+      "declarationRef": "UAT-SMOKE-001",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "C4",
+      "consigneeCode": "N108974",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS LTD",
+      "consignorName": "CENTRAL INTERNATIONAL",
+      "invoiceNumber": "INV-UAT-1",
+      "invoiceDate": "2026-03-10",
+      "vesselName": "TROPIC ISLAND",
+      "etaDate": "2026-03-12",
+      "blAwbNumber": "BL-UAT-1",
+      "blAwbDate": "2026-03-10",
+      "declarantTIN": "BR0286"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 1000,
+      "exchange_rate": 6.7732,
+      "freight_foreign": 10,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 40,
+      "surcharge_rate_pct": 15,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "duty": 100,
+      "surcharge": 20,
+      "vat": 0,
+      "customs_user_fee": 40,
+      "cf2_fee": 0,
+      "ces_fees": 0,
+      "total_assessed": 160,
+      "cif_local": 6800
+    },
+    "items": [
+      {
+        "hsCode": "02071490000",
+        "description": "TEST ITEM",
+        "itemValue": 1000,
+        "qty": 10,
+        "grossKg": 100,
+        "netKg": 90,
+        "packageType": "CT"
+      }
+    ],
+    "containers": [],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-10T06:50:46.696754Z",
+    "export_events": [
+      {
+        "at": "2026-03-10T06:50:46.689942Z",
+        "status": "blocked",
+        "ref": "worksheet-lb01-4ce5a8ee3e",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-10T06:50:46.689942Z",
+      "status": "blocked",
+      "ref": "worksheet-lb01-4ce5a8ee3e",
+      "preflight": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    "receipt_number": "C82/2026/001234"
+  },
+  {
+    "source": {
+      "type": "SEED",
+      "filename": "upsl-demo"
+    },
+    "confidence": 87,
+    "worksheet": {
+      "invoice_value_foreign": 13319,
+      "exchange_rate": 6.79547,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 10,
+      "surcharge_rate_pct": 2,
+      "vat_rate_pct": 12.5,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-1",
+        "description": "Other dental fittings / Invisalign system",
+        "hsCode": "9021.29.00.00",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 2.5,
+        "netKg": 2,
+        "itemValue": 13319,
+        "unitCode": "NMB",
+        "dutyTaxCode": "DUTY",
+        "dutyTaxBase": "CIF",
+        "cpc": "4000"
+      }
+    ],
+    "containers": [],
+    "id": "UPSL-DEMO-001",
+    "status": "approved",
+    "updated_at": "2026-03-13T05:51:19.425116Z",
+    "header": {
+      "declarationRef": "HMTL3227-25",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "Align Technology Switzerland GmbH",
+      "consignorAddress": "Switzerland",
+      "consigneeCode": "HECA001",
+      "consigneeName": "HECA Medical Technologies Ltd",
+      "consigneeAddress": "Trinidad and Tobago",
+      "vesselName": "N-269CM",
+      "blAwbNumber": "Z8E391A0451113227",
+      "blAwbDate": "2026-01-05",
+      "etaDate": "2026-01-07",
+      "invoiceNumber": "TT-979-25",
+      "invoiceDate": "2026-01-05",
+      "currency": "USD"
+    },
+    "export_events": [
+      {
+        "at": "2026-03-13T05:51:19.503504Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-13T05:51:26.828062Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-13T05:51:59.979017Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-8cf0c25a95",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.546529Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-d2bc1593e1",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.560816Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-dfe1de7f58",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.572866Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-257c8afe2e",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-13T05:52:22.572866Z",
+      "status": "generated",
+      "ref": "worksheet-lb01-257c8afe2e",
+      "preflight": {
+        "errors": 0,
+        "warnings": 1
+      }
+    },
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:25:56.817Z"
+  },
+  {
+    "source": {
+      "type": "SEED",
+      "filename": "upsl-demo"
+    },
+    "confidence": 87,
+    "worksheet": {
+      "invoice_value_foreign": 13319,
+      "exchange_rate": 6.79547,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 10,
+      "surcharge_rate_pct": 2,
+      "vat_rate_pct": 12.5,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-1",
+        "description": "Other dental fittings / Invisalign system",
+        "hsCode": "9021.29.00.00",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 2.5,
+        "netKg": 2,
+        "itemValue": 13319,
+        "unitCode": "NMB",
+        "dutyTaxCode": "DUTY",
+        "dutyTaxBase": "CIF",
+        "cpc": "4000"
+      }
+    ],
+    "containers": [],
+    "id": "UPSL-DEMO-002",
+    "status": "approved",
+    "updated_at": "2026-03-13T05:52:07.298260+00:00",
+    "header": {
+      "declarationRef": "HMTL3227-25-B",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "Align Technology Switzerland GmbH",
+      "consignorAddress": "Switzerland",
+      "consigneeCode": "",
+      "consigneeName": "HECA Medical Technologies Ltd",
+      "consigneeAddress": "Trinidad and Tobago",
+      "vesselName": "",
+      "blAwbNumber": "Z8E391A0451113227",
+      "blAwbDate": "2026-01-05",
+      "etaDate": "2026-01-07",
+      "invoiceNumber": "TT-979-25",
+      "invoiceDate": "2026-01-05",
+      "currency": "USD"
+    },
+    "export_events": [
+      {
+        "at": "2026-03-13T05:51:19.508517Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-13T05:51:26.833413Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 11,
+          "warnings": 0
+        }
+      },
+      {
+        "at": "2026-03-13T05:51:59.988218Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-d7a786ca5f",
+        "preflight": {
+          "errors": 0,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:07.304835Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.550527Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.563823Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 1
+        }
+      },
+      {
+        "at": "2026-03-13T05:52:22.576919Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-13T05:52:22.576919Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 1,
+        "warnings": 1
+      }
+    },
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T06:47:50.344Z"
+  },
+  {
+    "id": "EXT-79A45820",
+    "status": "needs_correction",
+    "updated_at": "2026-03-13T05:59:40.961200Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "ASSESSMENT_NOTICE---432718b6-04c4-4560-8e7f-77e5b0f2f9fe.pdf"
+      ]
+    },
+    "confidence": 0.63,
+    "header": {
+      "declarationRef": "EXT-79A45820",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "",
+      "consigneeCode": "",
+      "consigneeName": "",
+      "vesselName": "",
+      "blAwbNumber": "COLORSPACE",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-9DB4A9",
+        "description": "Extracted from source document",
+        "hsCode": "456789",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000"
+      }
+    ],
+    "containers": [],
+    "extraction_notes": [
+      "Low confidence \u2014 broker review required"
+    ],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:37:10.804Z"
+  },
+  {
+    "id": "EXT-E7BB5D28",
+    "status": "needs_correction",
+    "updated_at": "2026-03-13T11:47:29.970241Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "EC82 and other.pdf"
+      ]
+    },
+    "confidence": 0.63,
+    "header": {
+      "declarationRef": "EXT-E7BB5D28",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "",
+      "consigneeCode": "",
+      "consigneeName": "",
+      "vesselName": "",
+      "blAwbNumber": "HEIGHT 3300",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-968B18",
+        "description": "Extracted from source document",
+        "hsCode": "1061723",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000"
+      }
+    ],
+    "containers": [],
+    "extraction_notes": [
+      "Low confidence \u2014 broker review required"
+    ],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:37:12.910Z"
+  },
+  {
+    "id": "EXT-87E899BB",
+    "status": "pending_review",
+    "updated_at": "2026-03-13T12:26:08.848291Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "UPS AWB.pdf"
+      ]
+    },
+    "confidence": 0.63,
+    "header": {
+      "declarationRef": "EXT-87E899BB",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "",
+      "consigneeCode": "",
+      "consigneeName": "",
+      "vesselName": "",
+      "blAwbNumber": "HEIGHT 2550",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0.0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-AF1FBD",
+        "description": "Extracted from source document",
+        "hsCode": "1192458",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 0.0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000"
+      }
+    ],
+    "containers": [],
+    "extraction_notes": [
+      "Low confidence \u2014 broker review required"
+    ]
+  },
+  {
+    "id": "EXT-ACDF92FB",
+    "reference_number": "EXT-ACDF92FB",
+    "status": "pending_review",
+    "updated_at": "2026-03-13T12:49:12.543255Z",
+    "created_at": "2026-03-13T12:49:12.543255Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "test.txt"
+      ]
+    },
+    "confidence": 0.35,
+    "extraction_notes": [
+      "Extracted via text fallback \u2014 Claude API unavailable"
+    ],
+    "header": {
+      "declarationRef": "EXT-ACDF92FB",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "",
+      "consignorAddress": "",
+      "consigneeCode": "",
+      "consigneeName": "",
+      "consigneeAddress": "",
+      "vesselName": "",
+      "blAwbNumber": "",
+      "blAwbDate": "",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD",
+      "portOfLoading": "",
+      "countryOfOrigin": ""
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0.0,
+      "fob_foreign": 0.0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-D58AA3",
+        "description": "Extracted item",
+        "hsCode": "",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 0.0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": ""
+      }
+    ],
+    "containers": []
+  },
+  {
+    "id": "EXT-7D350A93",
+    "reference_number": "EXT-7D350A93",
+    "status": "approved",
+    "updated_at": "2026-03-13T12:55:15.684105Z",
+    "created_at": "2026-03-13T12:55:15.684105Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "invoice.txt"
+      ]
+    },
+    "confidence": 0.72,
+    "extraction_notes": [
+      "Consignee address is partial \u2014 only 'Port of Spain, Trinidad' provided; full street address required for customs entry.",
+      "Consignor full address not provided; may be required for Form C82/C84.",
+      "Country of origin inferred as CH (Switzerland) based on consignor name 'Align Technology Switzerland GmbH' \u2014 not explicitly stated on document; broker should verify.",
+      "Port of loading not stated \u2014 broker should confirm from carrier or full AWB master.",
+      "Package count, package type, gross weight, and net weight are absent \u2014 required for ASYCUDA World manifest matching.",
+      "Invoice total of USD 13,319.00 appears to be the only value shown; it is unclear whether this is EXW, FOB, or CIF. Broker should confirm Incoterms with shipper before filing.",
+      "HS Code 9021.29.00.00 is present and consistent with the goods description; however, broker should verify applicable TT tariff rate and any import licensing requirements for medical/orthodontic devices.",
+      "Flight AA 201 noted \u2014 broker should confirm origin airport and routing to determine applicable freight charges for CIF calculation."
+    ],
+    "header": {
+      "declarationRef": "EXT-7D350A93",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "SEA",
+      "customsRegime": "IM4",
+      "consignorName": "Align Technology Switzerland GmbH",
+      "consignorAddress": "",
+      "consigneeCode": "",
+      "consigneeName": "HECA Medical Technologies Ltd",
+      "consigneeAddress": "Port of Spain, Trinidad",
+      "vesselName": "AA 201",
+      "blAwbNumber": "Z8E391A0451113227",
+      "blAwbDate": "2026-01-05",
+      "invoiceNumber": "TT979-25",
+      "invoiceDate": "2026-01-05",
+      "currency": "USD",
+      "portOfLoading": "",
+      "countryOfOrigin": "CH"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 13319.0,
+      "fob_foreign": 13319.0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-E3E699",
+        "description": "Orthodontic appliances - Invisalign dental aligners",
+        "hsCode": "9021.29.00.00",
+        "qty": 1,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 13319.0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "CH"
+      }
+    ],
+    "containers": [],
+    "review_notes": "[]",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-15T00:10:42.980Z",
+    "export_events": [
+      {
+        "at": "2026-03-15T00:28:31.762452Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-15T00:28:31.762452Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 1,
+        "warnings": 1
+      }
+    }
+  },
+  {
+    "id": "EXT-5CE3EA9B",
+    "reference_number": "EXT-5CE3EA9B",
+    "status": "pending_review",
+    "updated_at": "2026-03-13T12:58:29.815638Z",
+    "created_at": "2026-03-13T12:58:29.815638Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "ASSESSMENT_NOTICE---432718b6-04c4-4560-8e7f-77e5b0f2f9fe.pdf"
+      ]
+    },
+    "confidence": 0.25,
+    "extraction_notes": [
+      "This document is a Customs Assessment Notice (duty bill), NOT a commercial invoice or transport document \u2014 it contains very limited shipment data.",
+      "Customs reference: 02/08/2023 A 46631; Declarant reference: 2023 LB01/23; Model: IM 4.",
+      "Declarant (broker): ANTHONY CHOW (BR0286), 1 ZEV BEN ELIAZER ST., D/MARTIN.",
+      "Consignee code N108974 noted; address is partial (#31 HENRY STREET only, no city/country).",
+      "Total assessed duties/taxes: TTD 224,998.52 (ICD: 163,224.38 | SUR: 61,209.14 | VAT: 0.00 | CF2: 525.00 | UFC: 40.00).",
+      "invoiceValueForeign cannot be determined from this document \u2014 no commercial invoice or CIF value shown.",
+      "No consignor, HS code, description of goods, country of origin, AWB/BL, vessel/flight, or port of loading found.",
+      "Currency assumed TTD based on context (TT Customs assessment); original invoice currency unknown.",
+      "Broker should supply the underlying commercial invoice, airway bill/bill of lading, and packing list for a complete extraction."
+    ],
+    "header": {
+      "declarationRef": "EXT-5CE3EA9B",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "",
+      "consignorAddress": "",
+      "consigneeCode": "",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS LTD",
+      "consigneeAddress": "#31 HENRY STREET",
+      "vesselName": "",
+      "blAwbNumber": "",
+      "blAwbDate": "",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "TTD",
+      "portOfLoading": "",
+      "countryOfOrigin": ""
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0.0,
+      "fob_foreign": 0.0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-F01D16",
+        "description": "Extracted item",
+        "hsCode": "",
+        "qty": 1394,
+        "packageType": "BOX",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 0.0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": ""
+      }
+    ],
+    "containers": [],
+    "export_events": [
+      {
+        "at": "2026-03-19T02:49:45.078574Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 6,
+          "warnings": 1
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-19T02:49:45.078574Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 6,
+        "warnings": 1
+      }
+    }
+  },
+  {
+    "id": "EXT-9E70ACDD",
+    "reference_number": "EXT-9E70ACDD",
+    "status": "approved",
+    "updated_at": "2026-03-13T20:11:43.400393Z",
+    "created_at": "2026-03-13T20:11:43.400393Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "Leon Bassant - Commercial invoice.pdf",
+        "Leon Bassant - BL.pdf"
+      ]
+    },
+    "confidence": 0.88,
+    "extraction_notes": [
+      "Invoice terms are CIF Trinidad; freight, packing and insurance are stated as 'INCLUDED' in the invoice total of $60,220.80 \u2014 no separate FOB/EXW subtotal is available, so the total invoice amount has been used as invoiceValueForeign.",
+      "HS code not stated on any document \u2014 broker to determine applicable tariff heading for frozen boneless skinless chicken breast.",
+      "Bill of Lading is marked DRAFT; broker should confirm final signed original.",
+      "No certificates (CARICOM, health, phytosanitary, free-sale) were provided in the uploaded documents \u2014 these may be required by Trinidad and Tobago customs/TTBS for frozen poultry imports.",
+      "Net weight 25,292.18 kg converted from invoice figure (in KGS); gross weight 26,245 kg taken from BL.",
+      "Customer's reference on invoice: BASC; other reference: 23-0410.",
+      "Package count of 1,394 taken from invoice (1,394 CS); BL states '1 UNIT' (1 x 40HC container)."
+    ],
+    "header": {
+      "declarationRef": "EXT-9E70ACDD",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "SEA",
+      "customsRegime": "IM4",
+      "consignorName": "CENTRAL INTERNATIONAL CO. LLC",
+      "consignorAddress": "ONE WHITMAN ROAD, P.O. BOX 525, CANTON, MASSACHUSETTS 02021, U.S.A.",
+      "consigneeCode": "",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS",
+      "consigneeAddress": "31 HENDRY STREET, GASPARILLO, TRINIDAD AND TOBAGO",
+      "vesselName": "TROPIC ISLAND V: 0118",
+      "blAwbNumber": "TSCW16401583",
+      "blAwbDate": "2023-07-27",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "currency": "USD",
+      "portOfLoading": "PORT OF PALM BEACH SEAPORT",
+      "countryOfOrigin": "US"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 60220.8,
+      "fob_foreign": 60220.8,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-F013A5",
+        "description": "Boneless Skinless Chicken Breast Filets, Frozen, 40# Pilgrims Code 21230 \u2014 1,394 cartons",
+        "hsCode": "",
+        "qty": 1394,
+        "packageType": "CTN",
+        "grossKg": 26245,
+        "netKg": 25292.18,
+        "itemValue": 60220.8,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "US"
+      }
+    ],
+    "containers": [
+      {
+        "containerNumber": "SEGU9261010",
+        "sealNumber": "A1191769"
+      }
+    ],
+    "certificates": [],
+    "permit_flags": [
+      {
+        "invoiceName": "Chicken Breast",
+        "ttbizlinkName": "Chicken Breast, Boneless Skinless",
+        "category": "A6",
+        "sequence": 29,
+        "permitType": "Meat"
+      }
+    ],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:25:45.572Z"
+  },
+  {
+    "id": "id-1773501084688-b49a1e8af8d06",
+    "status": "needs_correction",
+    "updated_at": "2026-03-14T15:48:33.173Z",
+    "source": {
+      "type": "WORKBENCH",
+      "filename": "manual-entry"
+    },
+    "confidence": 100,
+    "header": {
+      "declarationRef": "GIO01",
+      "port": "04",
+      "term": "01",
+      "modeOfTransport": "12",
+      "customsRegime": "C4",
+      "consignorName": "HATIMI EXIM PRIVATE",
+      "consignorAddress": "",
+      "consignorStreet": "GF SHOP, ",
+      "consignorCity": "4 CENTRAL POINT",
+      "consignorCountry": "INDIA",
+      "consigneeCode": "N124869",
+      "consigneeName": "DRIVESMART MOTORS ",
+      "consigneeAddress": "SAN JUAN",
+      "declarantTIN": "BR0343",
+      "declarantName": "JASON MAULE",
+      "vesselName": "VESSEL",
+      "blAwbNumber": "HLCUBO12345",
+      "blAwbDate": "2026-01-06",
+      "etaDate": "2026-03-31",
+      "invoiceNumber": "01",
+      "invoiceDate": "2026-01-02",
+      "currency": "USD",
+      "bankCode": "01",
+      "modeOfPayment": "CASH",
+      "termsCode": "99",
+      "termsDescription": "Basic",
+      "countryFirstDestination": "TT",
+      "tradingCountry": "IN",
+      "exportCountryCode": "IN",
+      "exportCountryName": "INDIA",
+      "countryOfOriginName": "INDIA"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 52500,
+      "exchange_rate": 6.77512,
+      "freight_foreign": 5900,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 0,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "id-1773501084689-d2ed57acba957",
+        "description": "BRAND NEW HYRYDER",
+        "hsCode": "8703.40.00.00",
+        "qty": 3,
+        "packageType": "70",
+        "grossKg": 3735,
+        "netKg": 0,
+        "itemValue": 52500,
+        "dutyTaxCode": "01",
+        "dutyTaxBase": "",
+        "cpc": "C4",
+        "unitCode": "",
+        "countryOfOrigin": "IN",
+        "exchangeRate": 6.77512
+      }
+    ],
+    "containers": [
+      {
+        "id": "id-1773502735035-40b30ec2099348",
+        "containerNo": "HAMU2800082",
+        "type": "40GP",
+        "packageType": "70",
+        "packages": 3,
+        "goodsWeight": 3735
+      }
+    ],
+    "review_notes": "[]",
+    "export_events": [
+      {
+        "at": "2026-03-14T15:48:34.388679Z",
+        "status": "generated",
+        "ref": "worksheet-lb01-b75f1f6aa7",
+        "preflight": {
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-14T15:48:34.388679Z",
+      "status": "generated",
+      "ref": "worksheet-lb01-b75f1f6aa7",
+      "preflight": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-15T00:39:02.461Z"
+  },
+  {
+    "id": "EXT-88C03F89",
+    "reference_number": "EXT-88C03F89",
+    "status": "needs_correction",
+    "updated_at": "2026-03-16T17:24:44.883112Z",
+    "created_at": "2026-03-16T17:24:44.883112Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "UPS AWB.pdf"
+      ]
+    },
+    "confidence": 0.52,
+    "extraction_notes": [
+      "This is a UPS Worldwide Services Waybill (non-negotiable), not a commercial invoice \u2014 no invoice number or invoice date available.",
+      "Country of origin section appears to show 'T T' (Trinidad and Tobago), which is unusual for goods being shipped into Trinidad; may warrant broker attention.",
+      "Declared value for customs purposes appears to be 2.50 USD; total shipping charges shown as 580.20 \u2014 only declared value used as invoiceValueForeign.",
+      "Gross weight field shows 'lbs' unit but value is illegible; netWeightKg set to null.",
+      "Contact person at receiver is 'Mr. Mike Kerkman', telephone +1 813 600 8642.",
+      "Shipper telephone appears to be +1 865 304-8097 but is partially illegible.",
+      "Service level selected appears to be Express Saver 1P.",
+      "No HS code, no certificates, no container or seal numbers present on this document.",
+      "Description 'Samples' is vague \u2014 broker should obtain commercial invoice for full goods description and value."
+    ],
+    "header": {
+      "declarationRef": "EXT-88C03F89",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "Pan Am Dragon Boat Association LLC",
+      "consignorAddress": "2216 Isleworth Circle, The Villages, Tampa, Florida 32163, USA",
+      "consigneeCode": "",
+      "consigneeName": "International Dragon Boat Federation",
+      "consigneeAddress": "3 Frederick Street, Port of Spain 100205, Trinidad and Tobago",
+      "vesselName": "",
+      "blAwbNumber": "H980 4655 042",
+      "blAwbDate": "2020-02-20",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD",
+      "portOfLoading": "Tampa, Florida, USA",
+      "countryOfOrigin": "TT"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 2.5,
+      "fob_foreign": 2.5,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-8BE39E",
+        "description": "Samples",
+        "hsCode": "",
+        "qty": 1,
+        "packageType": "PKG",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 2.5,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "TT"
+      }
+    ],
+    "containers": [],
+    "certificates": [],
+    "permit_flags": [],
+    "review_notes": "[]",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-16T17:26:44.967Z"
+  },
+  {
+    "id": "id-1773759812476-a1295ec0c17af",
+    "status": "approved",
+    "updated_at": "2026-03-17T15:18:50.117Z",
+    "source": {
+      "type": "WORKBENCH",
+      "filename": "manual-entry"
+    },
+    "confidence": 100,
+    "header": {
+      "declarationRef": "AZI03-0726",
+      "port": "12",
+      "term": "02",
+      "modeOfTransport": "42",
+      "customsRegime": "C4",
+      "consignorName": "PAS CARGO LTD",
+      "consignorAddress": "",
+      "consignorStreet": "HALIEAH",
+      "consignorCity": "UNITED STATES",
+      "consignorCountry": "TRINIDAD",
+      "consigneeCode": "N111645",
+      "consigneeName": "FUJITSU CARIBBEAN LTD",
+      "consigneeAddress": "6TH AVE, SOUTH EXT. BARATRIA",
+      "declarantTIN": "BR0343",
+      "declarantName": "JASON MAULE",
+      "vesselName": "PLANE",
+      "blAwbNumber": "PAS-A-1741460",
+      "blAwbDate": "2026/03/13",
+      "etaDate": "2026-03-18",
+      "rotationNumber": "",
+      "invoiceNumber": "1750515",
+      "invoiceDate": "20260325",
+      "currency": "USD",
+      "bankCode": "01",
+      "modeOfPayment": "CASH",
+      "termsCode": "99",
+      "termsDescription": "Basic",
+      "countryFirstDestination": "TT",
+      "tradingCountry": "US",
+      "exportCountryCode": "US",
+      "exportCountryName": "United States",
+      "countryOfOriginName": "United States"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 5117.55,
+      "inland_foreign": 0,
+      "uplift_pct": 0,
+      "exchange_rate": 6.775,
+      "freight_foreign": 260.2,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 12.5,
+      "extra_fees_local": 0,
+      "ces_fee_1": 0,
+      "ces_fee_2": 0,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "id-1773759812476-c169681d1dcb18",
+        "description": "DELL PRO SLIM [LAPTOP]",
+        "hsCode": "8471.30.00.00",
+        "qty": 1,
+        "packageType": "41",
+        "grossKg": 28.35,
+        "netKg": 0,
+        "itemValue": 0,
+        "dutyTaxCode": "01",
+        "dutyTaxBase": "",
+        "cpc": "C4",
+        "unitCode": "",
+        "exchangeRate": 6.775
+      }
+    ],
+    "containers": [],
+    "review_notes": "",
+    "export_events": [
+      {
+        "at": "2026-03-17T15:21:38.926609Z",
+        "status": "blocked",
+        "ref": null,
+        "preflight": {
+          "errors": 1,
+          "warnings": 0
+        }
+      }
+    ],
+    "last_export": {
+      "at": "2026-03-17T15:21:38.926609Z",
+      "status": "blocked",
+      "ref": null,
+      "preflight": {
+        "errors": 1,
+        "warnings": 0
+      }
+    },
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:25:59.164Z"
+  },
+  {
+    "id": "EXT-3EFB524D",
+    "reference_number": "EXT-3EFB524D",
+    "status": "pending_review",
+    "updated_at": "2026-03-17T15:24:49.216590Z",
+    "created_at": "2026-03-17T15:24:49.216590Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "separate",
+      "files": [
+        "AWB.pdf"
+      ]
+    },
+    "confidence": 0.62,
+    "extraction_notes": [
+      "AWB is upside-down/mirrored in the scan; fields extracted by reversing orientation.",
+      "AWB number identified as BW73712 (Reference Number field).",
+      "Shipper's account number: INTCOM1.",
+      "Consignee account number: 23000986.",
+      "Issuing carrier's agent: PAS CARGO USA, INC, 14501 NW 109TH AVE, HIALEAH GARDENS, FL 33018.",
+      "Authorized agent for INTCOMEX: PAS CARGO USA, INC.",
+      "Weight charge: $164.58 prepaid; total prepaid: $260.20.",
+      "Chargeable weight: 106.18 kg; gross weight: 62.9 / 28.35 K.",
+      "AES proof of filing citation present: X20260312152028, AES ITN noted.",
+      "No commercial invoice number or invoice date found in this document.",
+      "No invoice value (FOB/EXW) found \u2014 only freight/airfreight charges visible.",
+      "No country of origin found in AWB.",
+      "No HS code present.",
+      "No container or seal number (air shipment).",
+      "Flight number appears to be 791; carrier: CARIBBEAN AIRLINES.",
+      "CARICOM fee listed as $15.00 on AWB charges section.",
+      "TSA screening notice present on AWB.",
+      "MAWB #: 106-3127-3712 listed under accounting information."
+    ],
+    "header": {
+      "declarationRef": "HELPP",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "INTCOMEX",
+      "consignorAddress": "3505 NW 107 AVE, DORAL, FL 33178, UNITED STATES OF AMERICA",
+      "consigneeCode": "",
+      "consigneeName": "FUJITSU CARIBBEAN (TRINIDAD) LIMITED",
+      "consigneeAddress": "CORNER 6TH AVE SOUTH EXTENSION & IBIS AVE, BARATARIA, Trinidad and Tobago",
+      "vesselName": "791 / 791",
+      "blAwbNumber": "BW73712",
+      "blAwbDate": "2026-03-13",
+      "invoiceNumber": "",
+      "invoiceDate": "",
+      "currency": "USD",
+      "portOfLoading": "MIAMI INTERNATIONAL AIRPORT",
+      "countryOfOrigin": ""
+    },
+    "worksheet": {
+      "invoice_value_foreign": 0,
+      "fob_foreign": 0,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-698253",
+        "description": "(5 CTN) stc computer",
+        "hsCode": "87173000",
+        "qty": 5,
+        "packageType": "CTN",
+        "grossKg": 106.18,
+        "netKg": 0,
+        "itemValue": 0,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": ""
+      }
+    ],
+    "containers": [],
+    "certificates": [],
+    "permit_flags": [],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:45:07.793Z"
+  },
+  {
+    "id": "EXT-97B63758",
+    "reference_number": "EXT-97B63758",
+    "status": "receipted",
+    "updated_at": "2026-03-17T15:24:49.216590Z",
+    "created_at": "2026-03-17T15:24:49.216590Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "separate",
+      "files": [
+        "INVOICE.pdf"
+      ]
+    },
+    "confidence": 0.65,
+    "extraction_notes": [
+      "Document is scanned upside-down/mirrored; fields were interpreted by reversing the orientation.",
+      "Invoice date interpreted as 02/23/26 (February 23, 2026); unusual future date \u2014 please verify.",
+      "Trans Date and Invoice Date both show 02/23/26; Order date shown as 02/23/26.",
+      "Order number: 1750515; Customer PO: 021963; Customer ID: 13027.",
+      "No airway bill or bill of lading number found.",
+      "No country of origin explicitly stated; assumed US based on consignor address in Florida.",
+      "No HS code present on document.",
+      "No shipping/freight details (port of loading, port of discharge, vessel/flight) found.",
+      "No gross or net weight information found.",
+      "No container or seal number found.",
+      "No certificates present.",
+      "Ship Charge listed as Prepaid; Delivery Fee $0.00; Carrier: 3er Party Monday.",
+      "Quantity shipped: 5 units at $1,023.51 each = $5,117.55 subtotal (used as invoiceValueForeign)."
+    ],
+    "header": {
+      "declarationRef": "HELP",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "AIR",
+      "customsRegime": "IM4",
+      "consignorName": "INTCOMEX - Software Brokers of America, INC",
+      "consignorAddress": "10310 NW 121st Way Suite 100, Medley, FL 33178, United States",
+      "consigneeCode": "N111645",
+      "consigneeName": "FUJITSU CARIBBEAN (TRINIDAD) LIMITED",
+      "consigneeAddress": "6TH AVE EXT & IBIS AVE, Barataria, TT 00000, Trinidad & Tobago",
+      "vesselName": "AIRCRAFT",
+      "blAwbNumber": "PAS-A-1741460",
+      "blAwbDate": "13.03.2026",
+      "invoiceNumber": "1628586",
+      "invoiceDate": "2026-02-23",
+      "currency": "USD",
+      "portOfLoading": "",
+      "countryOfOrigin": "US",
+      "declarantTIN": "0343",
+      "etaDate": "14.03.2026",
+      "exportCountryCode": "USD",
+      "termsCode": "FOB"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 5117.55,
+      "fob_foreign": 5117.55,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0,
+      "insurance_foreign": 0,
+      "other_foreign": 0,
+      "deduction_foreign": 0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-CBEBD7",
+        "description": "Dell Pro Slim QC51250 ENG 17-14700 16GB 1TB W11P \u2014 PC971DEL58, MPN: 30001982876423",
+        "hsCode": "8471.30.000",
+        "qty": 5,
+        "packageType": "ea",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 5117.55,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "US"
+      }
+    ],
+    "containers": [],
+    "certificates": [],
+    "permit_flags": [],
+    "review_notes": "",
+    "reviewed_by": "Broker",
+    "reviewed_at": "2026-03-17T15:26:15.956Z",
+    "receipt_number": "1234",
+    "brokerage_invoices": [
+      {
+        "docId": "brokerage-inv-48b675611b",
+        "brokerageFee": 0.0,
+        "generatedAt": "2026-03-17T15:29:23.148351Z"
+      }
+    ]
+  },
+  {
+    "id": "EXT-DB77C8CF",
+    "reference_number": "EXT-DB77C8CF",
+    "status": "pending_review",
+    "declaration_type": "import",
+    "updated_at": "2026-05-02T22:40:02.064789Z",
+    "created_at": "2026-05-02T22:40:02.064789Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "Leon Bassant - Commercial invoice.pdf"
+      ]
+    },
+    "confidence": 0.85,
+    "extraction_notes": [
+      "Invoice terms state CIF: TRINIDAD \u2014 freight and insurance are stated as INCLUDED in the total of $60,220.80. No separate freight or insurance amounts are broken out, so freightCharges is null and invoiceValueForeign uses the single stated total.",
+      "Quantity of 1,394 CS (cases) used for lineItems.quantity; packageCount set to 1 representing 1 x 40' container as stated.",
+      "Gross weight of 25,292.18 kg taken directly from the NET WEIGHT KGS field on the invoice.",
+      "ETD: 7/27/23, ETA: 8/2/23 noted but no explicit 'Laden on Board' date found; shippedOnBoardDate left null.",
+      "Other Reference '23-0410' noted on invoice \u2014 may be a purchase order or internal reference number; not mapped to a standard field.",
+      "No AWB/BL number explicitly stated on this document.",
+      "Broker should verify if a separate freight/insurance breakdown is available to support CIF valuation split for customs purposes."
+    ],
+    "client_id": "cli_basco_food",
+    "header": {
+      "declarationRef": "EXT-DB77C8CF",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "IM4",
+      "consignorName": "CENTRAL INTERNATIONAL CO. LLC",
+      "consignorAddress": "ONE WHITMAN ROAD, P.O. BOX 525, CANTON, MASSACHUSETTS 02021, U.S.A.",
+      "consigneeCode": "N108974",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS",
+      "consigneeAddress": "31 HENDRY STREET, GASPARILLO, TRINIDAD",
+      "declarantTIN": "BR0286",
+      "vesselName": "TROPIC ISLAND V: 0118",
+      "rotationNumber": "",
+      "blAwbNumber": "",
+      "blAwbDate": "",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "currency": "USD",
+      "portOfLoading": "W. PALM, FL",
+      "countryOfOrigin": "US"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 60220.8,
+      "fob_foreign": 60220.8,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0.0,
+      "insurance_foreign": 0.0,
+      "other_foreign": 0.0,
+      "deduction_foreign": 0.0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-25CAF4",
+        "description": "BONELESS SKINLESS CHICKEN BREAST FILETS, 40# PILGRIMS CODE 21230",
+        "hsCode": "",
+        "qty": 1394,
+        "packageType": "CTN",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 60220.8,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "US",
+        "packageCount": 1
+      }
+    ],
+    "containers": [
+      {
+        "containerNumber": "SEGU9261010",
+        "sealNumber": "A1191769"
+      }
+    ],
+    "certificates": [],
+    "permit_flags": []
+  },
+  {
+    "id": "EXT-3ED0A63A",
+    "reference_number": "EXT-3ED0A63A",
+    "status": "pending_review",
+    "declaration_type": "import",
+    "updated_at": "2026-05-02T22:45:47.407227Z",
+    "created_at": "2026-05-02T22:45:47.407227Z",
+    "source": {
+      "type": "EXTRACT",
+      "mode": "batch",
+      "files": [
+        "CARICOM.pdf",
+        "Leon Bassant - BL.pdf",
+        "Leon Bassant - Commercial invoice.pdf"
+      ]
+    },
+    "confidence": 0.88,
+    "extraction_notes": [
+      "Invoice states CIF: TRINIDAD \u2014 freight, packing, and insurance are noted as INCLUDED in the total invoice amount of $60,220.80. No separate freight figure is available; freightCharges set to null.",
+      "invoiceValueForeign is the total CIF invoice amount as no separate EXW/FOB subtotal is provided. Broker should confirm or obtain FOB value for customs.",
+      "Unit price per lb is $1.08; total quantity listed as 55,760.00 lbs / 1,394 cases. lineItems.quantity set to 1,394 (cases).",
+      "Gross weight on BL is 26,245 kg (57,860 lbs); gross weight on invoice header field is blank \u2014 value taken from BL.",
+      "Net weight 25,292.18 kg taken from invoice net weight field.",
+      "CARICOM invoice document is present but no formal certificate number was printed.",
+      "Customer's Order No. / Other Reference: 23-0410 (BASC).",
+      "BL dated 07/28/2023 is marked DRAFT \u2014 broker should obtain original/final BL.",
+      "Port of Loading on invoice states W. PALM, FL; BL confirms PORT OF PALM BEACH SEAPORT.",
+      "AES filing reference: AES X20230721335897 noted on BL."
+    ],
+    "client_id": "cli_basco_food",
+    "header": {
+      "declarationRef": "EXT-3ED0A63A",
+      "port": "TTPTS",
+      "term": "CIF",
+      "modeOfTransport": "1",
+      "customsRegime": "IM4",
+      "consignorName": "CENTRAL INTERNATIONAL CO. LLC",
+      "consignorAddress": "ONE WHITMAN ROAD, P.O. BOX 525, CANTON, MASSACHUSETTS 02021, U.S.A.",
+      "consigneeCode": "N108974",
+      "consigneeName": "BASCO FOOD DISTRIBUTORS",
+      "consigneeAddress": "31 HENDRY STREET, GASPARILLO, TRINIDAD AND TOBAGO",
+      "declarantTIN": "BR0286",
+      "vesselName": "TROPIC ISLAND V: 0118",
+      "rotationNumber": "",
+      "blAwbNumber": "TSCW16401583",
+      "blAwbDate": "2023-07-27",
+      "invoiceNumber": "446506",
+      "invoiceDate": "2023-07-25",
+      "currency": "USD",
+      "portOfLoading": "PORT OF PALM BEACH SEAPORT",
+      "countryOfOrigin": "US"
+    },
+    "worksheet": {
+      "invoice_value_foreign": 60220.8,
+      "fob_foreign": 60220.8,
+      "exchange_rate": 6.77,
+      "freight_foreign": 0.0,
+      "insurance_foreign": 0.0,
+      "other_foreign": 0.0,
+      "deduction_foreign": 0.0,
+      "duty_rate_pct": 0,
+      "surcharge_rate_pct": 0,
+      "vat_rate_pct": 0,
+      "extra_fees_local": 40,
+      "global_fee": 40
+    },
+    "items": [
+      {
+        "id": "ITEM-CF82E9",
+        "description": "1,394 CS BONELESS SKINLESS CHICKEN BREAST FILETS, 40# PILGRIMS CODE 21230",
+        "hsCode": "",
+        "qty": 1394,
+        "packageType": "CTN",
+        "grossKg": 0,
+        "netKg": 0,
+        "itemValue": 60220.8,
+        "unitCode": "NMB",
+        "dutyTaxCode": "",
+        "dutyTaxBase": "",
+        "cpc": "4000",
+        "countryOfOrigin": "US",
+        "packageCount": 1
+      }
+    ],
+    "containers": [
+      {
+        "containerNumber": "SEGU9261010",
+        "sealNumber": "A1191769"
+      }
+    ],
+    "certificates": [
+      {
+        "type": "CARICOM",
+        "number": null,
+        "issueDate": null,
+        "issuer": "CENTRAL INTERNATIONAL CO. LLC",
+        "country": "US"
+      }
+    ],
+    "permit_flags": []
+  }
+]

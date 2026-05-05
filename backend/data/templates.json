@@ -1,0 +1,32 @@
+[
+  {
+    "id": "c2b6e603-da26-4af4-ae9c-b88fac13a407",
+    "name": "Auto8 Default",
+    "scope": "team",
+    "kind": "consignee",
+    "payload": {
+      "traders": {
+        "consignee_consignee_code": "V131148"
+      }
+    }
+  },
+  {
+    "id": "47fc6617-035c-42e7-abee-3f1e5b0905b7",
+    "name": "PRATICE",
+    "scope": "team",
+    "kind": "shipment",
+    "payload": {
+      "declarationRef": "PRATICE",
+      "port": "04",
+      "term": "01",
+      "modeOfTransport": "12",
+      "customsRegime": "C4",
+      "consigneeCode": "N1234",
+      "vesselName": "VESSEL",
+      "duty_rate_pct": 40,
+      "surcharge_rate_pct": 15,
+      "vat_rate_pct": 0,
+      "global_fee": 40
+    }
+  }
+]

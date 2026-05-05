@@ -1,0 +1,1102 @@
+
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                        ║
+║   S T A L L I O N   V 2  ─  C O M P L E T E   S Y S T E M   A R C H I T E C T U R E                  ║
+║   If I started over: what the completed project looks like                                              ║
+║                                                                                                        ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 1 ─ WHY REDESIGN: THE V1 PROBLEMS
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  PROBLEM 1: Two declaration systems that don't talk to each other
+  ┌─────────────────────────┐          ┌─────────────────────────┐
+  │  DeclarationEditor.tsx  │          │  StallionWorkbench.tsx   │
+  │  ─────────────────────  │          │  ──────────────────────  │
+  │  zustand + localStorage │    ✗     │  Backend JSON file       │
+  │  /declarations/validate │◄──NO───►│  /pack/generate          │
+  │  /declarations/export   │ LINK    │  /declarations API       │
+  └─────────────────────────┘          └─────────────────────────┘
+         │                                     │
+         ▼                                     ▼
+  Home page reads HERE             BrokerReview reads HERE
+  (localStorage)                   (backend /declarations)
+                  ▲
+                  │
+          ╔═══════════════╗
+          ║  RESULT:      ║
+          ║  Declarations ║
+          ║  created in   ║
+          ║  one are      ║
+          ║  invisible    ║
+          ║  in the other ║
+          ╚═══════════════╝
+
+  PROBLEM 2: File-based JSON store with no locking
+  ┌──────────────────────────────────────────────────┐
+  │  data/declarations.json                          │
+  │  ──────────────────────────────────────────────  │
+  │  load_declarations() ──► full file read          │
+  │  modify in memory                                │
+  │  save_declarations() ──► full file write         │
+  │                                                  │
+  │  Two concurrent PATCHes = DATA LOSS              │
+  │  Server restart = fine (file persists)            │
+  │  Two users at once = race condition              │
+  └──────────────────────────────────────────────────┘
+
+  PROBLEM 3: Port number chaos
+  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐
+  │  README: 8020  │  │  Scripts: 8021 │  │  PM2: 8022     │
+  └────────────────┘  └────────────────┘  └────────────────┘
+
+  PROBLEM 4: 30+ files generated, deployment status unknown
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  BrokerReview v1 → v2 → v3 → v4 → production stub → production full   │
+  │  DeclarationsList v1 → v2                                               │
+  │  Workbench monolith → 6-component split                                │
+  │  xml_builder.py → hotfix v1 → hotfix v2                                 │
+  │  pack_service.py → bug fix v1 → LB01 rebuild v2                        │
+  │  models.py → v2 → v3                                                    │
+  │  worksheet_service.py → v2 → v3                                         │
+  │                                                                          │
+  │  WHICH VERSION IS LIVE? ──► Unknown for most files                      │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+  PROBLEM 5: No auth, no multi-tenancy
+  ┌──────────────────────────────────────────────────┐
+  │  Anyone with the URL sees all declarations       │
+  │  No user accounts                                │
+  │  No client isolation                             │
+  │  Blocks every client after UPSL                  │
+  └──────────────────────────────────────────────────┘
+
+  PROBLEM 6: Critical features built but never tested
+  ┌──────────────────────────────────────────────────┐
+  │  Document extraction ──► code exists, 0 tests    │
+  │  Spreadsheet ingestion ──► discussed, 0 code     │
+  │  CBTT rate lookup ──► button exists, hardcoded   │
+  │  HS code lookup ──► discussed, 0 code            │
+  │  Register CSV export ──► discussed, 0 code       │
+  │  WhatsApp alerts ──► discussed, 0 code           │
+  └──────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 2 ─ THE REDESIGNED ARCHITECTURE
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+  ╔═══════════════════════════════════════════════════════════════════════════╗
+  ║  DESIGN PRINCIPLES                                                       ║
+  ║  ───────────────────────────────────────────────────────────────────────  ║
+  ║  1. ONE data store (Supabase Postgres) ─ no localStorage, no JSON files  ║
+  ║  2. ONE declaration model ─ no parallel systems                          ║
+  ║  3. Auth from day 1 ─ Supabase Auth + RLS                               ║
+  ║  4. Every feature tested before next feature starts                      ║
+  ║  5. Extraction AFTER real documents received, not before                 ║
+  ║  6. XML generator built FROM a reference XML, not guessing at spec       ║
+  ╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+  │                              HIGH-LEVEL SYSTEM DIAGRAM                                      │
+  │                                                                                             │
+  │                                                                                             │
+  │   ┌──────────┐    ┌──────────┐    ┌──────────────┐                                         │
+  │   │  BROKER   │    │  UPSL    │    │  FUTURE      │                                         │
+  │   │  (tablet/ │    │  OPS     │    │  CLIENT      │                                         │
+  │   │  desktop) │    │  TEAM    │    │              │                                         │
+  │   └────┬─────┘    └────┬─────┘    └──────┬───────┘                                         │
+  │        │               │                  │                                                  │
+  │        ▼               ▼                  ▼                                                  │
+  │   ╔═══════════════════════════════════════════════╗                                         │
+  │   ║         STALLION FRONTEND (React/Vite)        ║                                         │
+  │   ║  ─────────────────────────────────────────── ║                                         │
+  │   ║  Supabase Auth (login/signup/roles)           ║                                         │
+  │   ║  Pages: Dashboard │ Workbench │ Review │ Ext  ║                                         │
+  │   ╚═══════════════════╤═══════════════════════════╝                                         │
+  │                        │                                                                     │
+  │                        │ HTTPS                                                               │
+  │                        ▼                                                                     │
+  │   ╔═══════════════════════════════════════════════╗                                         │
+  │   ║         STALLION BACKEND (FastAPI)            ║                                         │
+  │   ║  ─────────────────────────────────────────── ║                                         │
+  │   ║  /declarations  (CRUD + lifecycle)            ║                                         │
+  │   ║  /extract       (PDF + spreadsheet)           ║                                         │
+  │   ║  /worksheet     (calculate)                   ║                                         │
+  │   ║  /generate      (XML + LB01 PDF)              ║                                         │
+  │   ║  /lookups       (HS codes, ports, CBTT rate)  ║                                         │
+  │   ╚═══════╤══════════╤═══════════╤════════════════╝                                         │
+  │           │          │           │                                                           │
+  │     ┌─────┘    ┌─────┘     ┌─────┘                                                          │
+  │     ▼          ▼           ▼                                                                 │
+  │  ┌────────┐ ┌────────┐ ┌────────────┐                                                       │
+  │  │Supabase│ │Claude  │ │Central Bank│                                                       │
+  │  │Postgres│ │API     │ │TT Rate API │                                                       │
+  │  │+ Auth  │ │(extract│ │            │                                                       │
+  │  │+ RLS   │ │+ HS    │ │            │                                                       │
+  │  │+Storage│ │lookup) │ │            │                                                       │
+  │  └────────┘ └────────┘ └────────────┘                                                       │
+  │                                                                                             │
+  │                  ┌──────────┐                                                                │
+  │                  │ OpenClaw │ ◄──── WhatsApp alerts                                         │
+  │                  │ (webhook │       "3 declarations pending review"                          │
+  │                  │  listener│       "Batch UPSL-MAR-26 complete"                             │
+  │                  └──────────┘                                                                │
+  │                                                                                             │
+  └─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 3 ─ DATABASE SCHEMA (Supabase Postgres + RLS)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  auth.users (Supabase built-in)                                        │
+  │  ─────────────────────────────                                         │
+  │  id          UUID  PK                                                   │
+  │  email       TEXT                                                       │
+  │  role        TEXT  ('admin' │ 'broker' │ 'ops')                        │
+  │  org_id      UUID  FK → organisations                                   │
+  └─────────────────┬───────────────────────────────────────────────────────┘
+                    │
+          ┌─────────┴────────┐
+          ▼                  ▼
+  ┌───────────────┐  ┌─────────────────────────────────────────────────────┐
+  │ organisations │  │  declarations                                       │
+  │ ────────────  │  │  ────────────                                       │
+  │ id    UUID PK │  │  id               UUID  PK                          │
+  │ name  TEXT    │  │  org_id           UUID  FK → organisations          │
+  │ slug  TEXT    │  │  created_by       UUID  FK → auth.users             │
+  │               │  │  status           ENUM  (see lifecycle below)        │
+  │               │  │  source           ENUM  ('manual'│'extracted'│       │
+  │               │  │                          'spreadsheet')              │
+  └───────────────┘  │  declaration_ref  TEXT                               │
+                     │  ─── header ───                                      │
+                     │  consignor_name   TEXT                               │
+                     │  consignor_addr   JSONB  {street,city,country}       │
+                     │  consignee_code   TEXT                               │
+                     │  consignee_name   TEXT                               │
+                     │  consignee_addr   JSONB                              │
+                     │  declarant_tin    TEXT                               │
+                     │  declarant_name   TEXT                               │
+                     │  declarant_addr   JSONB                              │
+                     │  port             TEXT                               │
+                     │  delivery_term    TEXT                               │
+                     │  delivery_place   TEXT                               │
+                     │  transport_mode   TEXT                               │
+                     │  customs_regime   TEXT                               │
+                     │  vessel_name      TEXT                               │
+                     │  bl_awb_number    TEXT                               │
+                     │  bl_awb_date      DATE                               │
+                     │  shipped_on_board DATE  ◄── CBTT lookup key          │
+                     │  eta_date         DATE                               │
+                     │  invoice_number   TEXT                               │
+                     │  invoice_date     DATE                               │
+                     │  currency         TEXT  DEFAULT 'USD'                │
+                     │  exchange_rate    DECIMAL(12,6)                       │
+                     │  bank_code        TEXT                               │
+                     │  payment_mode     TEXT                               │
+                     │  manifest_ref     TEXT                               │
+                     │  ─── worksheet ───                                   │
+                     │  exworks_foreign  DECIMAL(14,2)                       │
+                     │  inland_foreign   DECIMAL(14,2)                       │
+                     │  freight_foreign  DECIMAL(14,2)                       │
+                     │  insurance_foreign DECIMAL(14,2)                      │
+                     │  other_foreign    DECIMAL(14,2)                       │
+                     │  deductions       DECIMAL(14,2)                       │
+                     │  duty_rate_pct    DECIMAL(6,3)                        │
+                     │  surcharge_pct    DECIMAL(6,3)                        │
+                     │  vat_rate_pct     DECIMAL(6,3)                        │
+                     │  cfu_fee          DECIMAL(10,2)  DEFAULT 40           │
+                     │  ces_fee_1        DECIMAL(10,2)                       │
+                     │  ces_fee_2        DECIMAL(10,2)                       │
+                     │  cf2_fee          DECIMAL(10,2)                       │
+                     │  ─── computed (server-side, read-only) ───           │
+                     │  fob_foreign      DECIMAL(14,2)                       │
+                     │  fob_local        DECIMAL(14,2)                       │
+                     │  cif_foreign      DECIMAL(14,2)                       │
+                     │  cif_local        DECIMAL(14,2)                       │
+                     │  duty_amount      DECIMAL(14,2)                       │
+                     │  surcharge_amount DECIMAL(14,2)                       │
+                     │  vat_amount       DECIMAL(14,2)                       │
+                     │  total_taxes      DECIMAL(14,2)                       │
+                     │  total_fees       DECIMAL(14,2)                       │
+                     │  grand_total      DECIMAL(14,2)                       │
+                     │  factor           DECIMAL(10,6)                       │
+                     │  ─── review ───                                      │
+                     │  reviewed_by      UUID  FK → auth.users              │
+                     │  reviewed_at      TIMESTAMPTZ                        │
+                     │  broker_notes     TEXT                               │
+                     │  receipt_number   TEXT                               │
+                     │  receipted_at     TIMESTAMPTZ                        │
+                     │  ─── metadata ───                                    │
+                     │  confidence       DECIMAL(3,2)  (0.00─1.00)          │
+                     │  extraction_notes TEXT                               │
+                     │  created_at       TIMESTAMPTZ  DEFAULT now()         │
+                     │  updated_at       TIMESTAMPTZ                        │
+                     └──────────────────────────────────────────────────────┘
+                         │
+                         │ 1:N
+                         ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  declaration_items                                                      │
+  │  ──────────────────                                                     │
+  │  id               UUID  PK                                              │
+  │  declaration_id   UUID  FK → declarations                               │
+  │  item_number      INT                                                   │
+  │  hs_code          TEXT       ◄── stored WITH dots: 9021.29.00.00       │
+  │  hs_commodity     TEXT       ◄── split: 90212900   (for XML)           │
+  │  hs_precision_1   TEXT       ◄── split: 000        (for XML)           │
+  │  description      TEXT                                                  │
+  │  country_origin   TEXT                                                  │
+  │  qty              DECIMAL(12,3)                                         │
+  │  unit_code        TEXT                                                  │
+  │  package_type     TEXT                                                  │
+  │  package_count    INT                                                   │
+  │  gross_kg         DECIMAL(12,3)                                         │
+  │  net_kg           DECIMAL(12,3)                                         │
+  │  item_value       DECIMAL(14,2)                                         │
+  │  item_value_local DECIMAL(14,2)                                         │
+  │  cpc              TEXT                                                  │
+  │  extended_proc    TEXT       DEFAULT '4000'                             │
+  │  national_proc    TEXT       DEFAULT '000'  ◄── always 3-char padded   │
+  │  marks            TEXT                                                  │
+  │  quota_code       TEXT       DEFAULT 'NEW'                             │
+  │  stat_value       DECIMAL(14,2)                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+                         │
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  declaration_containers                                                 │
+  │  ──────────────────────                                                 │
+  │  id               UUID  PK                                              │
+  │  declaration_id   UUID  FK → declarations                               │
+  │  container_no     TEXT                                                  │
+  │  type             TEXT  ('20GP'│'40GP'│'40HC'│...)                      │
+  │  ef_indicator     TEXT  ('FCL'│'LCL')                                   │
+  │  description      TEXT                                                  │
+  │  package_type     TEXT                                                  │
+  │  packages         INT                                                   │
+  │  goods_weight     DECIMAL(12,3)                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  declaration_events  (audit log ─ append only)                          │
+  │  ────────────────────                                                   │
+  │  id               UUID  PK                                              │
+  │  declaration_id   UUID  FK → declarations                               │
+  │  event_type       ENUM  ('created'│'updated'│'validated'│               │
+  │                          'reviewed'│'approved'│'correction'│             │
+  │                          'rejected'│'exported'│'submitted'│              │
+  │                          'receipted')                                    │
+  │  actor_id         UUID  FK → auth.users                                 │
+  │  metadata         JSONB      {errors:[], xml_doc_id:..., notes:...}    │
+  │  created_at       TIMESTAMPTZ  DEFAULT now()                            │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  generated_documents  (XML + PDF storage refs)                          │
+  │  ─────────────────────                                                  │
+  │  id               UUID  PK                                              │
+  │  declaration_id   UUID  FK → declarations                               │
+  │  doc_type         ENUM  ('c82_xml'│'lb01_pdf'│'approval_summary')      │
+  │  storage_path     TEXT  (Supabase Storage bucket path)                  │
+  │  version          INT   DEFAULT 1                                       │
+  │  created_at       TIMESTAMPTZ                                           │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │  templates                                                              │
+  │  ──────────                                                             │
+  │  id               UUID  PK                                              │
+  │  org_id           UUID  FK → organisations                              │
+  │  name             TEXT                                                  │
+  │  payload          JSONB  (full declaration snapshot)                    │
+  │  created_at       TIMESTAMPTZ                                           │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  ROW LEVEL SECURITY:
+  ┌──────────────────────────────────────────────────────────────────┐
+  │  ALL tables filtered by org_id = auth.jwt() -> 'org_id'         │
+  │  Broker role: can read + review, cannot delete                  │
+  │  Ops role: full CRUD on declarations within their org           │
+  │  Admin role: full access + manage users + see all orgs          │
+  └──────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 4 ─ DECLARATION LIFECYCLE (STATE MACHINE)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+                     ┌──────────────────┐
+                     │                  │
+            ┌────────┤    EXTRACTED     │◄────── AI reads invoice + AWB
+            │        │  (confidence %)  │        Auto-saved to Supabase
+            │        └────────┬─────────┘
+            │                 │
+            │        broker clicks into queue
+            │                 │
+            │                 ▼
+            │        ┌──────────────────┐
+            │        │                  │
+            │        │  PENDING_REVIEW  │◄────── Manual entry also lands here
+            │        │                  │
+            │        └───┬────────┬─────┘
+            │            │        │
+            │     approve│        │flag
+            │            │        │
+            │            ▼        ▼
+            │   ┌────────────┐  ┌────────────────┐
+            │   │            │  │                │
+            │   │  APPROVED  │  │  CORRECTION    │──── broker notes why
+            │   │            │  │                │
+            │   └─────┬──────┘  └───────┬────────┘
+            │         │                 │
+            │         │                 │ ops fixes, resubmits
+            │         │                 │
+            │         │         ┌───────┘
+            │         │         │
+            │         ▼         ▼
+            │   ┌──────────────────┐
+            │   │                  │
+            │   │    EXPORTED      │◄────── XML + LB01 generated
+            │   │  (docs in       │        Stored in Supabase Storage
+            │   │   Storage)      │
+            │   └────────┬─────────┘
+            │            │
+            │     broker uploads to ASYCUDA
+            │            │
+            │            ▼
+            │   ┌──────────────────┐
+            │   │                  │
+            │   │   SUBMITTED      │◄────── broker confirms upload
+            │   │                  │
+            │   └────────┬─────────┘
+            │            │
+            │     customs processes, broker gets receipt
+            │            │
+            │            ▼
+            │   ┌──────────────────┐
+            │   │                  │
+            │   │   RECEIPTED      │◄────── broker enters receipt number
+            │   │  (receipt_number │        Lifecycle complete
+            │   │   + receipted_at)│
+            │   └──────────────────┘
+            │
+            │
+            │   ┌──────────────────┐
+            └──►│                  │
+                │    REJECTED      │◄────── broker rejects entirely
+                │                  │        (bad data, duplicate, etc)
+                └──────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 5 ─ BACKEND API DESIGN (FastAPI)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  ┌─────────────────────────────────────────────────────────────────────────────────────┐
+  │  app/                                                                               │
+  │  ├── main.py                    ◄── FastAPI app, CORS, middleware                   │
+  │  ├── config.py                  ◄── env vars: SUPABASE_URL, SUPABASE_KEY,           │
+  │  │                                   ANTHROPIC_API_KEY, CBTT_API_URL                │
+  │  ├── auth.py                    ◄── Supabase JWT verification middleware            │
+  │  ├── db.py                      ◄── Supabase client (postgrest + storage)           │
+  │  │                                                                                  │
+  │  ├── routers/                                                                       │
+  │  │   ├── declarations.py        ◄── CRUD + lifecycle transitions                    │
+  │  │   ├── extraction.py          ◄── PDF + spreadsheet → declaration                 │
+  │  │   ├── generation.py          ◄── XML + LB01 PDF generation                       │
+  │  │   ├── worksheet.py           ◄── calculate endpoint                              │
+  │  │   ├── lookups.py             ◄── HS codes, ports, CBTT rate, terms               │
+  │  │   └── register.py            ◄── CSV export for broker logbook                   │
+  │  │                                                                                  │
+  │  ├── services/                                                                      │
+  │  │   ├── xml_builder.py         ◄── THE critical file                               │
+  │  │   │   ┌──────────────────────────────────────────────────────────────────┐       │
+  │  │   │   │  BUILT FROM A REFERENCE XML ─ not guessing                      │       │
+  │  │   │   │                                                                  │       │
+  │  │   │   │  1. Template XML loaded as string with {{placeholders}}          │       │
+  │  │   │   │  2. ASYCUDA_ELEMENT_ORDER enforced at build time                │       │
+  │  │   │   │  3. <null/> stubs injected for all absent optional fields       │       │
+  │  │   │   │  4. HS code auto-split: 9021.29.00.00 → commodity + precision  │       │
+  │  │   │   │  5. Value_item as literal formula string                        │       │
+  │  │   │   │  6. national_proc always zero-padded to "000"                   │       │
+  │  │   │   │  7. package_count always integer (no 1394.0)                    │       │
+  │  │   │   │  8. Exactly 9 Taxation_line stubs per item                      │       │
+  │  │   │   │  9. Exactly 8 Item_tax_total stubs                             │       │
+  │  │   │   │  10. <n> not <Name> in Border_office / Place_of_loading        │       │
+  │  │   │   │  11. Comments_free_text block for BL, rate, weight, ETA        │       │
+  │  │   │   │  12. All Gs_* blocks present with Currency_name child          │       │
+  │  │   │   │  13. Dates as MM/DD/YY not ISO                                 │       │
+  │  │   │   └──────────────────────────────────────────────────────────────────┘       │
+  │  │   │                                                                              │
+  │  │   ├── worksheet_service.py   ◄── CIF chain + all 5 fee types                    │
+  │  │   ├── lb01_pdf.py            ◄── ReportLab LB01 with running totals              │
+  │  │   ├── extraction_service.py  ◄── Claude API: invoice + AWB → JSON                │
+  │  │   ├── spreadsheet_service.py ◄── Claude maps columns → declaration schema        │
+  │  │   ├── cbtt_service.py        ◄── Central Bank TT rate by date (cached)           │
+  │  │   ├── hs_lookup_service.py   ◄── TT tariff code search (Claude or DB)            │
+  │  │   └── validation_service.py  ◄── preflight + C82 structural validation           │
+  │  │       ┌──────────────────────────────────────────────────────────────────┐       │
+  │  │       │  HS CODE BUG FIX: always strip dots before .isdigit() check     │       │
+  │  │       │  FOB KEY FIX: use consistent key name across all services       │       │
+  │  │       └──────────────────────────────────────────────────────────────────┘       │
+  │  │                                                                                  │
+  │  ├── models/                                                                        │
+  │  │   ├── declaration.py         ◄── Pydantic models matching DB schema              │
+  │  │   ├── worksheet.py           ◄── WorksheetInput + WorksheetResult                │
+  │  │   ├── extraction.py          ◄── ExtractionRequest + ExtractionResult            │
+  │  │   └── lookups.py             ◄── LookupItem, HSCode, Port, Term                  │
+  │  │                                                                                  │
+  │  └── tests/                                                                         │
+  │      ├── test_xml_against_reference.py   ◄── compare output vs real C82             │
+  │      ├── test_worksheet_math.py          ◄── verify against HECA numbers            │
+  │      ├── test_lifecycle.py               ◄── state machine transitions              │
+  │      ├── test_extraction.py              ◄── mock Claude, check mapping             │
+  │      └── test_preflight.py               ◄── HS dots, missing fields, edge cases    │
+  └─────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  API ROUTES:
+  ┌────────────────────────────────────────────────────────────────────────────────┐
+  │                                                                                │
+  │  AUTH (all routes require Supabase JWT)                                         │
+  │  ──────────────────────────────────────                                         │
+  │  GET    /health                           ◄── no auth                          │
+  │                                                                                │
+  │  DECLARATIONS                                                                   │
+  │  ──────────────                                                                 │
+  │  GET    /declarations                     ◄── list (filtered by org_id)        │
+  │  GET    /declarations/:id                 ◄── single + items + containers      │
+  │  POST   /declarations                     ◄── create (status: pending_review)  │
+  │  PATCH  /declarations/:id                 ◄── update fields                    │
+  │  PATCH  /declarations/:id/status          ◄── lifecycle transition             │
+  │         body: {action, notes?, receipt_number?}                                │
+  │  DELETE /declarations/:id                 ◄── soft delete (admin/ops only)     │
+  │                                                                                │
+  │  EXTRACTION                                                                     │
+  │  ──────────                                                                     │
+  │  POST   /extract/documents                ◄── upload PDFs → declarations       │
+  │         body: multipart {files[], mode: 'batch'│'separate'}                    │
+  │  POST   /extract/spreadsheet              ◄── upload XLSX/CSV → declarations   │
+  │         body: multipart {file, column_mapping?: JSON}                           │
+  │  GET    /extract/mappings/:org_id         ◄── saved column mappings            │
+  │                                                                                │
+  │  GENERATION                                                                     │
+  │  ──────────                                                                     │
+  │  POST   /generate/:id                     ◄── validate + XML + LB01           │
+  │         returns: {status, documents[], errors[]}                                │
+  │  GET    /generate/:id/download            ◄── ZIP of XML + LB01               │
+  │  GET    /generate/:id/document/:doc_id    ◄── single file download             │
+  │                                                                                │
+  │  WORKSHEET                                                                      │
+  │  ─────────                                                                      │
+  │  POST   /worksheet/calculate              ◄── compute all values               │
+  │                                                                                │
+  │  LOOKUPS                                                                        │
+  │  ───────                                                                        │
+  │  GET    /lookups/ports                                                          │
+  │  GET    /lookups/terms                                                          │
+  │  GET    /lookups/packages                                                       │
+  │  GET    /lookups/transport-modes                                                │
+  │  GET    /lookups/customs-regimes                                                │
+  │  GET    /lookups/hs-search?q=chicken+breast                                    │
+  │  GET    /lookups/cbtt-rate?date=2026-01-05                                     │
+  │                                                                                │
+  │  REGISTER                                                                       │
+  │  ────────                                                                       │
+  │  GET    /register/export?from=2026-01-01&to=2026-03-31                         │
+  │         returns: CSV (declaration_ref, consignee, hs_code,                      │
+  │                       cif, duty, vat, total, status,                            │
+  │                       receipt_number, broker, date)                              │
+  │                                                                                │
+  └────────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 6 ─ FRONTEND PAGES (React + Vite + Supabase Auth)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  PAGE 1: LOGIN
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │                     ╔══════════════════════════╗                         │
+  │                     ║     🐎 STALLION          ║                         │
+  │                     ║                          ║                         │
+  │                     ║  ┌────────────────────┐  ║                         │
+  │                     ║  │ email@company.com  │  ║                         │
+  │                     ║  └────────────────────┘  ║                         │
+  │                     ║  ┌────────────────────┐  ║                         │
+  │                     ║  │ ••••••••••         │  ║                         │
+  │                     ║  └────────────────────┘  ║                         │
+  │                     ║                          ║                         │
+  │                     ║  ┌────────────────────┐  ║                         │
+  │                     ║  │    SIGN IN         │  ║                         │
+  │                     ║  └────────────────────┘  ║                         │
+  │                     ║                          ║                         │
+  │                     ║  Customs · Declaration    ║                         │
+  │                     ║  · Workflow               ║                         │
+  │                     ╚══════════════════════════╝                         │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  PAGE 2: DASHBOARD (home page ─ what opens after login)
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ ┌────────────────────────────────────────────────────────────────────┐   │
+  │ │ 🐎 STALLION    Dashboard  Workbench  Review  Extract    [avatar]  │   │
+  │ └────────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+  │  │ TOTAL    │ │ PENDING  │ │ APPROVED │ │ EXPORTED │ │ THIS MO  │      │
+  │  │   47     │ │    8     │ │   12     │ │   22     │ │   31     │      │
+  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+  │                                                                          │
+  │  ┌─── NEEDS ATTENTION ──────────────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  ┌────────────────────┐  ┌────────────────────┐                  │   │
+  │  │  │ ⚠ 5 PENDING       │  │ ⚠ 3 CORRECTIONS   │                  │   │
+  │  │  │   REVIEW           │  │   FLAGGED          │                  │   │
+  │  │  │   → Open queue     │  │   → View issues    │                  │   │
+  │  │  └────────────────────┘  └────────────────────┘                  │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── WORKFLOW CARDS ───────────────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  ╔════════════════════╗  ╔════════════════════╗                  │   │
+  │  │  ║  NEW DECLARATION   ║  ║  EXTRACT DOCUMENTS ║                  │   │
+  │  │  ║  ────────────────  ║  ║  ──────────────── ║                  │   │
+  │  │  ║  Open Workbench    ║  ║  Upload invoices   ║                  │   │
+  │  │  ║  Manual entry      ║  ║  + AWBs, AI reads  ║                  │   │
+  │  │  ╚════════════════════╝  ╚════════════════════╝                  │   │
+  │  │                                                                   │   │
+  │  │  ╔════════════════════╗  ╔════════════════════╗                  │   │
+  │  │  ║  REVIEW QUEUE      ║  ║  EXPORT REGISTER   ║                  │   │
+  │  │  ║  ────────────────  ║  ║  ──────────────── ║                  │   │
+  │  │  ║  8 pending ●       ║  ║  Download CSV      ║                  │   │
+  │  │  ║  Broker sign-off   ║  ║  Monthly logbook   ║                  │   │
+  │  │  ╚════════════════════╝  ╚════════════════════╝                  │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── DECLARATIONS ─────────────────────────────────────────────────┐   │
+  │  │  REF          CONSIGNEE                   STATUS      UPDATED    │   │
+  │  │  ─────────────────────────────────────────────────────────────── │   │
+  │  │  HMTL3227-25  HECA Medical Technologies   ● PENDING   Today     │   │
+  │  │  UPS-0042     Caribbean Chemicals Ltd      ● APPROVED  Yesterday │   │
+  │  │  UPS-0041     Agostini Bros Ltd            ● EXPORTED  Mar 10    │   │
+  │  │  UPS-0040     Courts Trinidad              ● RECEIPTED Mar 9     │   │
+  │  │  ...                                                             │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── RECENT ACTIVITY ──────────────────────────────────────────────┐   │
+  │  │  HMTL3227-25 extracted from invoice          Today · 14:23       │   │
+  │  │  UPS-0042 approved by Arnim Brathwaite       Yesterday · 16:05   │   │
+  │  │  UPS-0041 XML + LB01 exported                Mar 10 · 09:30      │   │
+  │  │  UPS-0040 receipt #A356 entered               Mar 9 · 11:15      │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  PAGE 3: WORKBENCH (manual declaration entry ─ 5 tabs)
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ ┌────────────────────────────────────────────────────────────────────┐   │
+  │ │ 🐎 STALLION    Dashboard  Workbench  Review  Extract    [avatar]  │   │
+  │ └────────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─ HMTL3227-25 ─ NEW DECLARATION ──── [Template ▼] [Save Draft] ──┐   │
+  │  │                                                                   │   │
+  │  │  [Header] [Parties] [Transport] [Worksheet] [Items]               │   │
+  │  │   ━━━━━                                                           │   │
+  │  │                                                                   │   │
+  │  │   Declaration Ref    Port of Entry     Terms of Delivery          │   │
+  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │   │
+  │  │  │ HMTL3227-25  │  │ TTPTS    ▼   │  │ CIF      ▼   │            │   │
+  │  │  └──────────────┘  └──────────────┘  └──────────────┘            │   │
+  │  │                                                                   │   │
+  │  │   Transport Mode    Customs Regime     Invoice Number             │   │
+  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │   │
+  │  │  │ Air      ▼   │  │ IM4      ▼   │  │ TT 979-25    │            │   │
+  │  │  └──────────────┘  └──────────────┘  └──────────────┘            │   │
+  │  │                                                                   │   │
+  │  │   ──────────────────────────────────────────────────              │   │
+  │  │   ◄ Worksheet Tab ►                                               │   │
+  │  │                                                                   │   │
+  │  │   EX-WORKS (USD)    INLAND CHARGES    FREIGHT                     │   │
+  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │   │
+  │  │  │   105,297.15  │  │       0.00    │  │       0.00    │            │   │
+  │  │  └──────────────┘  └──────────────┘  └──────────────┘            │   │
+  │  │                                                                   │   │
+  │  │   Exchange Rate     [LOOKUP CBTT ◄── by shipped-on-board date]   │   │
+  │  │  ┌──────────────┐   CBTT · 2026-01-05 · buying rate              │   │
+  │  │  │     6.79547   │                                                │   │
+  │  │  └──────────────┘                                                │   │
+  │  │                                                                   │   │
+  │  │   Duty %            Surcharge %       VAT %                       │   │
+  │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐            │   │
+  │  │  │      10.0     │  │       2.0     │  │      12.5     │            │   │
+  │  │  └──────────────┘  └──────────────┘  └──────────────┘            │   │
+  │  │                                                                   │   │
+  │  │  ┌─── COMPUTED ──────────────────────────────────────────────┐   │   │
+  │  │  │  FOB        105,297.15 USD    CIF LOCAL   715,343.01 TTD │   │   │
+  │  │  │  DUTY        71,534.30 TTD    SURCHARGE    14,306.86 TTD │   │   │
+  │  │  │  VAT        126,148.02 TTD    FACTOR            6.79547  │   │   │
+  │  │  │  ─────────────────────────────────────────────────────── │   │   │
+  │  │  │  GRAND TOTAL                             212,029.18 TTD  │   │   │
+  │  │  └──────────────────────────────────────────────────────────┘   │   │
+  │  │                                                                   │   │
+  │  │   [Calculate]                    [Generate Pack]                   │   │
+  │  │                                                                   │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  PAGE 4: BROKER REVIEW (split pane ─ the quality gate)
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ ┌────────────────────────────────────────────────────────────────────┐   │
+  │ │ 🐎 STALLION    Dashboard  Workbench  Review  Extract    [avatar]  │   │
+  │ └────────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  Batch: UPSL-MAR-26    12 of 25 reviewed    ████████░░░░  48%           │
+  │                                                                          │
+  │  ┌─── BATCH LIST ───────────────────────────────────────────────────┐   │
+  │  │  ● HMTL3227-25  HECA Medical    Conf: 87%    PENDING            │   │
+  │  │    UPS-0043     Agostini Bros   Conf: 92%    APPROVED ✓         │   │
+  │  │  ○ UPS-0044     Courts TT       Conf: 74%    CORRECTION ⚠      │   │
+  │  │    ...                                                           │   │
+  │  └──────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── REVIEW PANEL ────────────────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  ┌── DOC / FIELDS toggle ──────────────────────────────────┐    │   │
+  │  │  │                                                          │    │   │
+  │  │  │  ╔══ DOC VIEW (dark) ══════════════════════════════════╗│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ║  SOURCE: Commercial Invoice (Align Technology)       ║│    │   │
+  │  │  │  ║  AWB: Z8E391A0451113227                              ║│    │   │
+  │  │  │  ║  Shipped on Board: 2026-01-05                        ║│    │   │
+  │  │  │  ║       label found: "Laden on Board"                  ║│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ║  [View Original PDF ↗]                               ║│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ╚══════════════════════════════════════════════════════╝│    │   │
+  │  │  │                                                          │    │   │
+  │  │  │  ╔══ FIELDS VIEW (light) ══════════════════════════════╗│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ║  [Header] [Parties] [Transport] [Worksheet] [Items] ║│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ║   HS CODE (primary check field)                      ║│    │   │
+  │  │  │  ║  ┌─────────────────────────────────────────────┐    ║│    │   │
+  │  │  │  ║  │  9021.29.00.00                              │    ║│    │   │
+  │  │  │  ║  │  OTHER DENTAL FITTINGS / INVISALIGN SYSTEM  │    ║│    │   │
+  │  │  │  ║  │  [View in TT Tariff ↗]                      │    ║│    │   │
+  │  │  │  ║  └─────────────────────────────────────────────┘    ║│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ║   Exchange Rate    Vessel Name      Port              ║│    │   │
+  │  │  │  ║  ┌────────────┐  ┌────────────┐  ┌──────────┐       ║│    │   │
+  │  │  │  ║  │  6.79547   │  │ N-269CM    │  │ TTPIA    │       ║│    │   │
+  │  │  │  ║  └────────────┘  └────────────┘  └──────────┘       ║│    │   │
+  │  │  │  ║   CBTT · 2026-01-05                                  ║│    │   │
+  │  │  │  ║                                                      ║│    │   │
+  │  │  │  ╚══════════════════════════════════════════════════════╝│    │   │
+  │  │  └──────────────────────────────────────────────────────────┘    │   │
+  │  │                                                                   │   │
+  │  │  ┌── RECEIPT NUMBER (appears after EXPORTED/SUBMITTED) ─────┐   │   │
+  │  │  │  Receipt #:  ┌─────────────┐  [Save Receipt]             │   │   │
+  │  │  │              │ A 356       │                              │   │   │
+  │  │  │              └─────────────┘                              │   │   │
+  │  │  └──────────────────────────────────────────────────────────┘   │   │
+  │  │                                                                   │   │
+  │  │  ⚠ 1 REQUIRED FIELD MISSING: Vessel Name                        │   │
+  │  │                                                                   │   │
+  │  │  Broker Notes                                                     │   │
+  │  │  ┌──────────────────────────────────────────────────────────┐   │   │
+  │  │  │                                                          │   │   │
+  │  │  └──────────────────────────────────────────────────────────┘   │   │
+  │  │                                                                   │   │
+  │  │  [Flag Correction]  [Reject]  [███ APPROVE ███]  [Export ZIP]    │   │
+  │  │   ghost              ghost     ━━━ PRIMARY ━━━    post-approval  │   │
+  │  │                                                                   │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  Keyboard: ← prev  → next  A approve  C correction                     │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+  PAGE 5: DOCUMENT EXTRACTION
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │ ┌────────────────────────────────────────────────────────────────────┐   │
+  │ │ 🐎 STALLION    Dashboard  Workbench  Review  Extract    [avatar]  │   │
+  │ └────────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── UPLOAD ZONE ─────────────────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  Mode:  [● Batch]  [○ Separate]                                  │   │
+  │  │                                                                   │   │
+  │  │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐   │   │
+  │  │                                                                   │   │
+  │  │  │   Drop commercial invoices, AWBs, packing lists here    │   │   │
+  │  │      or click to browse                                           │   │
+  │  │  │                                                          │   │   │
+  │  │      Accepted: PDF, XLSX, CSV                                     │   │
+  │  │  │                                                          │   │   │
+  │  │  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘   │   │
+  │  │                                                                   │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  │  ┌─── EXTRACTION RESULTS ──────────────────────────────────────────┐   │
+  │  │                                                                   │   │
+  │  │  ┌─────────────────────────────────────────────────────────┐    │   │
+  │  │  │  ✓ HECA Medical Technologies                            │    │   │
+  │  │  │    AWB: Z8E391A0451113227    HS: 9021.29.00.00          │    │   │
+  │  │  │    CIF: USD 105,297.15       Confidence: 87%            │    │   │
+  │  │  │    ⚠ Note: duty rate not extractable ─ broker must set  │    │   │
+  │  │  │                                                          │    │   │
+  │  │  │    [Send to Review →]                                    │    │   │
+  │  │  └─────────────────────────────────────────────────────────┘    │   │
+  │  │                                                                   │   │
+  │  │  ┌─────────────────────────────────────────────────────────┐    │   │
+  │  │  │  ✓ Caribbean Chemicals Ltd                               │    │   │
+  │  │  │    AWB: 1Z5678901234567      HS: 2907.21.00.00          │    │   │
+  │  │  │    CIF: USD 34,800.00        Confidence: 91%            │    │   │
+  │  │  │                                                          │    │   │
+  │  │  │    [Send to Review →]                                    │    │   │
+  │  │  └─────────────────────────────────────────────────────────┘    │   │
+  │  │                                                                   │   │
+  │  └───────────────────────────────────────────────────────────────────┘   │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 7 ─ END-TO-END DATA FLOW (the complete journey of one declaration)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+  ┌──────────────────┐
+  │ UPSL receives    │
+  │ UPS shipment     │
+  │ with invoice     │
+  │ + AWB            │
+  └────────┬─────────┘
+           │
+           ▼
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  STEP 1: EXTRACTION                                                 ║
+  ║  ──────────────────                                                 ║
+  ║                                                                     ║
+  ║  UPSL ops uploads invoice.pdf + awb.pdf to /stallion/extract       ║
+  ║                        │                                            ║
+  ║                        ▼                                            ║
+  ║  POST /extract/documents                                            ║
+  ║  ┌──────────────────────────────────────────────┐                  ║
+  ║  │  FastAPI receives files                       │                  ║
+  ║  │  Converts to base64                           │                  ║
+  ║  │  Sends to Claude with extraction prompt       │                  ║
+  ║  │  Claude returns structured JSON:              │                  ║
+  ║  │    {                                          │                  ║
+  ║  │      consignee: "HECA Medical Technologies",  │                  ║
+  ║  │      hs_code: "9021.29.00.00",               │                  ║
+  ║  │      exworks_foreign: 105297.15,              │                  ║
+  ║  │      shipped_on_board: "2026-01-05",          │                  ║
+  ║  │      shipped_on_board_label: "Laden on Board",│                  ║
+  ║  │      bl_awb: "Z8E391A0451113227",            │                  ║
+  ║  │      confidence: 0.87,                        │                  ║
+  ║  │      notes: ["duty rate not on invoice"]      │                  ║
+  ║  │    }                                          │                  ║
+  ║  └──────────────────────────────────────────────┘                  ║
+  ║                        │                                            ║
+  ║                        ▼                                            ║
+  ║  INSERT INTO declarations (status='extracted', confidence=0.87)     ║
+  ║  INSERT INTO declaration_items (hs_code, description, value...)     ║
+  ║  INSERT INTO declaration_events (event='created', source='extract') ║
+  ║  Upload source PDFs to Supabase Storage                             ║
+  ║                                                                     ║
+  ╚══════════════════════════╤═══════════════════════════════════════════╝
+                             │
+                             │ status auto-transitions to 'pending_review'
+                             │
+                             ▼
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  STEP 2: BROKER REVIEW                                              ║
+  ║  ─────────────────────                                              ║
+  ║                                                                     ║
+  ║  Broker Arnim opens /stallion/review                                ║
+  ║  Sees HMTL3227-25 in queue with 87% confidence                     ║
+  ║  Clicks into review panel                                           ║
+  ║                                                                     ║
+  ║  ┌─ DOC VIEW ────────────────────┐  ┌─ FIELDS VIEW ─────────────┐ ║
+  ║  │                                │  │                            │ ║
+  ║  │  Original invoice PDF          │  │  HS: 9021.29.00.00        │ ║
+  ║  │  rendered in iframe            │  │  [View in TT Tariff ↗]    │ ║
+  ║  │                                │  │                            │ ║
+  ║  │  "Laden on Board: 05-Jan-26"   │  │  Exchange Rate: 6.79547   │ ║
+  ║  │                                │  │  CBTT · 2026-01-05 ✓      │ ║
+  ║  │                                │  │                            │ ║
+  ║  │                                │  │  ⚠ Duty rate: 0%          │ ║
+  ║  │                                │  │  Broker sets to 10%       │ ║
+  ║  └────────────────────────────────┘  └────────────────────────────┘ ║
+  ║                                                                     ║
+  ║  Broker corrects duty rate 0% → 10%                                ║
+  ║  Broker confirms HS code against TT Tariff                         ║
+  ║  Broker confirms vessel name, port                                  ║
+  ║  Broker clicks [APPROVE]                                            ║
+  ║                                                                     ║
+  ║  PATCH /declarations/:id/status  {action: 'approved'}              ║
+  ║  INSERT INTO declaration_events (event='approved', actor=arnim)     ║
+  ║  Generate printable approval summary PDF → Supabase Storage        ║
+  ║  Auto-append register entry                                         ║
+  ║                                                                     ║
+  ╚══════════════════════════╤═══════════════════════════════════════════╝
+                             │
+                             │ status: 'approved'
+                             ▼
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  STEP 3: GENERATION                                                 ║
+  ║  ──────────────────                                                 ║
+  ║                                                                     ║
+  ║  Broker or ops clicks [Generate Pack] or [Export ZIP]               ║
+  ║                                                                     ║
+  ║  POST /generate/:id                                                 ║
+  ║  ┌──────────────────────────────────────────────┐                  ║
+  ║  │  GATE 1: Preflight validation                 │                  ║
+  ║  │  ├── All required fields present?             │                  ║
+  ║  │  ├── HS code valid? (strip dots, check len)   │                  ║
+  ║  │  ├── Exchange rate > 0?                       │                  ║
+  ║  │  ├── Vessel name not blank?                   │                  ║
+  ║  │  └── Items have qty, weight, value?           │                  ║
+  ║  │                                                │                  ║
+  ║  │  GATE 2: Worksheet recalculation              │                  ║
+  ║  │  ├── exworks + inland = FOB                   │                  ║
+  ║  │  ├── FOB + freight + insurance = CIF foreign  │                  ║
+  ║  │  ├── CIF × rate = CIF local                   │                  ║
+  ║  │  ├── duty = CIF local × duty%                 │                  ║
+  ║  │  ├── surcharge = CIF local × surcharge%       │                  ║
+  ║  │  ├── VAT base = CIF local + duty + surcharge  │                  ║
+  ║  │  └── VAT = VAT base × VAT%                    │                  ║
+  ║  │                                                │                  ║
+  ║  │  GATE 3: XML generation                       │                  ║
+  ║  │  ├── Build from template (strict element order)│                  ║
+  ║  │  ├── HS split: commodity + precision           │                  ║
+  ║  │  ├── All <null/> stubs                         │                  ║
+  ║  │  ├── 9 Taxation_line, 8 Item_tax_total        │                  ║
+  ║  │  ├── Comments_free_text block                  │                  ║
+  ║  │  ├── Dates as MM/DD/YY                         │                  ║
+  ║  │  └── Validate against reference structure      │                  ║
+  ║  │                                                │                  ║
+  ║  │  GATE 4: LB01 PDF generation                  │                  ║
+  ║  │  ├── Header: consignor, consignee, invoice     │                  ║
+  ║  │  ├── CIF breakdown: exworks → inland → FOB     │                  ║
+  ║  │  ├── Items table: CPC, HS, desc, FOB, CIF, tax│                  ║
+  ║  │  ├── Duties: running total column              │                  ║
+  ║  │  ├── CES line 1, CES line 2, CFU              │                  ║
+  ║  │  └── Grand total                               │                  ║
+  ║  └──────────────────────────────────────────────┘                  ║
+  ║                                                                     ║
+  ║  Upload XML + LB01 to Supabase Storage                              ║
+  ║  INSERT INTO generated_documents (doc_type, storage_path)           ║
+  ║  UPDATE declarations SET status = 'exported'                        ║
+  ║  INSERT INTO declaration_events (event='exported')                  ║
+  ║                                                                     ║
+  ║  → WhatsApp via OpenClaw: "HMTL3227-25 ready for ASYCUDA"         ║
+  ║                                                                     ║
+  ╚══════════════════════════╤═══════════════════════════════════════════╝
+                             │
+                             │ broker downloads ZIP, uploads XML to ASYCUDA
+                             ▼
+  ╔══════════════════════════════════════════════════════════════════════╗
+  ║  STEP 4: SUBMISSION + RECEIPT                                       ║
+  ║  ────────────────────────────                                       ║
+  ║                                                                     ║
+  ║  Broker logs into ASYCUDA World                                     ║
+  ║  Imports XML file                                                   ║
+  ║  ASYCUDA creates C82 SAD                                            ║
+  ║  Broker submits for assessment                                      ║
+  ║                                                                     ║
+  ║  Back in Stallion:                                                  ║
+  ║  PATCH /declarations/:id/status  {action: 'submitted'}             ║
+  ║                                                                     ║
+  ║  Customs processes, stamps, issues assessment                       ║
+  ║  Broker pays duties at bank                                         ║
+  ║  Broker enters receipt number in Stallion:                          ║
+  ║                                                                     ║
+  ║  PATCH /declarations/:id/status                                     ║
+  ║    {action: 'receipted', receipt_number: 'A 356'}                  ║
+  ║                                                                     ║
+  ║  INSERT INTO declaration_events (event='receipted')                 ║
+  ║  Auto-update register log                                           ║
+  ║                                                                     ║
+  ║  → WhatsApp: "HMTL3227-25 receipted · A 356"                      ║
+  ║                                                                     ║
+  ╚══════════════════════════════════════════════════════════════════════╝
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   LIFECYCLE     │
+                    │   COMPLETE      │
+                    │                 │
+                    │   Register log  │
+                    │   updated.      │
+                    │   CSV export    │
+                    │   available.    │
+                    └─────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 8 ─ BUILD ORDER (what I'd build first through last)
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │                                                                          │
+  │  PHASE 0 ─ FOUNDATION (Week 1)                                          │
+  │  ─────────────────────────────                                          │
+  │  ☐ Obtain real reference XML from broker BEFORE writing generator       │
+  │  ☐ Set up Supabase project: auth, database, storage, RLS               │
+  │  ☐ FastAPI skeleton with Supabase client + JWT middleware               │
+  │  ☐ React skeleton with Supabase Auth (login page)                      │
+  │  ☐ ONE port number. ONE config file. Documented.                        │
+  │                                                                          │
+  │  PHASE 1 ─ CORE ENGINE (Week 2─3)                                      │
+  │  ────────────────────────────────                                       │
+  │  ☐ Worksheet calculation service (verified against real C82 numbers)    │
+  │  ☐ XML generator built FROM the reference XML as a template             │
+  │  ☐ LB01 PDF generator matching broker's reference format                │
+  │  ☐ Preflight validation (with HS dot-strip fix from day 1)             │
+  │  ☐ Test suite: xml_against_reference, worksheet_math, preflight         │
+  │  ☐ RUN BROKER TEST: input real data → generate → broker verifies       │
+  │                                                                          │
+  │  ── GATE: ASYCUDA accepts the XML before proceeding ──                  │
+  │                                                                          │
+  │  PHASE 2 ─ WORKBENCH (Week 3─4)                                        │
+  │  ──────────────────────────────                                         │
+  │  ☐ Declaration CRUD API (Supabase, not JSON files)                      │
+  │  ☐ Workbench page with 5 tabs                                           │
+  │  ☐ Save draft to Supabase on every change                               │
+  │  ☐ Generate Pack wired to real API                                       │
+  │  ☐ Lookup endpoints: ports, terms, regimes, transport modes             │
+  │  ☐ CBTT rate lookup wired to Central Bank (confirm rate type first)     │
+  │  ☐ Template save + load                                                  │
+  │                                                                          │
+  │  PHASE 3 ─ BROKER REVIEW (Week 4─5)                                    │
+  │  ──────────────────────────────────                                     │
+  │  ☐ Broker review page with batch list + review panel                    │
+  │  ☐ DOC/FIELDS toggle                                                    │
+  │  ☐ PDF viewer for source documents (iframe)                              │
+  │  ☐ Approve/Reject/Correction actions wired to lifecycle API             │
+  │  ☐ Missing field blocker on Approve button                               │
+  │  ☐ Receipt number entry for submitted declarations                       │
+  │  ☐ Keyboard shortcuts                                                    │
+  │  ☐ Responsive layout for tablet (portrait + landscape)                   │
+  │                                                                          │
+  │  PHASE 4 ─ DASHBOARD + REGISTER (Week 5)                               │
+  │  ────────────────────────────────────────                               │
+  │  ☐ Dashboard with KPI counters, action queue, activity feed             │
+  │  ☐ Declaration list with status badges and search                       │
+  │  ☐ Register CSV export endpoint + download button                       │
+  │  ☐ Printable approval summary PDF                                        │
+  │                                                                          │
+  │  ── GATE: Full E2E test: create → review → generate → receipt ──       │
+  │  ── GATE: UPSL demo ──                                                  │
+  │                                                                          │
+  │  PHASE 5 ─ EXTRACTION (Week 6─7)                                       │
+  │  ───────────────────────────────                                        │
+  │  ☐ Obtain REAL sample documents from UPSL first                         │
+  │  ☐ Build extraction prompt tuned to UPSL's actual invoice format        │
+  │  ☐ PDF extraction endpoint                                               │
+  │  ☐ Spreadsheet ingestion endpoint (column mapping via Claude)           │
+  │  ☐ Upload page with drag-drop, batch/separate modes                     │
+  │  ☐ Confidence scoring + extraction notes                                 │
+  │  ☐ Send to Review bridge                                                 │
+  │  ☐ Test on 25 real UPSL declarations                                    │
+  │                                                                          │
+  │  PHASE 6 ─ SCALE (Week 8+)                                             │
+  │  ──────────────────────────                                             │
+  │  ☐ HS code search/lookup endpoint                                        │
+  │  ☐ WhatsApp alerts via OpenClaw webhook                                  │
+  │  ☐ Multi-org support (second client onboarding)                          │
+  │  ☐ Render deployment blueprint per client                                │
+  │  ☐ Onboarding script                                                     │
+  │  ☐ Bundle optimization                                                   │
+  │                                                                          │
+  └──────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ PART 9 ─ KEY DIFFERENCES FROM V1
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+  ┌─────────────────────────────┬──────────────────────────────────────────┐
+  │  V1 (current)               │  V2 (redesign)                           │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  Two parallel declaration   │  ONE declaration model, ONE store        │
+  │  systems (localStorage +    │  (Supabase Postgres)                     │
+  │  JSON file)                 │                                          │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  No auth, no user accounts  │  Supabase Auth + RLS from day 1         │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  XML generator built by     │  XML generator built FROM a real         │
+  │  guessing at ASYCUDA spec,  │  reference XML obtained from broker      │
+  │  fixed via hotfix sessions  │  BEFORE writing any code                 │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  File-based JSON store      │  Postgres with RLS + audit trail         │
+  │  with no locking            │                                          │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  30+ file iterations,       │  Each phase has a gate: confirmed        │
+  │  deployment status unknown  │  working BEFORE next phase starts        │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  Extraction built before    │  Extraction built AFTER real sample      │
+  │  real documents received    │  documents received from UPSL            │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  Port 8020/8021/8022        │  ONE port. ONE config.py.                │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  HS dot-notation bug in     │  HS validation strips dots from day 1   │
+  │  preflight blocks all       │  because the reference XML showed the    │
+  │  generation                 │  split format before code was written    │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  CBTT lookup: placeholder   │  CBTT lookup: confirmed rate type with   │
+  │                             │  broker, wired to real API, cached       │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  Features started in        │  Features completed in sequence:         │
+  │  parallel, many incomplete  │  engine → workbench → review →           │
+  │                             │  dashboard → extraction                  │
+  ├─────────────────────────────┼──────────────────────────────────────────┤
+  │  No tests                   │  Test suite runs before every deploy     │
+  └─────────────────────────────┴──────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+ SUMMARY
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+  The V1 Stallion codebase has a working core engine (ASYCUDA accepted
+  the XML) and well-designed UI components. The problems are structural,
+  not conceptual:
+
+    1. Two data systems that don't talk to each other
+    2. No auth or multi-tenancy
+    3. Too many features started, not enough finished
+    4. Deployment confirmation gaps across 30+ files
+    5. Critical bugs discovered late (HS dots, FOB key, element order)
+       because the reference XML was obtained too late
+
+  If starting over, the single biggest change is:
+
+    GET THE REFERENCE XML FIRST. THEN BUILD.
+
+  Every hotfix session, every structural diff, every "ASYCUDA rejected"
+  moment traces back to building the XML generator without having a real
+  accepted XML to compare against. That one decision cost more time than
+  any other technical choice in the project.
+
+  The second biggest change is: ONE store, ONE model, gates between phases.
+  Complete each layer before starting the next. Confirm deployment before
+  moving on. The V1 breadth is impressive ─ the V2 depth would be sellable.
+

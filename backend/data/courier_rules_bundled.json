@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-05T03:58:56.366326Z",
+  "exemptions": [
+    {
+      "thn": "85171300",
+      "class": "full_exempt",
+      "notes": "Smartphones (breakout exemption from 20% face rate)",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "thn": "39269090",
+      "class": "full_exempt",
+      "notes": "Plastic cellphone cases & screen protectors",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "thn": "84733000",
+      "class": "full_exempt",
+      "notes": "Computer parts and accessories of heading 84.71 (graphics cards, motherboards, RAM, SSDs, laptop batteries reclassified)",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "thn": "85183000",
+      "class": "full_exempt",
+      "notes": "Headphones, earphones, AirPods (cellphone accessories)",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "thn": "12099900",
+      "class": "full_exempt",
+      "notes": "Seeds (other) for sowing",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "thn": "85176900",
+      "class": "duty_free_only",
+      "notes": "Other apparatus for transmission/reception (CET printed Free)",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    }
+  ],
+  "thn_corrections": [
+    {
+      "wrong_thn": "85171200",
+      "correct_thn": "85171300",
+      "reason": "85171200 does not exist; use 85171300 for smartphones",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "wrong_thn": "84148090",
+      "correct_thn": "84148000",
+      "reason": "84148090 does not exist; use 84148000 for air pumps",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "wrong_thn": "83062990",
+      "correct_thn": "83062900",
+      "reason": "83062990 does not exist; use 83062900 for decorations",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "wrong_thn": "96190000",
+      "correct_thn": "96190029",
+      "reason": "96190000 is incomplete; use 96190029 for sanitary articles / pet pads",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    },
+    {
+      "wrong_thn": "85094000",
+      "correct_thn": "85098090",
+      "reason": "85094000 does not exist for steam cleaners; use 85098090",
+      "added_by": "system",
+      "added_at": "2026-05-05T03:58:56.366326Z",
+      "updated_at": "2026-05-05T03:58:56.366326Z"
+    }
+  ],
+  "audit": []
+}

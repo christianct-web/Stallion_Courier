@@ -1,0 +1,103 @@
+{
+  "project_path": "/home/keiraops/.openclaw/workspace/stallion",
+  "architecture": {
+    "detected_pattern": "layered",
+    "confidence": 55,
+    "layer_assignments": {
+      "frontend": "unknown",
+      "launch-kit": "unknown",
+      "docs": "unknown",
+      "backend": "unknown",
+      "data": "unknown"
+    },
+    "pattern_scores": {
+      "layered": 11,
+      "mvc": 8,
+      "hexagonal": 6,
+      "clean": 6,
+      "microservices": 6,
+      "modular_monolith": 5,
+      "feature_based": 8
+    }
+  },
+  "structure": {
+    "directories": [
+      "frontend",
+      "launch-kit",
+      "docs",
+      "backend",
+      "data"
+    ]
+  },
+  "code_quality": {
+    "metrics": {
+      "total_lines": 11115,
+      "file_count": 92,
+      "avg_file_lines": 120,
+      "large_files": [
+        {
+          "path": "backend/app/main.py",
+          "lines": 1148
+        },
+        {
+          "path": "frontend/src/pages/StallionWorkbench.tsx",
+          "lines": 1359
+        },
+        {
+          "path": "frontend/src/components/ui/sidebar.tsx",
+          "lines": 638
+        }
+      ],
+      "high_import_files": [
+        {
+          "path": "frontend/src/pages/DeclarationEditor.tsx",
+          "imports": 34
+        }
+      ],
+      "god_classes": [],
+      "naming_issues": []
+    },
+    "issues": [
+      {
+        "type": "large_file",
+        "severity": "warning",
+        "file": "backend/app/main.py",
+        "message": "File has 1148 lines (threshold: 500)",
+        "suggestion": "Consider splitting into smaller, focused modules"
+      },
+      {
+        "type": "large_file",
+        "severity": "warning",
+        "file": "frontend/src/pages/StallionWorkbench.tsx",
+        "message": "File has 1359 lines (threshold: 500)",
+        "suggestion": "Consider splitting into smaller, focused modules"
+      },
+      {
+        "type": "large_file",
+        "severity": "warning",
+        "file": "frontend/src/components/ui/sidebar.tsx",
+        "message": "File has 638 lines (threshold: 500)",
+        "suggestion": "Consider splitting into smaller, focused modules"
+      },
+      {
+        "type": "high_imports",
+        "severity": "info",
+        "file": "frontend/src/pages/DeclarationEditor.tsx",
+        "message": "File has 34 imports (threshold: 30)",
+        "suggestion": "Consider if all imports are necessary or if the file has too many responsibilities"
+      }
+    ]
+  },
+  "layer_violations": [],
+  "recommendations": [
+    "Consider refactoring 3 large file(s) into smaller modules",
+    "Consider adding missing architectural layer(s): application, domain, presentation, infrastructure"
+  ],
+  "summary": {
+    "pattern": "layered",
+    "confidence": 55,
+    "total_issues": 4,
+    "code_issues": 4,
+    "layer_violations": 0
+  }
+}

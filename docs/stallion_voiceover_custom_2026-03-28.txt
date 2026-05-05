@@ -1,0 +1,166 @@
+If you’re a customs broker in Trinidad…
+you know this routine.
+
+An invoice comes in.
+You open Asy-kyoo-duh… ASYCUDA.
+
+And then… you start typing.
+
+Consignee. Consignor. HS code.
+Values. Currency. Exchange rates.
+
+Then Excel.
+Then formatting.
+Then costing.
+Then XML.
+
+It takes… thirty to forty-five minutes
+for a single declaration.
+
+Now imagine doing that… a hundred times a month.
+
+Stallion does it in under three minutes.
+
+Let me show you.
+
+I’ve got three documents here.
+A commercial invoice…
+a FedEx airway bill…
+and a delivery receipt.
+
+I drop them into Stallion…
+click Extract…
+
+…and that’s it.
+
+Stallion reads everything together
+and pulls out the key data automatically.
+
+No copying.
+No retyping.
+No back and forth.
+
+Now we’re in the workbench.
+
+Most of this… is already done.
+
+Consignee. Consignor.
+Invoice value. AWB.
+Weight. Package count.
+
+All populated.
+
+The client directory matches the importer
+and fills in the TIN and consignee code.
+
+And over on the right…
+you’ve got a checklist.
+
+Green means it’s complete.
+Red means it needs a quick review.
+
+So you always know where you are…
+without guessing.
+
+Now this part usually takes time.
+
+HS classification.
+
+So I type in a product description…
+
+And Stallion searches
+over four thousand six hundred
+official Trinidad and Tobago tariff entries.
+
+Instantly.
+
+I pick the right one…
+
+…and everything updates.
+
+Duty rate.
+VAT.
+Line values.
+
+No manual lookup.
+No second-guessing.
+
+Now watch this.
+
+Everything updates in real time.
+
+EX-WORKS…
+freight…
+CIF…
+duty…
+VAT…
+
+All connected.
+
+Change one number…
+everything else adjusts.
+
+No broken spreadsheets.
+No formula errors.
+
+Before generating…
+Stallion runs a full validation.
+
+Fields.
+Formats.
+Values.
+
+Everything checks out.
+
+So I click Generate…
+
+…and instantly, I get:
+
+The ASYCUDA XML
+A duty worksheet
+And a client costing
+
+Ready to go.
+
+Then I generate the invoice.
+
+Stallion pulls everything in automatically.
+
+Reference.
+Client.
+Fees.
+
+From a single upload…
+you now have four outputs.
+
+Every declaration goes into a review queue.
+
+Prioritized by confidence.
+
+So the ones that need attention…
+come first.
+
+You can approve…
+flag…
+or reject.
+
+And everything is logged.
+
+That’s Stallion.
+
+From raw documents…
+to ASYCUDA-ready outputs…
+
+in minutes.
+
+Not hours.
+
+We’re onboarding founding broker firms right now.
+
+If you want to try it with one of your own declarations…
+
+reach out to us at:
+
+sales@manalabs8.com
+
+Thanks for watching.
