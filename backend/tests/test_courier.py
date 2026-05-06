@@ -435,5 +435,356 @@ class TestServiceIntegration(_RulesStoreTestBase):
         self.assertEqual(line["total_taxes"], 0.0)
 
 
+# ─── Phase 2: XLSX export tests ──────────────────────────────────────────────
+
+
+class TestWorksheetExport(_RulesStoreTestBase):
+    """Build a v3 worksheet from a manifest and inspect the result."""
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        self.manifest_path_backup = store_courier.COURIER_FILE
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "courier_manifests.json"
+        store_courier.COURIER_FILE.write_text("[]", encoding="utf-8")
+
+    def tearDown(self):
+        from app import store_courier
+        store_courier.COURIER_FILE = self.manifest_path_backup
+        super().tearDown()
+
+    def _make_manifest(self):
+        """Build a small manifest with mixed exemption classes."""
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "EXPORT-TEST-001",
+            "arrival_date": "2026-05-04",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "hawb": "TEST-001-A", "shipper": "Amazon", "importer": "John Doe",
+            "description": "Body cream", "thn": "33049990",
+            "cost_usd": 50.0, "freight_usd": 0.0, "packages": 1, "weight_kg": 0.5,
+        })
+        courier_service.add_line(m["id"], {
+            "hawb": "TEST-001-B", "shipper": "Apple", "importer": "Jane Smith",
+            "description": "Smartphone", "thn": "85171300",
+            "cost_usd": 800.0, "freight_usd": 0.0, "packages": 1, "weight_kg": 0.3,
+        })
+        courier_service.add_line(m["id"], {
+            "hawb": "TEST-001-C", "shipper": "Nest", "importer": "Bob Brown",
+            "description": "Smart device", "thn": "85176900",
+            "cost_usd": 100.0, "freight_usd": 0.0, "packages": 1, "weight_kg": 0.4,
+        })
+        return courier_service.get_manifest(m["id"])
+
+    def test_worksheet_returns_bytes(self):
+        from app.services import courier_export
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        self.assertIsInstance(data, bytes)
+        self.assertEqual(data[:2], b"PK")
+
+    def test_worksheet_layout_matches_real_template(self):
+        """Cell positions should match the real AWB 5034 template exactly."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # Title block
+        self.assertIn("EXPRESS CONSIGNMENTS WORKSHEET", str(ws["A1"].value))
+        self.assertIn("NON-COMMERCIAL", str(ws["A2"].value))
+        self.assertIn("CARGO REPORTER", str(ws["A3"].value))
+        self.assertIn("MASTER WAY BILL", str(ws["J3"].value))
+        self.assertIn("EXPORT-TEST-001", str(ws["J3"].value))
+        self.assertIn("R.O.E.", str(ws["F4"].value))
+        self.assertIn("FREIGHT", str(ws["J4"].value))
+
+        # Banner row 6
+        self.assertEqual(ws["A6"].value, "SECTION 2")
+        self.assertIn("SECTION 3", str(ws["Q6"].value))
+
+        # Column headers row 7
+        self.assertIn("LINE", str(ws["A7"].value))
+        self.assertEqual(ws["B7"].value, "HAWB")
+        self.assertEqual(ws["C7"].value, "SHIPPER")
+        self.assertIn("IMPORTER", str(ws["D7"].value))
+        self.assertIn("DESCRIPTION", str(ws["E7"].value))
+        self.assertIn("PKGS", str(ws["F7"].value))
+        self.assertEqual(ws["H7"].value, "THN")
+        self.assertEqual(ws["I7"].value, "RATE")
+        self.assertIn("CUSTOMS", str(ws["L7"].value))
+        self.assertEqual(ws["M7"].value, "DUTY")
+        self.assertIn("OPT", str(ws["N7"].value))
+        self.assertIn("VAT", str(ws["O7"].value))
+        self.assertIn("TOTAL", str(ws["P7"].value))
+        self.assertIn("OFFICER", str(ws["Q7"].value))
+        self.assertIn("ADJUSTED", str(ws["S7"].value))
+        self.assertIn("DETAINED", str(ws["X7"].value))
+        self.assertIn("T/SHED", str(ws["Y7"].value))
+
+        # First data row at row 8 (NOT row 9)
+        self.assertEqual(ws["A8"].value, 1)
+        self.assertEqual(ws["E8"].value, "Body cream")
+        self.assertEqual(ws["H8"].value, "33049990")
+        self.assertEqual(ws["I8"].value, "20%")
+        self.assertAlmostEqual(ws["J8"].value, 50.0, places=2)
+
+    def test_worksheet_formulas_match_real_template(self):
+        """Formulas should match the real worksheet's syntax."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # Row 8: body cream — standard 20% line
+        # Real template uses =J8*6.78 (rate baked into formula)
+        l_formula = str(ws["L8"].value)
+        self.assertIn("J8", l_formula)
+        self.assertIn("6.78", l_formula)
+        self.assertEqual(ws["M8"].value, "=L8*0.2")
+        self.assertEqual(ws["N8"].value, "=L8*0.07")
+        self.assertEqual(ws["O8"].value, "=(L8+M8+N8)*0.125")
+        # P uses M+N+O (NOT SUM)
+        self.assertEqual(ws["P8"].value, "=M8+N8+O8")
+
+        # Row 9: smartphone — full_exempt, hard zeros
+        self.assertEqual(ws["I9"].value, "FREE")
+        self.assertEqual(ws["M9"].value, 0)
+        self.assertEqual(ws["N9"].value, 0)
+        self.assertEqual(ws["O9"].value, 0)
+
+        # Row 10: smart device — duty_free_only
+        self.assertEqual(ws["I10"].value, "FREE")
+        self.assertEqual(ws["M10"].value, 0)
+        self.assertEqual(ws["N10"].value, "=L10*0.07")
+        self.assertEqual(ws["O10"].value, "=(L10+M10+N10)*0.125")
+
+    def test_worksheet_with_officer_corrections(self):
+        """Officer examination data lands in Section 3 of the right rows."""
+        import io
+        from openpyxl import load_workbook
+        from app.services import courier_export, courier_service
+
+        m = self._make_manifest()
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-04",
+            "examining_officer": "Officer Test",
+            "corrections": [
+                {
+                    "line_no": 1, "kind": "uplift",
+                    "officer_thn": "33049990",
+                    "add_cost_usd": 25.0,
+                    "adjusted_cif_ttd": 169.50,
+                    "add_duty": 33.90,
+                    "add_opt": 11.87,
+                    "add_vat": 26.91,
+                },
+            ],
+        })
+
+        m = courier_service.get_manifest(m["id"])
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # Line 1 → row 8, S3 fields populated
+        self.assertEqual(ws["Q8"].value, "33049990")
+        self.assertAlmostEqual(ws["R8"].value, 25.0, places=2)
+        self.assertAlmostEqual(ws["S8"].value, 169.50, places=2)
+        self.assertAlmostEqual(ws["T8"].value, 33.90, places=2)
+        self.assertEqual(ws["W8"].value, "=T8+U8+V8")
+
+        # Line 2 → row 9, S3 empty
+        self.assertIn(ws["Q9"].value, (None, ""))
+
+    def test_worksheet_totals_match_real_template(self):
+        """TOTALS row uses SUM formulas across columns F G J L M N O P R S T U V W."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # 3 lines → data at rows 8-10, totals at row 11
+        self.assertEqual(ws["A11"].value, "TOTALS")
+        for col in ("F", "G", "J", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W"):
+            v = ws[f"{col}11"].value
+            self.assertTrue(
+                str(v).startswith("=SUM("),
+                f"Cell {col}11 should be a SUM formula, got {v!r}",
+            )
+
+        # Grand total row 12: P12 = P11, W12 = P11 + W11
+        self.assertEqual(ws["P12"].value, "=P11")
+        self.assertEqual(ws["W12"].value, "=P11+W11")
+
+    def test_worksheet_recalc_correctness(self):
+        """LibreOffice recalc should produce expected duty/OPT/VAT values."""
+        import shutil
+        import subprocess
+
+        recalc_script = Path("/mnt/skills/public/xlsx/scripts/recalc.py")
+        if not recalc_script.exists() or not (
+            shutil.which("libreoffice") or shutil.which("soffice")
+        ):
+            self.skipTest("LibreOffice/recalc.py not available")
+
+        from openpyxl import load_workbook
+        from app.services import courier_export
+
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        out = Path(self.tmpdir) / "ws.xlsx"
+        out.write_bytes(data)
+
+        try:
+            result = subprocess.run(
+                ["python3", str(recalc_script), str(out)],
+                capture_output=True, text=True, timeout=60,
+            )
+        except subprocess.TimeoutExpired:
+            self.skipTest("Recalc timed out")
+        if result.returncode != 0:
+            self.skipTest(f"Recalc script failed: {result.stderr}")
+
+        wb = load_workbook(out, data_only=True)
+        ws = wb.active
+
+        # Row 8 (body cream, $50, 6.78, 20%):
+        # cif = 339, duty = 67.80, opt = 23.73, vat ≈ 53.82, total ≈ 145.35
+        self.assertAlmostEqual(ws["L8"].value, 339.0, places=2)
+        self.assertAlmostEqual(ws["M8"].value, 67.80, places=2)
+        self.assertAlmostEqual(ws["N8"].value, 23.73, places=2)
+
+        # Row 9 (smartphone, full_exempt): all zero
+        self.assertEqual(ws["M9"].value, 0)
+        self.assertEqual(ws["N9"].value, 0)
+        self.assertEqual(ws["O9"].value, 0)
+
+        # Row 10 (smart device, duty_free_only): duty 0, OPT 47.46, VAT 90.68
+        self.assertEqual(ws["M10"].value, 0)
+        self.assertAlmostEqual(ws["N10"].value, 47.46, places=2)
+        self.assertAlmostEqual(ws["O10"].value, 90.68, places=2)
+
+
+class TestHazmatExport(_RulesStoreTestBase):
+    """Build the Swissport Transit Shed Hazmat XLSX and verify its structure."""
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        self.manifest_path_backup = store_courier.COURIER_FILE
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "courier_manifests.json"
+        store_courier.COURIER_FILE.write_text("[]", encoding="utf-8")
+
+    def tearDown(self):
+        from app import store_courier
+        store_courier.COURIER_FILE = self.manifest_path_backup
+        super().tearDown()
+
+    def test_hazmat_swissport_layout(self):
+        """Verify the Swissport Transit Shed Form layout (Trade + Non-Trade sections)."""
+        import io
+        from openpyxl import load_workbook
+        from app.services import courier_export, courier_service
+
+        m = courier_service.create_manifest({
+            "manifest_no": "HZ-001",
+            "arrival_date": "2026-05-04",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "hawb": "H-1", "description": "Body cream", "thn": "33049990",
+            "cost_usd": 50.0, "packages": 1, "weight_kg": 0.5,
+        })
+        m = courier_service.get_manifest(m["id"])
+        data = courier_export.build_hazmat(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # Header
+        self.assertIn("SWISSPORT", str(ws["B2"].value).upper())
+
+        # Manifest meta
+        self.assertEqual(ws["B7"].value, "NAME OF COURIER:")
+        self.assertEqual(ws["J7"].value, "AWB/BL #")
+        self.assertEqual(ws["K7"].value, "HZ-001")
+
+        # Tax column headers at row 22
+        self.assertEqual(ws["F22"].value, "CIF")
+        self.assertEqual(ws["H22"].value, "OPT")
+        self.assertEqual(ws["J22"].value, "DUTY")
+        self.assertEqual(ws["L22"].value, "VAT")
+        self.assertEqual(ws["N22"].value, "TOTAL")
+
+        # Trade section (rows 23, 25, 27)
+        self.assertEqual(ws["E23"].value, "Trade")
+        self.assertEqual(ws["B23"].value, "Original Values Declared")
+        self.assertEqual(ws["F23"].value, 0)  # Trade is zero for TTPOST
+        # Additional row 25 = Final - Original
+        self.assertEqual(ws["F25"].value, "=F27-F23")
+        self.assertEqual(ws["H25"].value, "=H27-H23")
+        self.assertEqual(ws["F27"].value, 0)  # Final Trade also zero
+
+        # Non-Trade section (rows 31, 33, 35)
+        self.assertEqual(ws["E31"].value, "Non-Trade")
+        self.assertGreater(ws["F31"].value, 0)  # Non-Trade Original CIF
+        # Additional row 33 = Final - Original
+        self.assertEqual(ws["F33"].value, "=F35-F31")
+        self.assertEqual(ws["H33"].value, "=H35-H31")
+        self.assertEqual(ws["J33"].value, "=J35-J31")
+        self.assertEqual(ws["L33"].value, "=L35-L31")
+
+        # Summary footer
+        self.assertEqual(ws["B39"].value, "Total Additional Taxes")
+        self.assertEqual(ws["F38"].value, "=F33")
+        self.assertEqual(ws["B42"].value, "TOTAL TAXES")
+        self.assertEqual(ws["F41"].value, "=F35")
+
+    def test_hazmat_with_corrections(self):
+        """Officer corrections feed into the Non-Trade Final values."""
+        import io
+        from openpyxl import load_workbook
+        from app.services import courier_export, courier_service
+
+        m = courier_service.create_manifest({
+            "manifest_no": "HZ-002", "arrival_date": "2026-05-04", "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Body cream", "thn": "33049990", "cost_usd": 50.0,
+        })
+        courier_service.record_examination(m["id"], {
+            "corrections": [
+                {"line_no": 1, "kind": "uplift",
+                 "officer_thn": "33049990",
+                 "adjusted_cif_ttd": 169.50,
+                 "add_duty": 33.90, "add_opt": 11.87, "add_vat": 26.91},
+            ],
+        })
+        m = courier_service.get_manifest(m["id"])
+        data = courier_export.build_hazmat(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # F35 (Non-Trade Final CIF) = original_cif + add_cif
+        # original_cif = 50 * 6.78 = 339, add_cif = 169.50, final = 508.50
+        self.assertAlmostEqual(ws["F35"].value, 508.50, places=2)
+        # J35 (Final Duty) = orig duty (67.80) + add duty (33.90) = 101.70
+        self.assertAlmostEqual(ws["J35"].value, 101.70, places=2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

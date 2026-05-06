@@ -2,18 +2,21 @@
 Stallion Courier Module routes.
 
 Endpoints for TTPOST express consignment manifests, lines, officer
-examination, and THN classification. Worksheet/Hazmat export endpoints
-are stubbed here and will be implemented in Phase 2 (courier_export.py).
+examination, THN classification, and worksheet/hazmat exports.
 """
 from __future__ import annotations
 
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
-from ..services import courier_duty, courier_matcher, courier_service
+from ..services import courier_duty, courier_export, courier_matcher, courier_service
 
 router = APIRouter(prefix="/courier", tags=["courier"])
+
+
+XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 # ── Manifests ────────────────────────────────────────────────────────────────
@@ -139,16 +142,46 @@ def lookup_thn(thn: str):
     }
 
 
-# ── Stubs for Phase 2 ────────────────────────────────────────────────────────
+# ── XLSX exports ─────────────────────────────────────────────────────────────
+
+
+def _safe_filename(s: str, fallback: str = "manifest") -> str:
+    """Sanitize a manifest_no for use in a filename."""
+    keep = "".join(c if (c.isalnum() or c in "-_.") else "_" for c in (s or fallback))
+    return keep.strip("_") or fallback
 
 
 @router.get("/manifests/{manifest_id}/worksheet")
 def export_worksheet(manifest_id: str):
-    """Generate Worksheet v3 XLSX. Implemented in Phase 2."""
-    raise HTTPException(status_code=501, detail="Worksheet export pending Phase 2 (courier_export.py)")
+    """Generate Worksheet v3 XLSX for the manifest. Returns the file inline."""
+    manifest = courier_service.get_manifest(manifest_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail="Manifest not found")
+    try:
+        data = courier_export.build_worksheet_v3(manifest)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {e}")
+    fname = _safe_filename(manifest.get("manifest_no")) + "_v3.xlsx"
+    return Response(
+        content=data,
+        media_type=XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
 
 
 @router.get("/manifests/{manifest_id}/hazmat")
 def export_hazmat(manifest_id: str):
-    """Generate Courier Data Form Hazmat XLSX. Implemented in Phase 2."""
-    raise HTTPException(status_code=501, detail="Hazmat export pending Phase 2 (courier_export.py)")
+    """Generate Courier Data Form Hazmat XLSX for the manifest."""
+    manifest = courier_service.get_manifest(manifest_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail="Manifest not found")
+    try:
+        data = courier_export.build_hazmat(manifest)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {e}")
+    fname = _safe_filename(manifest.get("manifest_no")) + "_hazmat.xlsx"
+    return Response(
+        content=data,
+        media_type=XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
