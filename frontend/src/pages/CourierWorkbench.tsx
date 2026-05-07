@@ -79,7 +79,7 @@ export default function CourierWorkbench() {
     setDraft(v === null || v === undefined ? "" : String(v));
   }
 
-  async function commitInlineEdit(r: any, field: EditableField) {
+  async function commitInlineEdit(r: any, field: EditableField, next?: GridPos) {
     const payload: Record<string, unknown> = {};
     if (["packages", "weight_kg", "cost_usd", "freight_usd"].includes(field)) {
       payload[field] = draft.trim() === "" ? 0 : Number(draft);
@@ -91,6 +91,7 @@ export default function CourierWorkbench() {
     setEditing(null);
     setDraft("");
     await load();
+    if (next) setActiveCell(next);
   }
 
   async function removeLine(r: any) {
@@ -109,7 +110,12 @@ export default function CourierWorkbench() {
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => commitInlineEdit(r, field)}
           onKeyDown={(e) => {
-            if (e.key === "Enter") commitInlineEdit(r, field);
+            if (e.key === "Enter") commitInlineEdit(r, field, { row: rowIdx, col: colIdx + 1 });
+            if (e.key === "Tab") {
+              e.preventDefault();
+              const delta = e.shiftKey ? -1 : 1;
+              commitInlineEdit(r, field, { row: rowIdx, col: Math.max(0, colIdx + delta) });
+            }
             if (e.key === "Escape") {
               setEditing(null);
               setDraft("");
@@ -128,7 +134,12 @@ export default function CourierWorkbench() {
         onClick={() => beginInlineEdit(r, field)}
         onKeyDown={(e) => {
           if (e.key === "Enter") beginInlineEdit(r, field);
-          if (e.key === "Tab") return;
+          if (e.key === "Tab") {
+            e.preventDefault();
+            const delta = e.shiftKey ? -1 : 1;
+            setActiveCell({ row: rowIdx, col: Math.max(0, colIdx + delta) });
+            return;
+          }
           if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
             e.preventDefault();
             const delta = e.key === "ArrowLeft" ? [-1, 0] : e.key === "ArrowRight" ? [1, 0] : e.key === "ArrowUp" ? [0, -1] : [0, 1];
