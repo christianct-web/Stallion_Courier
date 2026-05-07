@@ -37,6 +37,20 @@ export default function CourierExam() {
     setRows((r) => r.map((x, idx) => idx === i ? { ...x, [key]: val } : x));
   }
 
+  function applyTaxRemoval(i: number) {
+    const corr = rows[i];
+    const base = (manifest?.lines || []).find((l: any) => l.line_no === corr.line_no);
+    if (!base) return;
+    setRows((r) => r.map((x, idx) => idx === i ? {
+      ...x,
+      add_duty: -Math.abs(Number(base.duty || 0)),
+      add_opt: -Math.abs(Number(base.opt || 0)),
+      add_vat: -Math.abs(Number(base.vat || 0)),
+      add_total: -Math.abs(Number(base.total_taxes || 0)),
+      kind: x.kind || 'reclass',
+    } : x));
+  }
+
   async function save() {
     await saveCourierExam(id, { corrections: rows });
     await load();
@@ -48,11 +62,14 @@ export default function CourierExam() {
       <TopNav rightSlot={<div style={{display:'flex',gap:8}}><button onClick={() => nav(`/stallion/courier/${id}`)}>← Back to Workbench</button><button onClick={addCorrection}>+ Add Correction</button><button onClick={save}>Save Exam</button></div>} />
       <div style={{ padding: 14 }}>
         <h3 style={{ marginTop: 0 }}>Courier Exam — {manifest?.manifest_no || id}</h3>
+        <div style={{ marginBottom: 8, color: '#9eb0c8', fontSize: 12 }}>
+          Tip: for reclass-to-exempt corrections, use “Auto Tax Removal” to generate negative add_duty/add_opt/add_vat/add_total from original line.
+        </div>
         <div style={{ overflow: "auto", border: "1px solid #2a3340", background: "#151922" }}>
           <table style={{ borderCollapse: "collapse", minWidth: 1700, width: "100%", fontSize: 13 }}>
             <thead>
               <tr>
-                {['Line','Kind','Officer THN','New Description','Add Cost USD','Add Duty','Add OPT','Add VAT','Add Total','Detained','T-Shed'].map(h => (
+                {['Line','Kind','Officer THN','New Description','Add Cost USD','Add Duty','Add OPT','Add VAT','Add Total','Detained','T-Shed','Quick'].map(h => (
                   <th key={h} style={{border:'1px solid #2f3b4f',padding:'8px 6px',textAlign:'left',background:'#1b2230'}}>{h}</th>
                 ))}
               </tr>
@@ -71,6 +88,7 @@ export default function CourierExam() {
                   <td style={cell}><input value={r.add_total ?? 0} onChange={e => patch(i,'add_total',Number(e.target.value||0))} style={inp}/></td>
                   <td style={cell}><input type='checkbox' checked={!!r.detained_seized} onChange={e => patch(i,'detained_seized',e.target.checked)} /></td>
                   <td style={cell}><input type='checkbox' checked={!!r.dep_in_tshed} onChange={e => patch(i,'dep_in_tshed',e.target.checked)} /></td>
+                  <td style={cell}><button onClick={() => applyTaxRemoval(i)}>Auto Tax Removal</button></td>
                 </tr>
               ))}
             </tbody>
