@@ -44,11 +44,14 @@ const editableFields = [
 
 type EditableField = (typeof editableFields)[number];
 
+type GridPos = { row: number; col: number };
+
 export default function CourierWorkbench() {
   const { id = "" } = useParams();
   const [manifest, setManifest] = useState<any>(null);
   const [editing, setEditing] = useState<{ lineNo: number; field: EditableField } | null>(null);
   const [draft, setDraft] = useState<string>("");
+  const [activeCell, setActiveCell] = useState<GridPos | null>(null);
 
   async function load() {
     const m = await getCourierManifest(id);
@@ -96,7 +99,7 @@ export default function CourierWorkbench() {
     await load();
   }
 
-  function renderEditableCell(r: any, field: EditableField, style: CSSProperties = cell) {
+  function renderEditableCell(r: any, field: EditableField, style: CSSProperties = cell, rowIdx = 0, colIdx = 0) {
     const isEditing = editing?.lineNo === r.line_no && editing?.field === field;
     if (isEditing) {
       return (
@@ -117,8 +120,24 @@ export default function CourierWorkbench() {
       );
     }
     const value = r?.[field] ?? "";
+    const isActive = activeCell?.row === rowIdx && activeCell?.col === colIdx;
     return (
-      <div onClick={() => beginInlineEdit(r, field)} style={{ cursor: "text", minHeight: 18 }} title="Click to edit">
+      <div
+        tabIndex={0}
+        onFocus={() => setActiveCell({ row: rowIdx, col: colIdx })}
+        onClick={() => beginInlineEdit(r, field)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") beginInlineEdit(r, field);
+          if (e.key === "Tab") return;
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+            e.preventDefault();
+            const delta = e.key === "ArrowLeft" ? [-1, 0] : e.key === "ArrowRight" ? [1, 0] : e.key === "ArrowUp" ? [0, -1] : [0, 1];
+            setActiveCell({ row: Math.max(0, rowIdx + delta[1]), col: Math.max(0, colIdx + delta[0]) });
+          }
+        }}
+        style={{ cursor: "text", minHeight: 18, outline: isActive ? "1px solid #4b5e7b" : "none" }}
+        title="Click to edit"
+      >
         {String(value)}
       </div>
     );
@@ -172,16 +191,16 @@ export default function CourierWorkbench() {
               {lines.map((r: any, idx: number) => (
                 <tr key={idx}>
                   <td style={cell}>{r.line_no ?? idx + 1}</td>
-                  <td style={cell}>{renderEditableCell(r, "hawb")}</td>
-                  <td style={cell}>{renderEditableCell(r, "shipper")}</td>
-                  <td style={cell}>{renderEditableCell(r, "importer")}</td>
-                  <td style={cell}>{renderEditableCell(r, "description")}</td>
-                  <td style={cell}>{renderEditableCell(r, "packages")}</td>
-                  <td style={cell}>{renderEditableCell(r, "weight_kg")}</td>
-                  <td style={cell}>{renderEditableCell(r, "thn")}</td>
+                  <td style={cell}>{renderEditableCell(r, "hawb", cell, idx, 0)}</td>
+                  <td style={cell}>{renderEditableCell(r, "shipper", cell, idx, 1)}</td>
+                  <td style={cell}>{renderEditableCell(r, "importer", cell, idx, 2)}</td>
+                  <td style={cell}>{renderEditableCell(r, "description", cell, idx, 3)}</td>
+                  <td style={cell}>{renderEditableCell(r, "packages", cell, idx, 4)}</td>
+                  <td style={cell}>{renderEditableCell(r, "weight_kg", cell, idx, 5)}</td>
+                  <td style={cell}>{renderEditableCell(r, "thn", cell, idx, 6)}</td>
                   <td style={cell}>{r.duty_rate ?? ""}</td>
-                  <td style={cell}>{renderEditableCell(r, "cost_usd", num)}</td>
-                  <td style={cell}>{renderEditableCell(r, "freight_usd", num)}</td>
+                  <td style={cell}>{renderEditableCell(r, "cost_usd", num, idx, 7)}</td>
+                  <td style={cell}>{renderEditableCell(r, "freight_usd", num, idx, 8)}</td>
                   <td style={num}>{r.customs_value_ttd ?? r.cif_ttd ?? ""}</td>
                   <td style={num}>{r.duty ?? ""}</td>
                   <td style={num}>{r.opt ?? ""}</td>
