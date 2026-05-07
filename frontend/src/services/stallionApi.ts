@@ -159,6 +159,23 @@ export async function generatePack(payload: {
   }>("/pack/generate", { method: "POST", body: JSON.stringify(payload) });
 }
 
+export async function listCourierManifests(): Promise<{ items: any[] }> {
+  const res = await api<unknown>(`/courier/manifests`);
+  return { items: normalizeListEnvelope(res, "/courier/manifests") };
+}
+
+export async function createCourierManifest(payload: { manifest_no: string; arrival_date?: string; exch_rate?: number }) {
+  return api<any>("/courier/manifests", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function getCourierManifest(id: string) {
+  return api<any>(`/courier/manifests/${id}`);
+}
+
+export async function addCourierLine(id: string, payload: Record<string, unknown>) {
+  return api<any>(`/courier/manifests/${id}/lines`, { method: "POST", body: JSON.stringify(payload) });
+}
+
 export async function listDeclarations(status?: string): Promise<{ items: any[] }> {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
   const res = await api<unknown>(`/declarations${q}`);

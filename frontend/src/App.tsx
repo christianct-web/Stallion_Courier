@@ -12,6 +12,8 @@ const DocumentUpload = lazy(() => import("./pages/DocumentUpload"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ActivityLog = lazy(() => import("./pages/ActivityLog"));
 const ClientsPage = lazy(() => import("./pages/Clients"));
+const CourierManifests = lazy(() => import("./pages/CourierManifests"));
+const CourierWorkbench = lazy(() => import("./pages/CourierWorkbench"));
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/stallion/extract" element={<DocumentUpload />} />
             <Route path="/stallion/log" element={<ActivityLog />} />
             <Route path="/stallion/clients" element={<ClientsPage />} />
+            <Route path="/stallion/courier" element={<CourierManifests />} />
+            <Route path="/stallion/courier/:id" element={<CourierWorkbench />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

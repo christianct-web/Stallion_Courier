@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 const NAV_LINKS = [
   { label: "Dashboard", path: "/" },
   { label: "Workbench",  path: "/stallion/workbench" },
+  { label: "Courier",    path: "/stallion/courier" },
   { label: "Review",     path: "/stallion/brokerreview4" },
   { label: "Extract",    path: "/stallion/extract" },
   { label: "Clients",    path: "/stallion/clients" },
