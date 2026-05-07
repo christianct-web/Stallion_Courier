@@ -80,6 +80,39 @@ def _iter_lines(ws):
         row += 1
 
 
+def _iter_corrections(ws):
+    row = 8
+    while row < 5000:
+        officer_thn = ws[f"Q{row}"].value
+        add_cost = ws[f"R{row}"].value
+        add_duty = ws[f"T{row}"].value
+        add_opt = ws[f"U{row}"].value
+        add_vat = ws[f"V{row}"].value
+        add_total = ws[f"W{row}"].value
+        detained = ws[f"X{row}"].value
+        tshed = ws[f"Y{row}"].value
+
+        if all(v in (None, "", 0) for v in [officer_thn, add_cost, add_duty, add_opt, add_vat, add_total, detained, tshed]):
+            row += 1
+            continue
+
+        yield {
+            "line_no": row - 7,
+            "kind": "reclass" if officer_thn else "uplift",
+            "officer_thn": "" if officer_thn is None else str(officer_thn).replace('.', '').strip(),
+            "new_description": "",
+            "add_cost_usd": _to_num(add_cost, 0),
+            "adjusted_cif_ttd": _to_num(ws[f"S{row}"].value, 0),
+            "add_duty": _to_num(add_duty, 0),
+            "add_opt": _to_num(add_opt, 0),
+            "add_vat": _to_num(add_vat, 0),
+            "add_total": _to_num(add_total, 0),
+            "detained_seized": bool(detained),
+            "dep_in_tshed": bool(tshed),
+        }
+        row += 1
+
+
 def import_file(path: Path, arrival_date: str, exch_rate: float, dry_run: bool = False) -> tuple[bool, str]:
     manifest_no = _manifest_no_from_filename(path)
 
@@ -91,11 +124,12 @@ def import_file(path: Path, arrival_date: str, exch_rate: float, dry_run: bool =
     ws = wb.active
 
     lines = list(_iter_lines(ws))
+    corrections = list(_iter_corrections(ws))
     if not lines:
         return False, f"skip no lines parsed ({path.name})"
 
     if dry_run:
-        return True, f"dry-run import {manifest_no}: {len(lines)} lines"
+        return True, f"dry-run import {manifest_no}: {len(lines)} lines, {len(corrections)} corrections"
 
     m = courier_service.create_manifest(
         {
@@ -125,7 +159,11 @@ def import_file(path: Path, arrival_date: str, exch_rate: float, dry_run: bool =
         else:
             courier_service.add_line(m["id"], payload)
 
-    return True, f"imported {manifest_no}: {len(lines)} lines"
+    # Import officer uplift/reclass rows from Section 3 so hazmat can be regenerated from worksheet-derived corrections.
+    if corrections:
+        courier_service.record_examination(m["id"], {"corrections": corrections})
+
+    return True, f"imported {manifest_no}: {len(lines)} lines, {len(corrections)} corrections"
 
 
 def main():
