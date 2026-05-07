@@ -176,6 +176,22 @@ export async function addCourierLine(id: string, payload: Record<string, unknown
   return api<any>(`/courier/manifests/${id}/lines`, { method: "POST", body: JSON.stringify(payload) });
 }
 
+export async function updateCourierLine(id: string, lineNo: number, payload: Record<string, unknown>) {
+  return api<any>(`/courier/manifests/${id}/lines/${lineNo}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export async function deleteCourierLine(id: string, lineNo: number) {
+  return api<any>(`/courier/manifests/${id}/lines/${lineNo}`, { method: "DELETE" });
+}
+
+export function courierWorksheetUrl(id: string) {
+  return `${BASE_URL}/courier/manifests/${id}/worksheet`;
+}
+
+export function courierHazmatUrl(id: string) {
+  return `${BASE_URL}/courier/manifests/${id}/hazmat`;
+}
+
 export async function listDeclarations(status?: string): Promise<{ items: any[] }> {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
   const res = await api<unknown>(`/declarations${q}`);
