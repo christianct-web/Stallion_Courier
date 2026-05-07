@@ -166,6 +166,9 @@ export default function CourierWorkbench() {
             <a href={courierHazmatUrl(id)} target="_blank">
               <button>Hazmat</button>
             </a>
+            <a href={`/stallion/courier/${id}/exam`}>
+              <button>Officer Exam</button>
+            </a>
           </div>
         }
       />

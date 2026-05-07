@@ -192,6 +192,10 @@ export function courierHazmatUrl(id: string) {
   return `${BASE_URL}/courier/manifests/${id}/hazmat`;
 }
 
+export async function saveCourierExam(id: string, payload: { corrections: any[] }) {
+  return api<any>(`/courier/manifests/${id}/exam`, { method: "POST", body: JSON.stringify(payload) });
+}
+
 export async function listDeclarations(status?: string): Promise<{ items: any[] }> {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
   const res = await api<unknown>(`/declarations${q}`);
