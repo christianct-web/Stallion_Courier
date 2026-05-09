@@ -1,237 +1,760 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { useParams } from "react-router-dom";
+/**
+ * CourierWorkbench — line entry & classification page.
+ *
+ * Top: manifest header (editable: arrival_date, exch_rate, cargo_reporter)
+ * Middle: line table with inline edit. Each line shows description, THN,
+ *         rate (FREE/EXEMPT/20%), cost, computed CIF/duty/OPT/VAT/total.
+ * Bottom: add-line form with auto-classify from description.
+ * Side: totals panel + actions (download worksheet, download hazmat, go to exam).
+ */
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { TopNav } from "@/components/TopNav";
+import { toast } from "sonner";
 import {
-  addCourierLine,
-  courierHazmatUrl,
-  courierWorksheetUrl,
-  deleteCourierLine,
-  getCourierManifest,
-  updateCourierLine,
-} from "@/services/stallionApi";
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  getManifest, updateManifestHeader, addLine, updateLine, deleteLine,
+  classifyDescription,
+  worksheetDownloadUrl, hazmatDownloadUrl,
+  CourierManifest, CourierLine, ThnSuggestion,
+} from "@/services/courierApi";
+import { C, fmtTtd, fmtUsd, ratePillStyle } from "@/components/courier/tokens";
 
-const columns = [
-  "#",
-  "HAWB",
-  "Shipper",
-  "Importer",
-  "Description",
-  "Pkgs",
-  "Weight",
-  "THN",
-  "Rate",
-  "Cost USD",
-  "Freight",
-  "CIF TTD",
-  "Duty",
-  "OPT",
-  "VAT",
-  "Total",
-  "Actions",
-];
+// ── Helpers ──────────────────────────────────────────────────────────────
 
-const editableFields = [
-  "hawb",
-  "shipper",
-  "importer",
-  "description",
-  "packages",
-  "weight_kg",
-  "thn",
-  "cost_usd",
-  "freight_usd",
-] as const;
-
-type EditableField = (typeof editableFields)[number];
-
-type GridPos = { row: number; col: number };
-
-export default function CourierWorkbench() {
-  const { id = "" } = useParams();
-  const [manifest, setManifest] = useState<any>(null);
-  const [editing, setEditing] = useState<{ lineNo: number; field: EditableField } | null>(null);
-  const [draft, setDraft] = useState<string>("");
-  const [activeCell, setActiveCell] = useState<GridPos | null>(null);
-
-  async function load() {
-    const m = await getCourierManifest(id);
-    setManifest(m);
-  }
-
-  useEffect(() => {
-    if (id) load();
-  }, [id]);
-
-  async function addLine() {
-    const description = prompt("Description") || "";
-    if (!description) return;
-    const thn = prompt("THN (optional)") || undefined;
-    const cost_usd = Number(prompt("Cost USD", "0") || "0");
-    await addCourierLine(id, { description, thn, cost_usd, auto_classify: !thn });
-    await load();
-  }
-
-  const lines = useMemo(() => manifest?.lines || [], [manifest]);
-
-  function beginInlineEdit(r: any, field: EditableField) {
-    setEditing({ lineNo: r.line_no, field });
-    const v = r?.[field];
-    setDraft(v === null || v === undefined ? "" : String(v));
-  }
-
-  async function commitInlineEdit(r: any, field: EditableField, next?: GridPos) {
-    const payload: Record<string, unknown> = {};
-    if (["packages", "weight_kg", "cost_usd", "freight_usd"].includes(field)) {
-      payload[field] = draft.trim() === "" ? 0 : Number(draft);
-    } else {
-      payload[field] = draft;
-    }
-
-    await updateCourierLine(id, r.line_no, payload);
-    setEditing(null);
-    setDraft("");
-    await load();
-    if (next) setActiveCell(next);
-  }
-
-  async function removeLine(r: any) {
-    if (!confirm(`Delete line ${r.line_no}?`)) return;
-    await deleteCourierLine(id, r.line_no);
-    await load();
-  }
-
-  function renderEditableCell(r: any, field: EditableField, style: CSSProperties = cell, rowIdx = 0, colIdx = 0) {
-    const isEditing = editing?.lineNo === r.line_no && editing?.field === field;
-    if (isEditing) {
-      return (
-        <input
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={() => commitInlineEdit(r, field)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commitInlineEdit(r, field, { row: rowIdx, col: colIdx + 1 });
-            if (e.key === "Tab") {
-              e.preventDefault();
-              const delta = e.shiftKey ? -1 : 1;
-              commitInlineEdit(r, field, { row: rowIdx, col: Math.max(0, colIdx + delta) });
-            }
-            if (e.key === "Escape") {
-              setEditing(null);
-              setDraft("");
-            }
-          }}
-          style={{ width: "100%", background: "#0f141d", color: "#fff", border: "1px solid #4b5e7b", padding: "4px" }}
-        />
-      );
-    }
-    const value = r?.[field] ?? "";
-    const isActive = activeCell?.row === rowIdx && activeCell?.col === colIdx;
-    return (
-      <div
-        tabIndex={0}
-        onFocus={() => setActiveCell({ row: rowIdx, col: colIdx })}
-        onClick={() => beginInlineEdit(r, field)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") beginInlineEdit(r, field);
-          if (e.key === "Tab") {
-            e.preventDefault();
-            const delta = e.shiftKey ? -1 : 1;
-            setActiveCell({ row: rowIdx, col: Math.max(0, colIdx + delta) });
-            return;
-          }
-          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
-            e.preventDefault();
-            const delta = e.key === "ArrowLeft" ? [-1, 0] : e.key === "ArrowRight" ? [1, 0] : e.key === "ArrowUp" ? [0, -1] : [0, 1];
-            setActiveCell({ row: Math.max(0, rowIdx + delta[1]), col: Math.max(0, colIdx + delta[0]) });
-          }
-        }}
-        style={{ cursor: "text", minHeight: 18, outline: isActive ? "1px solid #4b5e7b" : "none" }}
-        title="Click to edit"
-      >
-        {String(value)}
-      </div>
-    );
-  }
-
+function RatePill({ line }: { line: CourierLine }) {
+  const s = ratePillStyle(line.exemption_class, line.duty_rate);
   return (
-    <div style={{ minHeight: "100vh", background: "#0f1115", color: "#eaeef5" }}>
-      <TopNav
-        rightSlot={
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={addLine}>+ Add Line</button>
-            <a href={courierWorksheetUrl(id)} target="_blank">
-              <button>Worksheet v3</button>
-            </a>
-            <a href={courierHazmatUrl(id)} target="_blank">
-              <button>Hazmat</button>
-            </a>
-            <a href={`/stallion/courier/${id}/exam`}>
-              <button>Officer Exam</button>
-            </a>
-          </div>
-        }
+    <span style={{
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+      letterSpacing: "0.08em", color: s.color, background: s.bg,
+      padding: "2px 6px", borderRadius: 3,
+    }}>
+      {s.label}
+    </span>
+  );
+}
+
+function HeaderField({
+  label, value, onChange, type = "text", width = 140,
+}: {
+  label: string; value: string | number; onChange: (v: string) => void;
+  type?: string; width?: number;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      <label style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+        letterSpacing: "0.1em", color: C.ghost, textTransform: "uppercase",
+      }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+          padding: "6px 8px", width,
+          border: `1px solid ${C.voidBorder}`, borderRadius: 3,
+          background: C.voidMid, color: C.paper, outline: "none",
+        }}
       />
-
-      <div style={{ padding: 14 }}>
-        <h3 style={{ marginTop: 0 }}>Courier Workbench — {manifest?.manifest_no || id}</h3>
-        <div style={{ marginBottom: 8, color: "#9eb0c8", fontSize: 12 }}>
-          Spreadsheet mode: click a cell to edit, Enter to save, Esc to cancel.
-        </div>
-
-        <div style={{ overflow: "auto", border: "1px solid #2a3340", background: "#151922" }}>
-          <table style={{ borderCollapse: "collapse", minWidth: 1750, width: "100%", fontSize: 13 }}>
-            <thead>
-              <tr>
-                {columns.map((c) => (
-                  <th
-                    key={c}
-                    style={{
-                      position: "sticky",
-                      top: 0,
-                      background: "#1b2230",
-                      border: "1px solid #2f3b4f",
-                      padding: "8px 6px",
-                      textAlign: "left",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map((r: any, idx: number) => (
-                <tr key={idx}>
-                  <td style={cell}>{r.line_no ?? idx + 1}</td>
-                  <td style={cell}>{renderEditableCell(r, "hawb", cell, idx, 0)}</td>
-                  <td style={cell}>{renderEditableCell(r, "shipper", cell, idx, 1)}</td>
-                  <td style={cell}>{renderEditableCell(r, "importer", cell, idx, 2)}</td>
-                  <td style={cell}>{renderEditableCell(r, "description", cell, idx, 3)}</td>
-                  <td style={cell}>{renderEditableCell(r, "packages", cell, idx, 4)}</td>
-                  <td style={cell}>{renderEditableCell(r, "weight_kg", cell, idx, 5)}</td>
-                  <td style={cell}>{renderEditableCell(r, "thn", cell, idx, 6)}</td>
-                  <td style={cell}>{r.duty_rate ?? ""}</td>
-                  <td style={cell}>{renderEditableCell(r, "cost_usd", num, idx, 7)}</td>
-                  <td style={cell}>{renderEditableCell(r, "freight_usd", num, idx, 8)}</td>
-                  <td style={num}>{r.customs_value_ttd ?? r.cif_ttd ?? ""}</td>
-                  <td style={num}>{r.duty ?? ""}</td>
-                  <td style={num}>{r.opt ?? ""}</td>
-                  <td style={num}>{r.vat ?? ""}</td>
-                  <td style={num}>{r.total_taxes ?? ""}</td>
-                  <td style={cell}>
-                    <button onClick={() => removeLine(r)}>Del</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }
 
-const cell: CSSProperties = { border: "1px solid #273241", padding: "6px", whiteSpace: "nowrap" };
-const num: CSSProperties = { ...cell, textAlign: "right", fontVariantNumeric: "tabular-nums" };
+// ── Add-line form with classify ──────────────────────────────────────────
+
+function ClassifySuggestions({ suggestions, onPick }: {
+  suggestions: ThnSuggestion[]; onPick: (s: ThnSuggestion) => void;
+}) {
+  if (!suggestions.length) return null;
+  return (
+    <div style={{
+      position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+      background: C.paper, border: `1px solid ${C.paperBorder}`, borderRadius: 4,
+      boxShadow: "0 8px 24px rgba(0,0,0,0.15)", zIndex: 50,
+      maxHeight: 280, overflowY: "auto",
+    }}>
+      {suggestions.map(s => {
+        const pill = ratePillStyle(s.exemption_class, s.duty_rate);
+        return (
+          <button
+            key={s.thn}
+            onClick={() => onPick(s)}
+            style={{
+              display: "block", width: "100%", textAlign: "left",
+              padding: "10px 12px",
+              background: "transparent", border: "none",
+              borderBottom: `1px solid ${C.paperBorder}`,
+              cursor: "pointer", transition: "background 0.1s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = C.paperAlt}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 700,
+                color: C.ink,
+              }}>
+                {s.code}
+              </span>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                letterSpacing: "0.08em", color: pill.color, background: pill.bg,
+                padding: "1px 5px", borderRadius: 2,
+              }}>
+                {pill.label}
+              </span>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                color: C.inkLight, marginLeft: "auto",
+              }}>
+                {Math.round(s.confidence * 100)}% conf.
+              </span>
+            </div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: C.inkMid, marginBottom: 2 }}>
+              {s.description}
+            </div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkLight, fontStyle: "italic" }}>
+              {s.match_reason}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function AddLineRow({ manifestId, onAdded }: {
+  manifestId: string; onAdded: () => void;
+}) {
+  const [hawb, setHawb] = useState("");
+  const [shipper, setShipper] = useState("");
+  const [importer, setImporter] = useState("");
+  const [description, setDescription] = useState("");
+  const [thn, setThn] = useState("");
+  const [costUsd, setCostUsd] = useState("");
+  const [packages, setPackages] = useState("1");
+  const [weight, setWeight] = useState("1");
+  const [busy, setBusy] = useState(false);
+  const [suggestions, setSuggestions] = useState<ThnSuggestion[]>([]);
+  const [showSugg, setShowSugg] = useState(false);
+  const [classifying, setClassifying] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced classify on description change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (description.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    if (thn) return; // don't override an explicit THN
+    debounceRef.current = setTimeout(async () => {
+      setClassifying(true);
+      try {
+        const res = await classifyDescription(description, 5);
+        setSuggestions(res.suggestions || []);
+        setShowSugg(true);
+      } catch {
+        // silent — suggestions are an aid
+      } finally {
+        setClassifying(false);
+      }
+    }, 350);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [description, thn]);
+
+  const reset = () => {
+    setHawb(""); setShipper(""); setImporter("");
+    setDescription(""); setThn(""); setCostUsd("");
+    setPackages("1"); setWeight("1");
+    setSuggestions([]); setShowSugg(false);
+  };
+
+  const submit = async () => {
+    if (!description.trim()) { toast.error("Description is required"); return; }
+    const cost = parseFloat(costUsd);
+    if (!(cost > 0)) { toast.error("Cost USD must be > 0"); return; }
+    setBusy(true);
+    try {
+      await addLine(manifestId, {
+        hawb: hawb.trim(),
+        shipper: shipper.trim(),
+        importer: importer.trim(),
+        description: description.trim(),
+        thn: thn.trim(),
+        cost_usd: cost,
+        packages: parseInt(packages, 10) || 1,
+        weight_kg: parseFloat(weight) || 0,
+        auto_classify: !thn.trim(),
+      });
+      toast.success("Line added");
+      reset();
+      onAdded();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add line");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+    padding: "7px 9px",
+    border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+    background: C.paper, color: C.ink, outline: "none",
+    width: "100%", boxSizing: "border-box",
+  };
+
+  return (
+    <div style={{
+      background: C.paperAlt, border: `1px solid ${C.paperBorder}`,
+      borderRadius: 4, padding: 16, marginTop: 16,
+    }}>
+      <div style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+        letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
+        marginBottom: 10, fontWeight: 700,
+      }}>
+        + Add Line
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "100px 140px 140px 1fr 100px 75px 75px 80px auto", gap: 8, alignItems: "end" }}>
+        <input style={inputStyle} placeholder="HAWB" value={hawb} onChange={e => setHawb(e.target.value)} />
+        <input style={inputStyle} placeholder="Shipper" value={shipper} onChange={e => setShipper(e.target.value)} />
+        <input style={inputStyle} placeholder="Importer" value={importer} onChange={e => setImporter(e.target.value)} />
+        <div style={{ position: "relative" }}>
+          <input style={inputStyle} placeholder="Description (auto-classifies)…"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            onFocus={() => suggestions.length && setShowSugg(true)}
+            onBlur={() => setTimeout(() => setShowSugg(false), 200)} />
+          {classifying && (
+            <span style={{
+              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              fontSize: 10, color: C.inkLight, fontStyle: "italic", fontFamily: "'Fraunces', serif",
+            }}>
+              classifying…
+            </span>
+          )}
+          {showSugg && suggestions.length > 0 && (
+            <ClassifySuggestions
+              suggestions={suggestions}
+              onPick={s => {
+                setThn(s.thn);
+                setShowSugg(false);
+              }}
+            />
+          )}
+        </div>
+        <input style={{ ...inputStyle, fontWeight: thn ? 700 : 400 }}
+          placeholder="THN (auto)" value={thn} onChange={e => setThn(e.target.value)} />
+        <input style={inputStyle} type="number" placeholder="Cost USD" value={costUsd}
+          onChange={e => setCostUsd(e.target.value)} />
+        <input style={inputStyle} type="number" placeholder="Pkgs" value={packages}
+          onChange={e => setPackages(e.target.value)} />
+        <input style={inputStyle} type="number" placeholder="Wt" value={weight}
+          onChange={e => setWeight(e.target.value)} />
+        <button
+          onClick={submit}
+          disabled={busy}
+          style={{
+            padding: "7px 14px", fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
+            background: C.ink, color: C.paper, border: `1px solid ${C.ink}`,
+            borderRadius: 3, cursor: busy ? "not-allowed" : "pointer",
+            opacity: busy ? 0.6 : 1, fontWeight: 600, whiteSpace: "nowrap",
+          }}
+        >
+          {busy ? "…" : "Add"}
+        </button>
+      </div>
+
+      {thn && (
+        <div style={{
+          fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkLight,
+          marginTop: 8, fontStyle: "italic",
+        }}>
+          THN <strong>{thn}</strong> selected. Clear it to re-trigger auto-classification from description.
+          {" "}
+          <button onClick={() => setThn("")} style={{
+            background: "transparent", border: "none", color: C.amber,
+            textDecoration: "underline", cursor: "pointer", fontFamily: "inherit",
+            fontSize: "inherit",
+          }}>clear</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Editable line row ────────────────────────────────────────────────────
+
+function LineRow({ manifestId, line, onChanged, onDelete }: {
+  manifestId: string; line: CourierLine;
+  onChanged: () => void; onDelete: (line: CourierLine) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState({
+    description: line.description,
+    thn: line.thn,
+    cost_usd: line.cost_usd,
+    packages: line.packages,
+    weight_kg: line.weight_kg,
+  });
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await updateLine(manifestId, line.line_no, {
+        description: draft.description,
+        thn: draft.thn,
+        cost_usd: typeof draft.cost_usd === "string" ? parseFloat(draft.cost_usd as any) : draft.cost_usd,
+        packages: typeof draft.packages === "string" ? parseInt(draft.packages as any, 10) : draft.packages,
+        weight_kg: typeof draft.weight_kg === "string" ? parseFloat(draft.weight_kg as any) : draft.weight_kg,
+      });
+      toast.success(`Line ${line.line_no} updated`);
+      setEditing(false);
+      onChanged();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to update line");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = () => {
+    setDraft({
+      description: line.description, thn: line.thn, cost_usd: line.cost_usd,
+      packages: line.packages, weight_kg: line.weight_kg,
+    });
+    setEditing(false);
+  };
+
+  const cellStyle: React.CSSProperties = {
+    padding: "10px 12px",
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+    color: C.inkMid, verticalAlign: "middle",
+  };
+
+  const inputStyle: React.CSSProperties = {
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+    padding: "5px 7px",
+    border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+    background: "#fff", color: C.ink, outline: "none",
+    width: "100%", boxSizing: "border-box",
+  };
+
+  return (
+    <tr style={{
+      borderBottom: `1px solid ${C.paperBorder}`,
+      background: editing ? "#FFFAEC" : "transparent",
+    }}>
+      <td style={{ ...cellStyle, color: C.inkLight, fontWeight: 600, textAlign: "center", width: 32 }}>
+        {line.line_no}
+      </td>
+      <td style={{ ...cellStyle, fontSize: 11, color: C.inkLight, maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {line.hawb || "—"}
+      </td>
+      <td style={{ ...cellStyle, fontFamily: "'Fraunces', serif", fontSize: 12 }}>
+        {editing ? (
+          <input style={inputStyle} value={draft.description}
+            onChange={e => setDraft({ ...draft, description: e.target.value })} />
+        ) : line.description}
+      </td>
+      <td style={cellStyle}>
+        {editing ? (
+          <input style={{ ...inputStyle, width: 100 }} value={draft.thn}
+            onChange={e => setDraft({ ...draft, thn: e.target.value })} />
+        ) : (
+          <span style={{ fontWeight: 700, color: C.ink }}>
+            {line.thn || "—"}
+            {line.thn_was_corrected && (
+              <span title={`Corrected from ${line.thn_original}`} style={{
+                marginLeft: 4, fontSize: 10, color: C.amber, fontWeight: 400, fontStyle: "italic",
+              }}>
+                (corrected)
+              </span>
+            )}
+            {line.thn_unknown && (
+              <span title="Not in CET DB — verify" style={{
+                marginLeft: 4, fontSize: 10, color: C.warnText, fontWeight: 400, fontStyle: "italic",
+              }}>
+                ⚠
+              </span>
+            )}
+          </span>
+        )}
+      </td>
+      <td style={cellStyle}>
+        <RatePill line={line} />
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>
+        {editing ? (
+          <input style={{ ...inputStyle, width: 80, textAlign: "right" }} type="number"
+            value={draft.cost_usd as any}
+            onChange={e => setDraft({ ...draft, cost_usd: e.target.value as any })} />
+        ) : `$${fmtUsd(line.cost_usd)}`}
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right", color: C.ink, fontWeight: 600 }}>
+        {fmtTtd(line.cif_ttd)}
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>{fmtTtd(line.duty)}</td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>{fmtTtd(line.opt)}</td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>{fmtTtd(line.vat)}</td>
+      <td style={{ ...cellStyle, textAlign: "right", color: C.ink, fontWeight: 700 }}>
+        {fmtTtd(line.total_taxes)}
+      </td>
+      <td style={{ ...cellStyle, textAlign: "right" }}>
+        {editing ? (
+          <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+            <button onClick={save} disabled={busy} style={{
+              padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              background: C.green, color: "#fff", border: "none", borderRadius: 3,
+              cursor: "pointer", fontWeight: 600,
+            }}>
+              {busy ? "…" : "Save"}
+            </button>
+            <button onClick={cancel} disabled={busy} style={{
+              padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`,
+              borderRadius: 3, cursor: "pointer",
+            }}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+            <button onClick={() => setEditing(true)} style={{
+              padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              background: "transparent", color: C.amber,
+              border: `1px solid ${C.amber}33`, borderRadius: 3, cursor: "pointer",
+            }}>
+              Edit
+            </button>
+            <button onClick={() => onDelete(line)} style={{
+              padding: "4px 8px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10, color: C.critBorder, background: "transparent",
+              border: `1px solid ${C.critBorder}33`, borderRadius: 3, cursor: "pointer",
+            }}>
+              ✕
+            </button>
+          </div>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────
+
+export default function CourierWorkbench() {
+  const { manifestId } = useParams<{ manifestId: string }>();
+  const navigate = useNavigate();
+  const [manifest, setManifest] = useState<CourierManifest | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<CourierLine | null>(null);
+
+  // Header edit state
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [exchRate, setExchRate] = useState("");
+  const [cargoReporter, setCargoReporter] = useState("");
+
+  const load = useCallback(async () => {
+    if (!manifestId) return;
+    setLoading(true);
+    try {
+      const m = await getManifest(manifestId);
+      setManifest(m);
+      setArrivalDate(m.arrival_date);
+      setExchRate(String(m.exch_rate));
+      setCargoReporter(m.cargo_reporter);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to load manifest");
+      navigate("/stallion/courier");
+    } finally {
+      setLoading(false);
+    }
+  }, [manifestId, navigate]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const headerDirty = useMemo(() => {
+    if (!manifest) return false;
+    return arrivalDate !== manifest.arrival_date ||
+      parseFloat(exchRate) !== manifest.exch_rate ||
+      cargoReporter !== manifest.cargo_reporter;
+  }, [manifest, arrivalDate, exchRate, cargoReporter]);
+
+  const saveHeader = async () => {
+    if (!manifestId) return;
+    try {
+      const rate = parseFloat(exchRate);
+      if (!(rate > 0)) { toast.error("Exchange rate must be > 0"); return; }
+      await updateManifestHeader(manifestId, {
+        arrival_date: arrivalDate,
+        exch_rate: rate,
+        cargo_reporter: cargoReporter,
+      });
+      toast.success("Header saved — lines recomputed");
+      load();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to save header");
+    }
+  };
+
+  const onDeleteLine = async (line: CourierLine) => {
+    if (!manifestId) return;
+    try {
+      await deleteLine(manifestId, line.line_no);
+      toast.success(`Line ${line.line_no} deleted`);
+      setConfirmDelete(null);
+      load();
+    } catch (e: any) {
+      toast.error(e.message || "Delete failed");
+    }
+  };
+
+  if (loading || !manifest) {
+    return (
+      <div style={{ minHeight: "100vh", background: C.paperAlt }}>
+        <TopNav />
+        <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
+          Loading manifest…
+        </div>
+      </div>
+    );
+  }
+
+  const t = manifest.totals || {} as any;
+
+  return (
+    <div style={{ minHeight: "100vh", background: C.paperAlt }}>
+      <TopNav rightSlot={
+        <button onClick={() => navigate("/stallion/courier")} style={{
+          background: "transparent", border: `1px solid ${C.voidBorder}`,
+          color: C.ghost, padding: "5px 12px", borderRadius: 4,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+          letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
+        }}>
+          ← Manifests
+        </button>
+      } />
+
+      {/* Manifest header strip — dark band like the navigation */}
+      <div style={{
+        background: C.voidMid, borderBottom: `1px solid ${C.voidBorder}`,
+        padding: "16px 28px",
+      }}>
+        <div style={{ maxWidth: 1480, margin: "0 auto", display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+          <div>
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              letterSpacing: "0.12em", color: C.amber, textTransform: "uppercase",
+              marginBottom: 4,
+            }}>
+              Manifest
+            </div>
+            <div style={{
+              fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 600,
+              color: C.paper, lineHeight: 1,
+            }}>
+              {manifest.manifest_no}
+            </div>
+          </div>
+          <div style={{ width: 1, alignSelf: "stretch", background: C.voidBorder }} />
+          <HeaderField label="Arrival" value={arrivalDate} onChange={setArrivalDate} type="date" width={150} />
+          <HeaderField label="Rate (TTD/USD)" value={exchRate} onChange={setExchRate} type="number" width={130} />
+          <HeaderField label="Cargo Reporter" value={cargoReporter} onChange={setCargoReporter} width={150} />
+          <button
+            onClick={saveHeader}
+            disabled={!headerDirty}
+            style={{
+              padding: "8px 16px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+              background: headerDirty ? C.amber : "transparent",
+              border: `1px solid ${headerDirty ? C.amber : C.voidBorder}`,
+              borderRadius: 3, color: headerDirty ? "#fff" : C.ghostDim,
+              cursor: headerDirty ? "pointer" : "default", fontWeight: 600,
+              alignSelf: "end", marginBottom: 0,
+            }}
+          >
+            Save Header
+          </button>
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            <a href={worksheetDownloadUrl(manifest.id)} download style={{
+              padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+              color: C.paper, textDecoration: "none",
+              background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
+            }}>
+              ⬇ Worksheet XLSX
+            </a>
+            <a href={hazmatDownloadUrl(manifest.id)} download style={{
+              padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+              color: C.paper, textDecoration: "none",
+              background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
+            }}>
+              ⬇ Hazmat XLSX
+            </a>
+            <button
+              onClick={() => navigate(`/stallion/courier/${manifest.id}/exam`)}
+              style={{
+                padding: "8px 16px", fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3,
+                color: "#fff", cursor: "pointer", fontWeight: 600,
+              }}
+            >
+              Officer Exam →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1480, margin: "0 auto", padding: "24px 28px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 24 }}>
+        {/* Lines table + add form */}
+        <div>
+          <div style={{
+            background: C.paper, border: `1px solid ${C.paperBorder}`,
+            borderRadius: 4, overflow: "hidden",
+          }}>
+            <div style={{
+              padding: "10px 14px", background: C.paperAlt,
+              borderBottom: `1px solid ${C.paperBorder}`,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
+              fontWeight: 700,
+            }}>
+              Section 2 — Declared Lines ({manifest.lines.length})
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
+                <thead>
+                  <tr style={{ background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}` }}>
+                    {["#", "HAWB", "Description", "THN", "Rate", "Cost", "CIF", "Duty", "OPT", "VAT", "Total", ""]
+                      .map((h, i) => (
+                        <th key={i} style={{
+                          textAlign: ["Cost", "CIF", "Duty", "OPT", "VAT", "Total"].includes(h) ? "right" : "left",
+                          padding: "8px 12px",
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                          letterSpacing: "0.08em", color: C.inkLight, fontWeight: 600,
+                          textTransform: "uppercase",
+                        }}>
+                          {h}
+                        </th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {manifest.lines.length === 0 ? (
+                    <tr><td colSpan={12} style={{ padding: 32, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight, fontStyle: "italic" }}>
+                      No lines yet — add your first line below.
+                    </td></tr>
+                  ) : manifest.lines.map(line => (
+                    <LineRow
+                      key={line.id}
+                      manifestId={manifest.id}
+                      line={line}
+                      onChanged={load}
+                      onDelete={(l) => setConfirmDelete(l)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <AddLineRow manifestId={manifest.id} onAdded={load} />
+        </div>
+
+        {/* Totals panel */}
+        <div style={{
+          background: C.paper, border: `1px solid ${C.paperBorder}`,
+          borderRadius: 4, padding: 18, height: "fit-content", position: "sticky", top: 80,
+        }}>
+          <div style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
+            fontWeight: 700, marginBottom: 12,
+          }}>
+            Manifest Totals
+          </div>
+          {[
+            ["Total CIF", t.total_cif_ttd],
+            ["Duty", t.total_duty],
+            ["OPT (7%)", t.total_opt],
+            ["VAT (12.5%)", t.total_vat],
+          ].map(([label, val]) => (
+            <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "6px 0", borderBottom: `1px solid ${C.paperBorder}` }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.04em" }}>
+                {label as string}
+              </div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.inkMid, fontWeight: 600 }}>
+                {fmtTtd(val as number)}
+              </div>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "12px 0 4px 0" }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ink, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 700 }}>
+              Total Taxes
+            </div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: C.ink, fontWeight: 700 }}>
+              {fmtTtd(t.total_taxes)}
+            </div>
+          </div>
+          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkLight, fontStyle: "italic", marginTop: 6 }}>
+            All amounts in TTD. Exchange rate {manifest.exch_rate.toFixed(5)} TTD/USD.
+          </div>
+
+          {manifest.officer_examination && (
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px dashed ${C.paperBorder}` }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
+                fontWeight: 700, marginBottom: 6,
+              }}>
+                Examined
+              </div>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: C.inkMid }}>
+                {manifest.officer_examination.corrections.length} correction(s) recorded
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete line?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove line {confirmDelete?.line_no} ({confirmDelete?.description}) and renumber the remaining lines.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmDelete && onDeleteLine(confirmDelete)}
+              style={{ background: C.critBorder, color: "#fff" }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
