@@ -37,8 +37,8 @@ const App = () => (
             <Route path="/stallion/log" element={<ActivityLog />} />
             <Route path="/stallion/clients" element={<ClientsPage />} />
             <Route path="/stallion/courier" element={<CourierManifests />} />
-            <Route path="/stallion/courier/:id" element={<CourierWorkbench />} />
-            <Route path="/stallion/courier/:id/exam" element={<CourierExam />} />
+            <Route path="/stallion/courier/:manifestId" element={<CourierWorkbench />} />
+            <Route path="/stallion/courier/:manifestId/exam" element={<CourierExam />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

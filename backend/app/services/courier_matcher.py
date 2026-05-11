@@ -56,12 +56,18 @@ logger = logging.getLogger("stallion.courier.matcher")
 
 COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
     # ── Electronics ──────────────────────────────────────────────────────
+    # Phone CASE patterns must come BEFORE the smartphone pattern and have
+    # higher confidence, so "smartphone case" matches the case (39269090)
+    # rather than the phone (85171300).
+    (r"\b(phone\s*case|phone\s*cover|phone\s*holder|cellphone\s*case|cell\s*phone\s*case|smart\s*phone\s*case|smartphone\s*case|iphone\s*case)\b",
+        "39269090", 0.0, 0.96, "Cellphone case — full exempt as plastic accessory"),
+    (r"\b(screen\s*protector|tempered\s*glass|phone\s*film|phone\s*screen)\b",
+        "39269090", 0.0, 0.95, "Screen protector — full exempt as plastic accessory"),
+    # Smartphone — only matches when no case/cover/protector context present.
+    # We use a negative lookahead/negative-context guard via the description
+    # token, which the scorer applies (see _scoring_with_context below).
     (r"\b(smart\s*phone|smartphone|iphone|cellphone|cell\s*phone|mobile\s*phone)\b",
         "85171300", 0.0, 0.95, "Smartphone — full exempt under 85171300"),
-    (r"\b(phone\s*case|phone\s*cover|phone\s*holder|cellphone\s*case|cell\s*phone\s*case)\b",
-        "39269090", 0.0, 0.92, "Cellphone case — full exempt as plastic accessory"),
-    (r"\b(screen\s*protector|tempered\s*glass|phone\s*film)\b",
-        "39269090", 0.0, 0.92, "Screen protector — full exempt as plastic accessory"),
     (r"\b(earphone|earbud|earpod|headphone|head\s*phone|airpod)\b",
         "85183000", 0.0, 0.95, "Earphones/headphones — full exempt"),
     (r"\b(graphics?\s*card|gpu|video\s*card)\b",
@@ -100,6 +106,9 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
     # ── Clothing & footwear ──────────────────────────────────────────────
     (r"\b(shoe|sneaker|trainer|boot|sandal|slipper|flip\s*flop|crocs?)\b",
         "64029990", 0.20, 0.80, "Footwear (rubber/plastic uppers most common)"),
+    # Women's blouses (62064000 — MMF) before generic blouse (61091000 — t-shirt)
+    (r"\b(women.?s?\s*blouse|ladies.?\s*blouse|womens\s*shirt|ladies\s*shirt)\b",
+        "62064000", 0.20, 0.88, "Women's blouse — 62064000"),
     (r"\b(shirt|t\s*shirt|tshirt|blouse|top|tank\s*top)\b",
         "61091000", 0.20, 0.75, "Knitted shirt/top"),
     (r"\b(pants|trouser|jean|legging|shorts)\b",
@@ -139,6 +148,19 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
     (r"\b(plate|bowl|cup|mug|dinnerware|tableware)\b",
         "69120000", 0.20, 0.75, "Tableware (ceramic)"),
 
+    # ── Furniture ────────────────────────────────────────────────────────
+    # Wooden furniture (94036000). Patterns ordered so wooden+table beats plain "coffee".
+    (r"\b(wooden\s*(?:coffee\s*)?table|wooden\s*chair|wooden\s*shelf|wooden\s*bench|wooden\s*stool|wooden\s*cabinet|wooden\s*desk|wooden\s*bookcase|wooden\s*nightstand|wooden\s*dresser|wooden\s*wardrobe)\b",
+        "94036000", 0.20, 0.90, "Wooden furniture — 94036000"),
+    (r"\b(wood(?:en)?\s*furniture|wooden\s*piece|wood\s*piece)\b",
+        "94036000", 0.20, 0.85, "Wooden furniture — 94036000"),
+    (r"\b(coffee\s*table|dining\s*table|side\s*table|end\s*table|console\s*table|tv\s*stand)\b",
+        "94036000", 0.20, 0.82, "Table — wooden furniture (most common)"),
+    (r"\b(office\s*chair|dining\s*chair|armchair|recliner|sofa|couch|loveseat|ottoman)\b",
+        "94016100", 0.20, 0.78, "Upholstered seat"),
+    (r"\b(bed\s*frame|mattress|headboard|footboard)\b",
+        "94049090", 0.20, 0.78, "Bedroom furniture"),
+
     # ── Toys & games ─────────────────────────────────────────────────────
     (r"\b(toy|doll|action\s*figure|stuffed\s*animal|plush)\b",
         "95030000", 0.20, 0.78, "Toy"),
@@ -164,10 +186,16 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "12099900", 0.0, 0.80, "Seeds — full exempt"),
     (r"\b(vitamin|supplement|protein\s*powder|protein\s*shake)\b",
         "21069099", 0.20, 0.75, "Food supplement"),
-    (r"\b(coffee|coffee\s*bean)\b",
-        "09011100", 0.40, 0.78, "Coffee beans"),
-    (r"\b(tea|tea\s*bag)\b",
-        "09022000", 0.40, 0.78, "Tea"),
+    # Coffee — coffee BEAN (food). Excluded from matching when "table" is
+    # also present (handled by suppression rule in scorer).
+    (r"\b(coffee\s*bean|ground\s*coffee|instant\s*coffee|coffee\s*powder|roasted\s*coffee)\b",
+        "09011100", 0.40, 0.85, "Coffee beans/grounds — food"),
+    (r"\b(coffee)\b",
+        "09011100", 0.40, 0.78, "Coffee — food"),
+    (r"\b(tea\s*bag|tea\s*leaf|loose\s*tea|green\s*tea|black\s*tea)\b",
+        "09022000", 0.40, 0.85, "Tea — food"),
+    (r"\b(tea)\b",
+        "09022000", 0.40, 0.78, "Tea — food"),
 
     # ── Pet supplies ─────────────────────────────────────────────────────
     (r"\b(pet\s*food|dog\s*food|cat\s*food)\b",
@@ -280,6 +308,38 @@ def _build_suggestion(
     }
 
 
+# ── Suppression rules ────────────────────────────────────────────────────
+# When the description contains the suppressor pattern, the THN listed is
+# removed from the candidate set. This handles cases where a more specific
+# match should win even if it has lower base confidence.
+#
+# Examples:
+#   "smartphone case" → suppress 85171300 (smartphone) so 39269090 (case) wins
+#   "wooden coffee table" → suppress 09011100 (coffee) so 94036000 (furniture) wins
+#   "phone screen protector" → suppress 85171300 so 39269090 wins
+
+SUPPRESSION_RULES: List[Tuple[str, str, str]] = [
+    # (thn_to_suppress, suppressor_regex, reason)
+    ("85171300", r"\b(case|cover|holder|protector|skin|sleeve|pouch|bumper|grip|stand|charger|cable|adapter|lens|tripod)\b",
+     "Phone accessory present — phone itself unlikely"),
+    ("09011100", r"\b(table|chair|furniture|wooden|wood|cup|mug|maker|grinder|machine|filter|pot|cabinet)\b",
+     "Coffee-related furniture/equipment, not the bean"),
+    ("09022000", r"\b(table|cup|mug|pot|kettle|maker|set|towel|holder|tree|tray)\b",
+     "Tea-related equipment/accessory, not the leaf"),
+    ("61091000", r"\b(women.?s?\s*blouse|ladies.?\s*blouse|womens\s*shirt|ladies\s*shirt)\b",
+     "Women's blouse-specific match takes priority"),
+]
+
+
+def _apply_suppression(haystacks: set, best_by_thn: Dict[str, Tuple[float, float, str]]) -> None:
+    """Remove THN candidates when the description matches a suppression rule."""
+    for thn_to_suppress, suppressor_pattern, _reason in SUPPRESSION_RULES:
+        if thn_to_suppress not in best_by_thn:
+            continue
+        if any(re.search(suppressor_pattern, h) for h in haystacks):
+            best_by_thn.pop(thn_to_suppress, None)
+
+
 def suggest_thns_keyword_index(description: str) -> List[Dict[str, Any]]:
     """
     Match against the courier keyword index. Returns highest-confidence
@@ -316,6 +376,9 @@ def suggest_thns_keyword_index(description: str) -> List[Dict[str, Any]]:
             existing = best_by_thn.get(thn)
             if existing is None or confidence > existing[0]:
                 best_by_thn[thn] = (confidence, fallback_rate, reason)
+
+    # Apply suppression rules — removes context-incompatible candidates
+    _apply_suppression(haystacks, best_by_thn)
 
     suggestions: List[Dict[str, Any]] = []
     for thn, (confidence, fallback_rate, reason) in best_by_thn.items():
