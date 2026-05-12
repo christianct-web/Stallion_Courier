@@ -171,7 +171,9 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
           duty_pct: pct,
           chapter: state.chapter ?? undefined,
           unit: state.unit ?? undefined,
-          is_exempt: exemptionClass === "full_exempt" || pct === 0,
+          // Only FULL EXEMPT should set the exempt flag. Duty-free-only can
+          // still have 0% duty while paying OPT/VAT.
+          is_exempt: exemptionClass === "full_exempt",
           comment: comment.trim() || undefined,
         },
         "broker",

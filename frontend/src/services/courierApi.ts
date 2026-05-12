@@ -6,6 +6,24 @@ import { STALLION_BASE_URL } from "./stallionApi";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
+function extractErrorMessage(err: any, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err.detail === "string") return err.detail;
+  if (Array.isArray(err.detail)) {
+    const first = err.detail[0];
+    if (typeof first === "string") return first;
+    if (first?.msg) return String(first.msg);
+  }
+  if (typeof err.message === "string") return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return fallback;
+  }
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | null = null;
   return new Promise<T>((resolve, reject) => {
@@ -27,7 +45,7 @@ async function courierApi<T>(path: string, init?: RequestInit): Promise<T> {
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as any).detail || `Request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Request failed (${res.status})`));
   }
   return res.json() as Promise<T>;
 }
@@ -213,7 +231,7 @@ export async function uploadTemplate(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as any).detail || `Upload failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Upload failed (${res.status})`));
   }
   return res.json();
 }
