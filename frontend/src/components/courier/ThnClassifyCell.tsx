@@ -5,7 +5,7 @@
  *
  * Used in the Courier Workbench line table.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   CourierLine,
@@ -15,6 +15,7 @@ import {
 } from "@/services/courierApi";
 import { C, ratePillStyle, thnConfidenceStyle } from "./tokens";
 import { MaintainTariffDialog } from "./MaintainTariffDialog";
+import { createPortal } from "react-dom";
 
 type Props = {
   line: CourierLine;
@@ -39,12 +40,43 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
   } | null>(null);
   const [fresh, setFresh] = useState<ThnSuggestion[] | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+
+  // Keep popover anchored to the THN button and above scroll containers.
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) return;
+
+    const updatePos = () => {
+      const r = anchorRef.current!.getBoundingClientRect();
+      const desiredLeft = r.left;
+      const maxLeft = Math.max(8, window.innerWidth - 500);
+      setPopoverPos({
+        top: r.bottom + 6,
+        left: Math.max(8, Math.min(desiredLeft, maxLeft)),
+      });
+    };
+
+    updatePos();
+    window.addEventListener("resize", updatePos);
+    window.addEventListener("scroll", updatePos, true);
+    return () => {
+      window.removeEventListener("resize", updatePos);
+      window.removeEventListener("scroll", updatePos, true);
+    };
+  }, [open]);
 
   // Close popover on outside click
   useEffect(() => {
     if (!open) return;
     function onClick(e: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(target) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
@@ -127,6 +159,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
       <button
+        ref={anchorRef}
         onClick={() => setOpen(!open)}
         style={{
           fontFamily: "'JetBrains Mono', monospace",
@@ -162,16 +195,18 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
         </span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           ref={popoverRef}
           style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            marginTop: 4,
-            zIndex: 100,
+            position: "fixed",
+            top: popoverPos.top,
+            left: popoverPos.left,
+            zIndex: 9999,
             width: 480,
+            maxWidth: "calc(100vw - 16px)",
+            maxHeight: "min(78vh, 720px)",
+            overflowY: "auto",
             background: C.paper,
             border: `1px solid ${C.paperBorder}`,
             borderRadius: 4,
@@ -399,7 +434,8 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {maintainOpen && (
