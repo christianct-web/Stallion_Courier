@@ -72,6 +72,8 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "85183000", 0.0, 0.95, "Earphones/headphones — full exempt"),
     (r"\b(graphics?\s*card|gpu|video\s*card)\b",
         "84733000", 0.0, 0.95, "Graphics card — computer accessory, full exempt"),
+    (r"\b(computer\s*part|computer\s*accessor(?:y|ies)|pc\s*part|laptop\s*part|mouse|keyboard|webcam)\b",
+        "84733000", 0.0, 0.88, "Computer accessory / part — full exempt"),
     (r"\b(motherboard|mainboard|main\s*board)\b",
         "84733000", 0.0, 0.92, "Motherboard — computer accessory, full exempt"),
     (r"\b(laptop\s*battery|notebook\s*battery|computer\s*battery)\b",
@@ -82,14 +84,18 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "84733000", 0.0, 0.82, "Storage drive — full exempt as computer accessory"),
     (r"\b(usb\s*cable|charging\s*cable|charger\s*cable|usb\s*c)\b",
         "85444290", 0.20, 0.70, "USB cable — verify against CET 2024"),
-    (r"\b(power\s*bank|portable\s*charger)\b",
-        "85076000", 0.20, 0.75, "Power bank (lithium battery)"),
+    (r"\b(power\s*bank)\b",
+        "85076000", 0.20, 0.80, "Power bank (lithium battery)"),
+    (r"\b(portable\s*charger|wall\s*charger|usb\s*charger|charging\s*adapter|power\s*adapter)\b",
+        "85044090", 0.20, 0.83, "Battery charger / power adapter"),
     (r"\b(laptop|notebook\s*computer|macbook)\b",
         "84713000", 0.0, 0.90, "Laptop computer"),
     (r"\b(tablet|ipad)\b",
         "84713000", 0.0, 0.85, "Tablet computer"),
     (r"\b(smart\s*watch|smartwatch|fitness\s*tracker|fitbit|apple\s*watch)\b",
         "85176900", 0.0, 0.75, "Smartwatch — duty-free only (CET Free)"),
+    (r"\b(wrist\s*watch|watch)\b",
+        "91021900", 0.20, 0.82, "Wrist watch"),
     (r"\b(generic\s*device|iot\s*device)\b",
         "85176900", 0.0, 0.70, "Generic IoT device — duty-free only"),
 
@@ -100,8 +106,12 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "33030000", 0.20, 0.85, "Perfume / fragrance"),
     (r"\b(makeup|make\s*up|cosmetic|lipstick|eyeliner|mascara|foundation)\b",
         "33049990", 0.20, 0.85, "Cosmetics / makeup"),
-    (r"\b(shampoo|conditioner|hair\s*product)\b",
+    (r"\b(shampoo|conditioner|hair\s*product|hair\s*care|hair\s*gel|hair\s*spray|hair\s*cream|hair\s*accessor(?:y|ies)|hair\s*clip|hair\s*band|scrunchie|wig|weave)\b",
         "33051000", 0.20, 0.85, "Hair care product"),
+    (r"\b(beauty\s*product|skin\s*care|skincare|face\s*cream|serum|cleanser|toner)\b",
+        "33049990", 0.20, 0.86, "Beauty / skincare product"),
+    (r"\b(microneedling|derma\s*roller|dermaroller|microneedle)\b",
+        "90189090", 0.20, 0.86, "Microneedling tool — medical instrument"),
 
     # ── Clothing & footwear ──────────────────────────────────────────────
     (r"\b(shoe|sneaker|trainer|boot|sandal|slipper|flip\s*flop|crocs?)\b",
@@ -152,8 +162,8 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
     # Wooden furniture (94036000). Patterns ordered so wooden+table beats plain "coffee".
     (r"\b(wooden\s*(?:coffee\s*)?table|wooden\s*chair|wooden\s*shelf|wooden\s*bench|wooden\s*stool|wooden\s*cabinet|wooden\s*desk|wooden\s*bookcase|wooden\s*nightstand|wooden\s*dresser|wooden\s*wardrobe)\b",
         "94036000", 0.20, 0.90, "Wooden furniture — 94036000"),
-    (r"\b(wood(?:en)?\s*furniture|wooden\s*piece|wood\s*piece)\b",
-        "94036000", 0.20, 0.85, "Wooden furniture — 94036000"),
+    (r"\b(furniture|funiture|wood(?:en)?\s*furniture|wooden\s*piece|wood\s*piece)\b",
+        "94036000", 0.20, 0.85, "Furniture — wooden furniture most common"),
     (r"\b(coffee\s*table|dining\s*table|side\s*table|end\s*table|console\s*table|tv\s*stand)\b",
         "94036000", 0.20, 0.82, "Table — wooden furniture (most common)"),
     (r"\b(office\s*chair|dining\s*chair|armchair|recliner|sofa|couch|loveseat|ottoman)\b",
@@ -178,6 +188,8 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "49021000", 0.0, 0.78, "Magazine"),
     (r"\b(notebook|notepad|stationery|note\s*book)\b",
         "48201020", 0.20, 0.75, "Notebook (stationery)"),
+    (r"\b(sticker|stickers|decal|label\s*sticker)\b",
+        "49081000", 0.20, 0.86, "Sticker / decal"),
     (r"\b(shoe\s*box|paper\s*box|cardboard\s*box|carton)\b",
         "48192090", 0.20, 0.85, "Paper/cardboard box"),
 
@@ -390,6 +402,8 @@ def suggest_thns_keyword_index(description: str) -> List[Dict[str, Any]]:
     return suggestions
 
 
+FULL_TEXT_CONFIDENCE_FLOOR = 0.50
+
 def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
     Fallback: keyword search over the entire CET 2024 database
@@ -428,6 +442,9 @@ def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, A
         # All-tokens-matched bonus
         if matched == len(tokens):
             score += 15.0
+        # Penalize weak single-token collisions (common source of garbage)
+        if len(tokens) <= 2 and matched == 1:
+            score -= 8.0
         scored.append((score, entry))
 
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -437,6 +454,8 @@ def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, A
         # Convert score to a 0.0-1.0 confidence (loose calibration:
         # max plausible score ~= 50, so cap at that)
         confidence = min(0.65, score / 50.0)
+        if confidence < FULL_TEXT_CONFIDENCE_FLOOR:
+            continue
         s = _build_suggestion(
             thn,
             confidence,
