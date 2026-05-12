@@ -786,5 +786,221 @@ class TestHazmatExport(_RulesStoreTestBase):
         self.assertAlmostEqual(ws["J35"].value, 101.70, places=2)
 
 
+class TestTemplateParser(_RulesStoreTestBase):
+    """Tests for the TTPOST blank-template parser (Phase 4)."""
+
+    def _build_minimal_ttpost_template(self) -> bytes:
+        """Build an in-memory TTPOST-style XLSX with header + 3 data rows."""
+        import io
+        from openpyxl import Workbook
+        wb = Workbook()
+        ws = wb.active
+        # Header rows
+        ws["H1"] = "EXPRESS CONSIGNMENTS WORKSHEET"
+        ws["H2"] = "NON-COMMERCIAL CONSIGNMENTS"
+        ws["A3"] = "CARGO REPORTER: TRINIDAD AND TOBAGO POSTAL CORPORATION"
+        ws["J3"] = "MASTER WAY BILL NUMBER: 106-31299999"
+        ws["A5"] = 'VAT NO. / "N" NO. : V117369'
+        ws["A7"] = "SECTION 2"
+        ws["A8"] = "DETAILS OF ALL HOUSE WAYBILLS"
+        # Column headers row 9
+        headers = ["LINE NO. AWB", "HAWB", "SHIPPER", "NAME OF IMPORTER",
+                   "DESCRIPTION OF GOODS", "NO. OF PKGS", "WEIGHT", "THN",
+                   "RATE", "COST", "FREIGHT", "CUSTOMS VALUE", "DUTY",
+                   "OPT", "VAT", "TOTAL TAXES"]
+        for col, h in enumerate(headers, 1):
+            ws.cell(row=9, column=col, value=h)
+        # Data rows 10-12
+        rows = [
+            (1, "2700001", "AMAZON", "TEST IMPORTER 1", "BACKPACK", 1, 1.0, None, None, 21.0),
+            (2, "2700002", "SHEIN",  "TEST IMPORTER 2", "SHOES",    1, 2.0, None, None, 19.99),
+            (3, "2700003", "TEMU",   "TEST IMPORTER 3", "CELL PHONE", 1, 0.5, None, None, 250.0),
+        ]
+        for r_idx, row_data in enumerate(rows, start=10):
+            for c_idx, val in enumerate(row_data, start=1):
+                ws.cell(row=r_idx, column=c_idx, value=val)
+        buf = io.BytesIO()
+        wb.save(buf)
+        return buf.getvalue()
+
+    def test_parser_extracts_header(self):
+        from app.services.courier_template_parser import parse_ttpost_template
+        result = parse_ttpost_template(self._build_minimal_ttpost_template())
+        self.assertEqual(result["manifest_no"], "106-31299999")
+        self.assertEqual(result["vat_no"], "V117369")
+        self.assertIn("TRINIDAD AND TOBAGO POSTAL CORPORATION", result["cargo_reporter"])
+
+    def test_parser_extracts_lines(self):
+        from app.services.courier_template_parser import parse_ttpost_template
+        result = parse_ttpost_template(self._build_minimal_ttpost_template())
+        self.assertEqual(len(result["lines"]), 3)
+        first = result["lines"][0]
+        self.assertEqual(first["hawb"], "2700001")
+        self.assertEqual(first["shipper"], "AMAZON")
+        self.assertEqual(first["importer"], "TEST IMPORTER 1")
+        self.assertEqual(first["description"], "BACKPACK")
+        self.assertEqual(first["packages"], 1)
+        self.assertEqual(first["weight_kg"], 1.0)
+        self.assertEqual(first["cost_usd"], 21.0)
+        # THN was empty in the template
+        self.assertEqual(first["thn"], "")
+
+    def test_parser_stops_at_blank_rows(self):
+        """3 consecutive blank rows = end of data."""
+        from app.services.courier_template_parser import parse_ttpost_template
+        # The minimal template has only 3 data rows; sheet ends after them
+        result = parse_ttpost_template(self._build_minimal_ttpost_template())
+        self.assertEqual(len(result["lines"]), 3)
+
+    def test_parser_rejects_non_ttpost_file(self):
+        """A file with no recognizable header structure should raise ValueError."""
+        from openpyxl import Workbook
+        import io
+        from app.services.courier_template_parser import parse_ttpost_template
+
+        wb = Workbook()
+        ws = wb.active
+        ws["A1"] = "Just some random data"
+        ws["B1"] = "Not a TTPOST file"
+        buf = io.BytesIO()
+        wb.save(buf)
+
+        with self.assertRaises(ValueError):
+            parse_ttpost_template(buf.getvalue())
+
+    def test_parser_handles_missing_master_waybill(self):
+        """If master waybill is absent, return empty string + warning."""
+        from openpyxl import Workbook
+        import io
+        from app.services.courier_template_parser import parse_ttpost_template
+
+        wb = Workbook()
+        ws = wb.active
+        ws["A1"] = "EXPRESS CONSIGNMENTS WORKSHEET"
+        ws["A9"] = "LINE NO. AWB"
+        ws["B9"] = "HAWB"
+        ws["C9"] = "SHIPPER"
+        ws["D9"] = "NAME OF IMPORTER"
+        ws["E9"] = "DESCRIPTION OF GOODS"
+        ws["F9"] = "NO. OF PKGS"
+        ws["J9"] = "COST"
+        # One data row
+        ws["A10"] = 1
+        ws["B10"] = "HAWB1"
+        ws["C10"] = "SHIPPER1"
+        ws["D10"] = "IMPORTER1"
+        ws["E10"] = "BOOKS"
+        ws["F10"] = 1
+        ws["J10"] = 10.0
+        buf = io.BytesIO()
+        wb.save(buf)
+
+        result = parse_ttpost_template(buf.getvalue())
+        self.assertEqual(result["manifest_no"], "")
+        self.assertTrue(any("master waybill" in w.lower() for w in result["warnings"]))
+
+
+class TestTemplateUploadEndToEnd(_RulesStoreTestBase):
+    """End-to-end: parse a template, create manifest, auto-classify all lines."""
+
+    def setUp(self):
+        super().setUp()
+        # Need an isolated manifest store too
+        from app import store_courier
+        from app.services import courier_service
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "manifests.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def test_upload_creates_manifest_with_classified_lines(self):
+        """Parse template → create manifest → all 3 lines have auto-classified THNs."""
+        from app.services import courier_service, courier_template_parser
+
+        # Build template inline
+        from openpyxl import Workbook
+        import io
+        wb = Workbook()
+        ws = wb.active
+        ws["H1"] = "EXPRESS CONSIGNMENTS WORKSHEET"
+        ws["A3"] = "CARGO REPORTER: TTPOST"
+        ws["J3"] = "MASTER WAY BILL NUMBER: 106-31299998"
+        ws["A9"] = "LINE NO. AWB"
+        ws["B9"] = "HAWB"
+        ws["C9"] = "SHIPPER"
+        ws["D9"] = "NAME OF IMPORTER"
+        ws["E9"] = "DESCRIPTION OF GOODS"
+        ws["F9"] = "NO. OF PKGS"
+        ws["G9"] = "WEIGHT"
+        ws["H9"] = "THN"
+        ws["J9"] = "COST"
+        # Data: 3 lines with descriptions the matcher knows
+        data = [
+            (1, "H1", "AMAZON", "A", "iPhone 15 Pro Max", 1, 1.0, None, 999.0),
+            (2, "H2", "AMAZON", "B", "wooden chair", 1, 10.0, None, 50.0),
+            (3, "H3", "AMAZON", "C", "AirPods Pro", 1, 0.5, None, 250.0),
+        ]
+        for r_idx, row in enumerate(data, start=10):
+            for c_idx, val in enumerate(row, start=1):
+                ws.cell(row=r_idx, column=c_idx, value=val)
+        buf = io.BytesIO()
+        wb.save(buf)
+
+        # Parse + import
+        parsed = courier_template_parser.parse_ttpost_template(buf.getvalue())
+        self.assertEqual(parsed["manifest_no"], "106-31299998")
+
+        m = courier_service.create_manifest({
+            "manifest_no": parsed["manifest_no"],
+            "arrival_date": "2026-05-11",
+            "exch_rate": 6.78,
+        })
+        for line in parsed["lines"]:
+            courier_service.add_line_with_auto_thn(m["id"], {
+                "hawb": line["hawb"], "shipper": line["shipper"],
+                "importer": line["importer"], "description": line["description"],
+                "packages": line["packages"], "weight_kg": line["weight_kg"],
+                "cost_usd": line["cost_usd"], "freight_usd": line["freight_usd"],
+            })
+
+        final = courier_service.get_manifest(m["id"])
+        self.assertEqual(len(final["lines"]), 3)
+
+        # iPhone → 85171300
+        self.assertEqual(final["lines"][0]["thn"], "85171300")
+        # AirPods → 85183000
+        self.assertEqual(final["lines"][2]["thn"], "85183000")
+
+        # Confidence and suggestions are persisted
+        for ln in final["lines"]:
+            self.assertIn("thn_confidence", ln)
+            self.assertIn("thn_suggestions", ln)
+            self.assertIsInstance(ln["thn_suggestions"], list)
+
+    def test_classified_thns_persist_through_reload(self):
+        """Verify the fix: thn_suggestions must survive a manifest reload."""
+        from app.services import courier_service
+
+        m = courier_service.create_manifest({
+            "manifest_no": "TEST-PERSIST",
+            "arrival_date": "2026-05-11",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line_with_auto_thn(m["id"], {
+            "description": "iPhone 15",
+            "cost_usd": 1000.0,
+        })
+
+        # Reload from disk
+        fresh = courier_service.get_manifest(m["id"])
+        line = fresh["lines"][0]
+
+        # Suggestions must be present
+        self.assertIn("thn_suggestions", line)
+        self.assertGreater(len(line["thn_suggestions"]), 0)
+        # Confidence must be a number
+        self.assertIsNotNone(line["thn_confidence"])
+        # Match source must be set
+        self.assertIn(line["thn_match_source"], ("keyword_index", "full_text", "hybrid"))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

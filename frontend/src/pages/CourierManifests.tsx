@@ -18,6 +18,7 @@ import {
   CourierManifest,
 } from "@/services/courierApi";
 import { C, fmtTtd } from "@/components/courier/tokens";
+import { UploadTemplateDialog } from "@/components/courier/UploadTemplateDialog";
 
 const STATUS_STYLE: Record<string, { color: string; bg: string; border: string; label: string }> = {
   draft:      { color: C.ghostDim, bg: C.paperAlt, border: C.paperBorder, label: "DRAFT" },
@@ -168,6 +169,7 @@ export default function CourierManifests() {
   const [manifests, setManifests] = useState<CourierManifest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<CourierManifest | null>(null);
 
   const load = useCallback(async () => {
@@ -232,14 +234,24 @@ export default function CourierManifests() {
               duty calculation, officer examination, and worksheet/hazmat export.
             </p>
           </div>
-          <button onClick={() => setShowNew(true)} style={{
-            padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
-            background: C.ink, border: `1px solid ${C.ink}`, borderRadius: 4,
-            color: C.paper, cursor: "pointer", fontWeight: 600,
-          }}>
-            + New Manifest
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowUpload(true)} style={{
+              padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
+              background: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4,
+              color: "#fff", cursor: "pointer", fontWeight: 600,
+            }}>
+              ↑ Upload TTPOST Worksheet
+            </button>
+            <button onClick={() => setShowNew(true)} style={{
+              padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
+              background: C.ink, border: `1px solid ${C.ink}`, borderRadius: 4,
+              color: C.paper, cursor: "pointer", fontWeight: 600,
+            }}>
+              + New Manifest
+            </button>
+          </div>
         </div>
 
         {/* Summary cards */}
@@ -396,6 +408,17 @@ export default function CourierManifests() {
             navigate(`/stallion/courier/${m.id}`);
           }}
           onClose={() => setShowNew(false)}
+        />
+      )}
+
+      {showUpload && (
+        <UploadTemplateDialog
+          onCreated={(result) => {
+            setShowUpload(false);
+            load();
+            navigate(`/stallion/courier/${result.manifest.id}`);
+          }}
+          onClose={() => setShowUpload(false)}
         />
       )}
 

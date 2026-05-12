@@ -23,6 +23,7 @@ import {
   CourierManifest, CourierLine, ThnSuggestion,
 } from "@/services/courierApi";
 import { C, fmtTtd, fmtUsd, ratePillStyle } from "@/components/courier/tokens";
+import { ThnClassifyCell } from "@/components/courier/ThnClassifyCell";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -375,23 +376,13 @@ function LineRow({ manifestId, line, onChanged, onDelete }: {
           <input style={{ ...inputStyle, width: 100 }} value={draft.thn}
             onChange={e => setDraft({ ...draft, thn: e.target.value })} />
         ) : (
-          <span style={{ fontWeight: 700, color: C.ink }}>
-            {line.thn || "—"}
-            {line.thn_was_corrected && (
-              <span title={`Corrected from ${line.thn_original}`} style={{
-                marginLeft: 4, fontSize: 10, color: C.amber, fontWeight: 400, fontStyle: "italic",
-              }}>
-                (corrected)
-              </span>
-            )}
-            {line.thn_unknown && (
-              <span title="Not in CET DB — verify" style={{
-                marginLeft: 4, fontSize: 10, color: C.warnText, fontWeight: 400, fontStyle: "italic",
-              }}>
-                ⚠
-              </span>
-            )}
-          </span>
+          <ThnClassifyCell
+            line={line}
+            onUpdate={async (patch) => {
+              await updateLine(manifestId, line.line_no, patch);
+              onChanged();
+            }}
+          />
         )}
       </td>
       <td style={cellStyle}>

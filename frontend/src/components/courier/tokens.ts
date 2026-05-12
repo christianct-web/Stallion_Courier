@@ -39,3 +39,33 @@ export function fmtUsd(n: number | null | undefined): string {
   if (n == null) return "—";
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+/**
+ * Color-code a THN by classification confidence:
+ *   ≥ 1.0 (manually confirmed by broker) → confirmed green
+ *   ≥ 0.85 high                          → calm green
+ *   ≥ 0.65 medium                        → amber (broker should review)
+ *   <  0.65 low                          → red (broker MUST review)
+ *   null/no THN                          → grey
+ */
+export function thnConfidenceStyle(confidence: number | null | undefined): {
+  bg: string;
+  border: string;
+  fg: string;
+  label: string;
+  level: "confirmed" | "high" | "medium" | "low" | "none";
+} {
+  if (confidence == null) {
+    return { bg: C.paperAlt, border: C.paperBorder, fg: C.inkLight, label: "—", level: "none" };
+  }
+  if (confidence >= 1.0) {
+    return { bg: "#DDEEDF", border: C.green, fg: C.green, label: "CONFIRMED", level: "confirmed" };
+  }
+  if (confidence >= 0.85) {
+    return { bg: C.greenLight, border: C.greenMid, fg: C.green, label: "HIGH", level: "high" };
+  }
+  if (confidence >= 0.65) {
+    return { bg: C.warn, border: C.warnBorder, fg: C.warnText, label: "REVIEW", level: "medium" };
+  }
+  return { bg: C.critical, border: C.critBorder, fg: C.critBorder, label: "LOW", level: "low" };
+}

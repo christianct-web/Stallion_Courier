@@ -61,6 +61,7 @@ export interface CourierLine {
   // Optional matcher metadata
   thn_suggestions?: ThnSuggestion[];
   thn_match_source?: string;
+  thn_confidence?: number | null;
   // Officer overrides
   duty_rate_override?: number | null;
   exemption_override?: string | null;
@@ -178,6 +179,43 @@ export async function createManifest(input: {
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export interface UploadTemplateResult {
+  manifest: CourierManifest;
+  summary: {
+    manifest_no: string;
+    lines_in_file: number;
+    lines_imported: number;
+    lines_skipped: number;
+    skipped_details: string[];
+    warnings: string[];
+  };
+}
+
+/**
+ * Upload a TTPOST express-consignment XLSX template. The system parses it,
+ * creates a manifest, and auto-classifies each line.
+ */
+export async function uploadTemplate(
+  file: File,
+  arrivalDate: string,
+  exchRate: number,
+): Promise<UploadTemplateResult> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("arrival_date", arrivalDate);
+  form.append("exch_rate", String(exchRate));
+
+  const res = await fetch(`${STALLION_BASE_URL}/courier/manifests/from-template`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as any).detail || `Upload failed (${res.status})`);
+  }
+  return res.json();
 }
 
 export async function updateManifestHeader(

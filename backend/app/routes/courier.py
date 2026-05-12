@@ -8,10 +8,16 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 
-from ..services import courier_duty, courier_export, courier_matcher, courier_service
+from ..services import (
+    courier_duty,
+    courier_export,
+    courier_matcher,
+    courier_service,
+    courier_template_parser,
+)
 
 router = APIRouter(prefix="/courier", tags=["courier"])
 
@@ -35,6 +41,97 @@ def manifests_create(req: Dict[str, Any]):
         return courier_service.create_manifest(req)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/manifests/from-template")
+async def manifests_from_template(
+    file: UploadFile = File(...),
+    arrival_date: str = Form(...),
+    exch_rate: float = Form(...),
+):
+    """
+    Upload a TTPOST express-consignment Excel and create a manifest from it.
+
+    The file is parsed for header info (master waybill, cargo reporter, VAT no.)
+    and line items (HAWB, shipper, importer, description, packages, weight, cost).
+    Each line is auto-classified with the matcher; suggestions and confidence
+    are stored on the line so the UI can color-code and offer alternatives.
+
+    Returns the full created manifest including any parser warnings.
+    """
+    try:
+        content = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read upload: {e}")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    try:
+        parsed = courier_template_parser.parse_ttpost_template(content)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    manifest_no = parsed["manifest_no"]
+    if not manifest_no:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Could not detect master waybill number in the uploaded file. "
+                "Make sure the file is a TTPOST Express Consignments Worksheet "
+                "with 'MASTER WAY BILL NUMBER: 106-XXXXXX' in the header."
+            ),
+        )
+
+    existing = courier_service.list_manifests()
+    if any(m.get("manifest_no") == manifest_no for m in existing):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Manifest {manifest_no} already exists. Delete it first or rename.",
+        )
+
+    try:
+        manifest = courier_service.create_manifest({
+            "manifest_no": manifest_no,
+            "arrival_date": arrival_date,
+            "exch_rate": exch_rate,
+            "cargo_reporter": parsed["cargo_reporter"] or "TTPOST",
+            "notes": f"Imported from {file.filename} ({len(parsed['lines'])} lines)",
+        })
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    added = 0
+    skipped: list[str] = []
+    for line_data in parsed["lines"]:
+        try:
+            courier_service.add_line_with_auto_thn(manifest["id"], {
+                "hawb": line_data["hawb"],
+                "shipper": line_data["shipper"],
+                "importer": line_data["importer"],
+                "description": line_data["description"],
+                "thn": line_data.get("thn", ""),
+                "packages": line_data["packages"],
+                "weight_kg": line_data["weight_kg"],
+                "cost_usd": line_data["cost_usd"],
+                "freight_usd": line_data["freight_usd"],
+            })
+            added += 1
+        except Exception as e:
+            skipped.append(f"row {line_data.get('source_row', '?')}: {e}")
+
+    fresh = courier_service.get_manifest(manifest["id"])
+    return {
+        "manifest": fresh,
+        "summary": {
+            "manifest_no": manifest_no,
+            "lines_in_file": len(parsed["lines"]),
+            "lines_imported": added,
+            "lines_skipped": len(skipped),
+            "skipped_details": skipped,
+            "warnings": parsed["warnings"],
+        },
+    }
 
 
 @router.get("/manifests/{manifest_id}")

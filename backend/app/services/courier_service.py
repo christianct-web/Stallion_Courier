@@ -237,7 +237,8 @@ def add_line(manifest_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, An
 
     Required (effectively): description, thn, cost_usd
     Optional: hawb, shipper, importer, packages, weight_kg, freight_usd,
-              duty_rate_override, exemption_override
+              duty_rate_override, exemption_override,
+              thn_suggestions, thn_confidence, thn_match_source
     """
     items = load_manifests()
     idx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
@@ -259,6 +260,11 @@ def add_line(manifest_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, An
         "freight_usd": _ensure_float(payload.get("freight_usd")),
         "duty_rate_override": payload.get("duty_rate_override"),
         "exemption_override": payload.get("exemption_override"),
+        # Auto-classification metadata. Persisted so the UI can show
+        # confidence color and alternatives after page reload.
+        "thn_suggestions": payload.get("thn_suggestions") or payload.get("_thn_suggestions") or [],
+        "thn_confidence": payload.get("thn_confidence"),
+        "thn_match_source": payload.get("thn_match_source") or payload.get("_thn_match_source") or "",
     }
 
     _compute_line(line, _ensure_float(manifest.get("exch_rate")))
@@ -288,6 +294,7 @@ def update_line(manifest_id: str, line_no: int, patch: Dict[str, Any]) -> Option
         "thn", "cost_usd", "freight_usd",
         "duty_rate_override", "exemption_override",
     }
+    thn_manually_set = False
     for k, v in patch.items():
         if k not in allowed:
             continue
@@ -296,9 +303,20 @@ def update_line(manifest_id: str, line_no: int, patch: Dict[str, Any]) -> Option
         elif k in ("weight_kg", "cost_usd", "freight_usd"):
             line[k] = _ensure_float(v)
         elif k == "thn":
-            line[k] = (v or "").strip().replace(".", "")
+            new_thn = (v or "").strip().replace(".", "")
+            if new_thn != line.get("thn", ""):
+                thn_manually_set = True
+            line[k] = new_thn
         else:
             line[k] = v
+
+    # If the broker explicitly changed the THN, this is now a confirmed
+    # human decision — clear the auto-classify confidence so the UI shows
+    # it as confirmed rather than as a suggestion. The full suggestion
+    # list is kept so the broker can still see alternatives.
+    if thn_manually_set:
+        line["thn_confidence"] = 1.0
+        line["thn_match_source"] = "manual"
 
     _compute_line(line, _ensure_float(manifest.get("exch_rate")))
     manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
@@ -349,8 +367,9 @@ def add_line_with_auto_thn(manifest_id: str, payload: Dict[str, Any]) -> Optiona
         if best:
             payload = dict(payload)
             payload["thn"] = best["thn"]
-            payload["_thn_suggestions"] = match["suggestions"]
-            payload["_thn_match_source"] = match["source"]
+            payload["thn_suggestions"] = match["suggestions"]
+            payload["thn_match_source"] = match["source"]
+            payload["thn_confidence"] = best.get("confidence")
 
             # If the matcher's best match has a non-zero rate but the THN
             # isn't in the CET DB (is_unknown), pass the rate as an
@@ -364,9 +383,6 @@ def add_line_with_auto_thn(manifest_id: str, payload: Dict[str, Any]) -> Optiona
                 payload["duty_rate_override"] = best["duty_rate"]
 
     line = add_line(manifest_id, payload)
-    if line and "_thn_suggestions" in payload:
-        line["thn_suggestions"] = payload["_thn_suggestions"]
-        line["thn_match_source"] = payload["_thn_match_source"]
     return line
 
 
