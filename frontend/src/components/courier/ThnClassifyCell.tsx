@@ -14,14 +14,22 @@ import {
   classifyDescription,
 } from "@/services/courierApi";
 import { C, ratePillStyle, thnConfidenceStyle } from "./tokens";
+import { MaintainTariffDialog } from "./MaintainTariffDialog";
 
 type Props = {
   line: CourierLine;
   onUpdate: (patch: { thn: string }) => Promise<void>;
+  /**
+   * Called when the underlying data needs to be reloaded without a line-level
+   * patch (e.g. after a tariff override is saved). The parent should refetch
+   * the manifest so duty/OPT/VAT recompute against the new rule.
+   */
+  onReload?: () => Promise<void> | void;
 };
 
-export function ThnClassifyCell({ line, onUpdate }: Props) {
+export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
   const [open, setOpen] = useState(false);
+  const [maintainOpen, setMaintainOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [manualThn, setManualThn] = useState("");
   const [manualLookup, setManualLookup] = useState<{
@@ -171,13 +179,34 @@ export function ThnClassifyCell({ line, onUpdate }: Props) {
             padding: 14,
           }}
         >
-          <div style={{ marginBottom: 10 }}>
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
-              color: C.inkLight, fontWeight: 700, marginBottom: 3,
-            }}>
-              Classify line {line.line_no}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 3 }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+                color: C.inkLight, fontWeight: 700,
+              }}>
+                Line {line.line_no}
+              </div>
+              {line.thn && (
+                <button
+                  onClick={() => {
+                    setMaintainOpen(true);
+                    setOpen(false);
+                  }}
+                  style={{
+                    padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
+                    fontWeight: 700,
+                    background: C.amber, color: "#fff",
+                    border: `1px solid ${C.amber}`, borderRadius: 3,
+                    cursor: "pointer",
+                  }}
+                  title="Open the Maintain Tariff window to edit this THN's description, duty %, or exemption class"
+                >
+                  ✎ Maintain {line.thn}
+                </button>
+              )}
             </div>
             <div style={{
               fontFamily: "'Fraunces', serif", fontSize: 13, color: C.ink,
@@ -371,6 +400,22 @@ export function ThnClassifyCell({ line, onUpdate }: Props) {
             </button>
           </div>
         </div>
+      )}
+
+      {maintainOpen && (
+        <MaintainTariffDialog
+          thn={line.thn}
+          onClose={() => setMaintainOpen(false)}
+          onSaved={async () => {
+            // After the broker edits the tariff entry, the manifest needs to
+            // be reloaded so duty/OPT/VAT recompute for every line using the
+            // new rule. We call onReload (if provided) — the parent fetches
+            // the manifest fresh and the new values flow back to this cell.
+            if (onReload) {
+              await onReload();
+            }
+          }}
+        />
       )}
     </div>
   );

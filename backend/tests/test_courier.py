@@ -1002,5 +1002,93 @@ class TestTemplateUploadEndToEnd(_RulesStoreTestBase):
         self.assertIn(line["thn_match_source"], ("keyword_index", "full_text", "hybrid"))
 
 
+class TestMaintainTariffFlow(_RulesStoreTestBase):
+    """Tests for the Maintain Tariff workflow — tariff override → recompute → updated taxes."""
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "manifests.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def test_tariff_override_then_recompute_updates_line_taxes(self):
+        """
+        Broker uploads, classifier picks THN, broker maintains the tariff
+        entry to change its duty rate, recompute → line's duty/total update.
+        """
+        from app.services import courier_service, courier_rules
+
+        # 1. Create a manifest with one line using a known THN
+        m = courier_service.create_manifest({
+            "manifest_no": "TEST-MAINT",
+            "arrival_date": "2026-05-12",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Random item",
+            "thn": "61091000",  # T-shirts cotton — bundled at 20%
+            "cost_usd": 100.0,
+        })
+
+        fresh = courier_service.get_manifest(m["id"])
+        line_before = fresh["lines"][0]
+        duty_before = line_before["duty"]
+        self.assertGreater(duty_before, 0)  # 20% of 678 = 135.60
+
+        # 2. Broker maintains the tariff: change duty from 20% to 10%
+        courier_rules.add_tariff_entry(
+            "61091000",
+            description="T-shirts (broker override)",
+            duty_pct=10,
+            by="broker",
+            comment="Test override",
+        )
+
+        # 3. Recompute the manifest
+        m2 = courier_service.recompute_manifest(m["id"])
+        line_after = m2["lines"][0]
+        duty_after = line_after["duty"]
+
+        # Duty should be lower: 10% of 678 = 67.80
+        self.assertLess(duty_after, duty_before)
+        self.assertAlmostEqual(duty_after, 67.80, places=1)
+
+    def test_tariff_override_to_exempt_zeroes_taxes(self):
+        """Adding a full_exempt rule should zero out duty/OPT/VAT after recompute."""
+        from app.services import courier_service, courier_rules
+
+        m = courier_service.create_manifest({
+            "manifest_no": "TEST-EXEMPT-FLOW",
+            "arrival_date": "2026-05-12",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Test item",
+            "thn": "61091000",
+            "cost_usd": 100.0,
+        })
+
+        # Make it full exempt
+        courier_rules.add_exemption(
+            "61091000",
+            "full_exempt",
+            notes="Test exemption",
+            by="broker",
+        )
+        m2 = courier_service.recompute_manifest(m["id"])
+        line = m2["lines"][0]
+
+        self.assertEqual(line["duty"], 0)
+        self.assertEqual(line["opt"], 0)
+        self.assertEqual(line["vat"], 0)
+        self.assertEqual(line["total_taxes"], 0)
+        self.assertEqual(line["exemption_class"], "full_exempt")
+
+    def test_recompute_404_for_unknown_manifest(self):
+        from app.services import courier_service
+        result = courier_service.recompute_manifest("nonexistent-id")
+        self.assertIsNone(result)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

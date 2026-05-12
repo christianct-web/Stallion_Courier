@@ -239,6 +239,14 @@ export async function deleteManifest(id: string): Promise<{ ok: boolean }> {
   return courierApi(`/courier/manifests/${id}`, { method: "DELETE" });
 }
 
+/**
+ * Recompute every line's duty/OPT/VAT against the current tariff/rules.
+ * Call after a tariff override is saved.
+ */
+export async function recomputeManifest(id: string): Promise<CourierManifest> {
+  return courierApi(`/courier/manifests/${id}/recompute`, { method: "POST" });
+}
+
 // ── Lines ────────────────────────────────────────────────────────────────
 
 export async function addLine(

@@ -160,6 +160,19 @@ def manifests_delete(manifest_id: str):
     return {"ok": True}
 
 
+@router.post("/manifests/{manifest_id}/recompute")
+def manifests_recompute(manifest_id: str):
+    """
+    Recompute every line in the manifest against the current tariff/rules.
+    Use after editing a tariff entry so duty / OPT / VAT pick up the new rate
+    without requiring per-line patches.
+    """
+    m = courier_service.recompute_manifest(manifest_id)
+    if not m:
+        raise HTTPException(status_code=404, detail="Manifest not found")
+    return m
+
+
 # ── Lines ────────────────────────────────────────────────────────────────────
 
 

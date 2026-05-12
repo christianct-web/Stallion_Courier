@@ -190,6 +190,25 @@ def get_manifest(manifest_id: str) -> Optional[Dict[str, Any]]:
     return next((m for m in items if m.get("id") == manifest_id), None)
 
 
+def recompute_manifest(manifest_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Recompute every line in the manifest against the current rules/tariff.
+
+    Useful after the broker edits a tariff entry (via the Maintain Tariff
+    dialog) so duty / OPT / VAT pick up the new rate without requiring a
+    manual line edit.
+    """
+    items = load_manifests()
+    idx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
+    if idx is None:
+        return None
+    manifest = items[idx]
+    _recompute_all_lines(manifest)
+    items[idx] = manifest
+    save_manifests(items)
+    return manifest
+
+
 def update_manifest_header(manifest_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Update manifest header fields. Recomputes lines if exch_rate changed."""
     items = load_manifests()

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   getManifest, updateManifestHeader, addLine, updateLine, deleteLine,
-  classifyDescription,
+  classifyDescription, recomputeManifest,
   worksheetDownloadUrl, hazmatDownloadUrl,
   CourierManifest, CourierLine, ThnSuggestion,
 } from "@/services/courierApi";
@@ -380,6 +380,14 @@ function LineRow({ manifestId, line, onChanged, onDelete }: {
             line={line}
             onUpdate={async (patch) => {
               await updateLine(manifestId, line.line_no, patch);
+              onChanged();
+            }}
+            onReload={async () => {
+              // Called after the Maintain Tariff dialog saves a new tariff
+              // override. Recompute every line in the manifest so the new
+              // duty rate takes effect across the whole manifest, then
+              // refresh the page state.
+              await recomputeManifest(manifestId);
               onChanged();
             }}
           />
