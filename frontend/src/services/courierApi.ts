@@ -14,7 +14,14 @@ function extractErrorMessage(err: any, fallback: string): string {
   if (Array.isArray(err.detail)) {
     const first = err.detail[0];
     if (typeof first === "string") return first;
-    if (first?.msg) return String(first.msg);
+    if (first?.msg) {
+      // Pydantic error shape: { loc: ["body", "thn"], msg: "Field required", ... }
+      // Surface the field name so the broker sees WHICH field is wrong.
+      const loc = Array.isArray(first.loc) ? first.loc : [];
+      const fieldPath = loc.filter((p: any) => p !== "body").join(".");
+      const msg = String(first.msg).replace(/^Value error,?\s*/, "");
+      return fieldPath ? `${fieldPath}: ${msg}` : msg;
+    }
   }
   if (typeof err.message === "string") return err.message;
   try {

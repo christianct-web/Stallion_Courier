@@ -1090,5 +1090,161 @@ class TestMaintainTariffFlow(_RulesStoreTestBase):
         self.assertIsNone(result)
 
 
+class TestHandoffBugRegression(_RulesStoreTestBase):
+    """
+    Regression: 'Input should be a valid dictionary' on Maintain Tariff save.
+
+    From the handoff brief: broker opens Maintain Tariff for THN 84713000
+    (laptop), sets exemption_class=full_exempt, clicks Save. Save should
+    persist tariff override + exemption + recompute manifest so taxes go
+    to zero.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "manifests.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def test_full_exempt_save_flow_persists_and_zeroes_taxes(self):
+        """Reproduce the handoff bug: full save chain must result in zero taxes."""
+        from app.services import courier_service, courier_rules
+
+        # Setup: manifest with line at THN 84713000
+        m = courier_service.create_manifest({
+            "manifest_no": "HANDOFF-BUG", "arrival_date": "2026-05-12", "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Laptop", "thn": "84713000", "cost_usd": 1000.0,
+        })
+
+        # The 3-step save chain the Maintain dialog performs:
+
+        # 1) Tariff override
+        courier_rules.add_tariff_entry(
+            thn="84713000",
+            description="Portable digital automatic data processing machines",
+            duty_pct=0,
+            chapter=84,
+            unit="u",
+            is_exempt=True,
+            by="broker",
+            comment="handoff test",
+        )
+
+        # 2) Exemption rule
+        courier_rules.add_exemption(
+            thn="84713000", exemption_class="full_exempt",
+            notes="Laptop full exempt", by="broker", comment="handoff test",
+        )
+
+        # 3) Recompute
+        result = courier_service.recompute_manifest(m["id"])
+        line = result["lines"][0]
+
+        self.assertEqual(line["exemption_class"], "full_exempt")
+        self.assertEqual(line["duty"], 0)
+        self.assertEqual(line["opt"], 0)
+        self.assertEqual(line["vat"], 0)
+        self.assertEqual(line["total_taxes"], 0)
+
+    def test_duty_free_only_keeps_opt_and_vat(self):
+        """Critical distinction from the brief: duty_free_only ≠ full_exempt."""
+        from app.services import courier_service, courier_rules
+
+        m = courier_service.create_manifest({
+            "manifest_no": "DFO-TEST", "arrival_date": "2026-05-12", "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Test", "thn": "84713000", "cost_usd": 1000.0,
+        })
+
+        # Set duty_free_only — duty is 0 but OPT/VAT still apply
+        courier_rules.add_exemption(
+            thn="84713000", exemption_class="duty_free_only",
+            notes="DFO test", by="broker",
+        )
+        result = courier_service.recompute_manifest(m["id"])
+        line = result["lines"][0]
+
+        self.assertEqual(line["exemption_class"], "duty_free_only")
+        self.assertEqual(line["duty"], 0)
+        self.assertGreater(line["opt"], 0, "OPT should still apply for duty_free_only")
+        self.assertGreater(line["vat"], 0, "VAT should still apply for duty_free_only")
+
+
+class TestPayloadValidation(_RulesStoreTestBase):
+    """
+    Validation tests for the rules/tariff POST endpoints. After the Pydantic
+    hardening, every malformed payload should return a clear, field-specific
+    422 — never the opaque 'Input should be a valid dictionary'.
+    """
+
+    def _make_app(self):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from app.routes.courier_rules import router as courier_rules_router
+        app = FastAPI()
+        app.include_router(courier_rules_router)
+        return TestClient(app)
+
+    def test_tariff_missing_thn_returns_clear_error(self):
+        client = self._make_app()
+        r = client.post("/courier/tariff",
+                        json={"description": "X", "duty_pct": 0},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 422)
+        # Error must specifically call out the missing 'thn' field
+        detail = r.json()["detail"]
+        self.assertTrue(any("thn" in str(d.get("loc", [])) for d in detail))
+
+    def test_tariff_invalid_thn_length_returns_clear_error(self):
+        client = self._make_app()
+        r = client.post("/courier/tariff",
+                        json={"thn": "1234567", "description": "X", "duty_pct": 0},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 422)
+        detail_str = str(r.json()["detail"])
+        self.assertIn("THN must be 8 digits", detail_str)
+
+    def test_tariff_duty_out_of_range_returns_clear_error(self):
+        client = self._make_app()
+        r = client.post("/courier/tariff",
+                        json={"thn": "84713000", "description": "X", "duty_pct": 150},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 422)
+
+    def test_exemption_invalid_class_returns_clear_error(self):
+        client = self._make_app()
+        r = client.post("/courier/rules/exemptions",
+                        json={"thn": "85171300", "class": "nonsense", "notes": "x"},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 422)
+        detail_str = str(r.json()["detail"])
+        # Pydantic Literal error mentions the allowed values
+        self.assertIn("full_exempt", detail_str)
+
+    def test_tariff_happy_path_succeeds(self):
+        client = self._make_app()
+        r = client.post("/courier/tariff",
+                        json={"thn": "85171300", "description": "Smartphones",
+                              "duty_pct": 0, "chapter": 85, "is_exempt": True,
+                              "comment": "test"},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 200, r.text)
+        body = r.json()
+        self.assertEqual(body["thn"], "85171300")
+        self.assertEqual(body["dutyPct"], 0)
+        self.assertTrue(body["isExempt"])
+
+    def test_exemption_happy_path_succeeds(self):
+        client = self._make_app()
+        r = client.post("/courier/rules/exemptions",
+                        json={"thn": "85171300", "class": "full_exempt",
+                              "notes": "Smartphones - test"},
+                        headers={"X-User-Id": "broker"})
+        self.assertEqual(r.status_code, 200, r.text)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
