@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Literal, Optional
 
-from fastapi import APIRouter, Header, HTTPException, Query
-from pydantic import BaseModel, Field, field_validator
+from fastapi import APIRouter, Body, Header, HTTPException, Query
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ..services import courier_rules
 
@@ -230,7 +230,7 @@ def tariff_browse(
 
 @router.post("/tariff")
 def tariff_add(
-    req: TariffAddRequest,
+    req: Any = Body(...),
     x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
 ):
     """
@@ -247,16 +247,34 @@ def tariff_add(
         "comment": "OCR missed this row in the bundled CET 2024 import"
       }
     """
+    # Accept strict object payloads, but also defensively handle legacy
+    # clients that might send a JSON string body.
+    try:
+        if isinstance(req, TariffAddRequest):
+            parsed = req
+        elif isinstance(req, dict):
+            parsed = TariffAddRequest.model_validate(req)
+        elif isinstance(req, str):
+            parsed = TariffAddRequest.model_validate_json(req)
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail="Body must be a JSON object with thn, description, duty_pct, and optional chapter/unit/is_exempt/comment",
+            )
+    except ValidationError as e:
+        errs = [{"loc": er.get("loc"), "msg": er.get("msg"), "type": er.get("type")} for er in e.errors()]
+        raise HTTPException(status_code=422, detail=errs)
+
     try:
         return courier_rules.add_tariff_entry(
-            thn=req.thn,
-            description=req.description,
-            duty_pct=req.duty_pct,
-            chapter=req.chapter,
-            unit=req.unit,
-            is_exempt=req.is_exempt,
+            thn=parsed.thn,
+            description=parsed.description,
+            duty_pct=parsed.duty_pct,
+            chapter=parsed.chapter,
+            unit=parsed.unit,
+            is_exempt=parsed.is_exempt,
             by=_user(x_user_id),
-            comment=req.comment,
+            comment=parsed.comment,
         )
     except (ValueError, TypeError) as e:
         raise HTTPException(status_code=400, detail=str(e))
