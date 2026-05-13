@@ -45,8 +45,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 async function courierApi<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await withTimeout(
     fetch(`${STALLION_BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
       ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...((init?.headers as Record<string, string>) || {}),
+      },
     }),
     REQUEST_TIMEOUT_MS,
   );
