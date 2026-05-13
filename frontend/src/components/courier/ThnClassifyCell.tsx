@@ -42,6 +42,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [openUpward, setOpenUpward] = useState(false);
 
   // Keep popover anchored to the THN button and above scroll containers.
   useLayoutEffect(() => {
@@ -51,9 +52,15 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       const r = anchorRef.current!.getBoundingClientRect();
       const desiredLeft = r.left;
       const maxLeft = Math.max(8, window.innerWidth - 500);
+      const left = Math.max(8, Math.min(desiredLeft, maxLeft));
+
+      // If the anchor is low in the viewport, open the popover upward so
+      // bottom rows remain usable.
+      const shouldOpenUpward = r.bottom > window.innerHeight * 0.62;
+      setOpenUpward(shouldOpenUpward);
       setPopoverPos({
-        top: r.bottom + 6,
-        left: Math.max(8, Math.min(desiredLeft, maxLeft)),
+        top: shouldOpenUpward ? r.top - 8 : r.bottom + 6,
+        left,
       });
     };
 
@@ -200,7 +207,8 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
           ref={popoverRef}
           style={{
             position: "fixed",
-            top: popoverPos.top,
+            top: openUpward ? undefined : popoverPos.top,
+            bottom: openUpward ? Math.max(8, window.innerHeight - popoverPos.top) : undefined,
             left: popoverPos.left,
             zIndex: 9999,
             width: 480,
