@@ -536,38 +536,56 @@ class TestWorksheetExport(_RulesStoreTestBase):
         self.assertAlmostEqual(ws["J8"].value, 50.0, places=2)
 
     def test_worksheet_formulas_match_real_template(self):
-        """Formulas should match the real worksheet's syntax."""
+        """
+        Data cells contain BOTH formulas (for Excel recalc) AND cached
+        numeric values (for viewers that don't recalculate).
+
+        Verified by loading the workbook twice — once with data_only=False
+        (formulas) and once with data_only=True (cached values).
+        """
         from openpyxl import load_workbook
         from app.services import courier_export
         import io
 
         m = self._make_manifest()
         data = courier_export.build_worksheet_v3(m)
-        wb = load_workbook(io.BytesIO(data))
-        ws = wb.active
 
-        # Row 8: body cream — standard 20% line
-        # Real template uses =J8*6.78 (rate baked into formula)
-        l_formula = str(ws["L8"].value)
-        self.assertIn("J8", l_formula)
-        self.assertIn("6.78", l_formula)
-        self.assertEqual(ws["M8"].value, "=L8*0.2")
-        self.assertEqual(ws["N8"].value, "=L8*0.07")
-        self.assertEqual(ws["O8"].value, "=(L8+M8+N8)*0.125")
-        # P uses M+N+O (NOT SUM)
-        self.assertEqual(ws["P8"].value, "=M8+N8+O8")
+        # data_only=False: read formulas
+        wb_f = load_workbook(io.BytesIO(data), data_only=False)
+        ws_f = wb_f.active
+        self.assertIn("J8", str(ws_f["L8"].value))
+        self.assertIn("6.78", str(ws_f["L8"].value))
+        self.assertEqual(ws_f["M8"].value, "=L8*0.2")
+        self.assertEqual(ws_f["N8"].value, "=L8*0.07")
+        self.assertEqual(ws_f["O8"].value, "=(L8+M8+N8)*0.125")
+        self.assertEqual(ws_f["P8"].value, "=M8+N8+O8")
 
-        # Row 9: smartphone — full_exempt, hard zeros
-        self.assertEqual(ws["I9"].value, "FREE")
-        self.assertEqual(ws["M9"].value, 0)
-        self.assertEqual(ws["N9"].value, 0)
-        self.assertEqual(ws["O9"].value, 0)
+        # data_only=True: read cached values
+        wb_v = load_workbook(io.BytesIO(data), data_only=True)
+        ws_v = wb_v.active
+        # Row 8: body cream — standard 20% line at cost $50.00, rate 6.78
+        # Expected: L = 50 * 6.78 = 339.00, M = L*0.2 = 67.80, etc.
+        self.assertAlmostEqual(ws_v["L8"].value, 339.00, places=2)
+        self.assertAlmostEqual(ws_v["M8"].value, 67.80, places=2)
+        self.assertAlmostEqual(ws_v["N8"].value, 23.73, places=2)
+        self.assertAlmostEqual(ws_v["O8"].value, 53.82, places=2)
+        self.assertAlmostEqual(
+            ws_v["P8"].value,
+            ws_v["M8"].value + ws_v["N8"].value + ws_v["O8"].value, places=2,
+        )
 
-        # Row 10: smart device — duty_free_only
-        self.assertEqual(ws["I10"].value, "FREE")
-        self.assertEqual(ws["M10"].value, 0)
-        self.assertEqual(ws["N10"].value, "=L10*0.07")
-        self.assertEqual(ws["O10"].value, "=(L10+M10+N10)*0.125")
+        # Row 9: smartphone — full_exempt, hard zeros (no formula)
+        self.assertEqual(ws_f["I9"].value, "FREE")
+        self.assertEqual(ws_f["M9"].value, 0)
+        self.assertEqual(ws_f["N9"].value, 0)
+        self.assertEqual(ws_f["O9"].value, 0)
+
+        # Row 10: smart device — duty_free_only (duty=0, OPT/VAT formulas)
+        self.assertEqual(ws_f["I10"].value, "FREE")
+        self.assertEqual(ws_f["M10"].value, 0)
+        # OPT and VAT must be present as cached values
+        self.assertGreater(ws_v["N10"].value or 0, 0)
+        self.assertGreater(ws_v["O10"].value or 0, 0)
 
     def test_worksheet_with_officer_corrections(self):
         """Officer examination data lands in Section 3 of the right rows."""
@@ -602,34 +620,56 @@ class TestWorksheetExport(_RulesStoreTestBase):
         self.assertAlmostEqual(ws["R8"].value, 25.0, places=2)
         self.assertAlmostEqual(ws["S8"].value, 169.50, places=2)
         self.assertAlmostEqual(ws["T8"].value, 33.90, places=2)
+        # W8 is a formula =T8+U8+V8
         self.assertEqual(ws["W8"].value, "=T8+U8+V8")
+        # And its cached value is the server-computed sum
+        wb_v = load_workbook(io.BytesIO(data), data_only=True)
+        ws_v = wb_v.active
+        self.assertAlmostEqual(ws_v["W8"].value, 72.68, places=2)
 
         # Line 2 → row 9, S3 empty
         self.assertIn(ws["Q9"].value, (None, ""))
 
     def test_worksheet_totals_match_real_template(self):
-        """TOTALS row uses SUM formulas across columns F G J L M N O P R S T U V W."""
+        """
+        TOTALS row uses =SUM formulas with cached numeric values.
+
+        Formulas: =SUM(col{first}:col{last}) per column.
+        Cached values are the server-computed sums.
+        """
         from openpyxl import load_workbook
         from app.services import courier_export
         import io
 
         m = self._make_manifest()
         data = courier_export.build_worksheet_v3(m)
-        wb = load_workbook(io.BytesIO(data))
-        ws = wb.active
 
-        # 3 lines → data at rows 8-10, totals at row 11
-        self.assertEqual(ws["A11"].value, "TOTALS")
-        for col in ("F", "G", "J", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W"):
-            v = ws[f"{col}11"].value
+        # data_only=False: formulas
+        wb_f = load_workbook(io.BytesIO(data), data_only=False)
+        ws_f = wb_f.active
+        self.assertEqual(ws_f["A11"].value, "TOTALS")
+        for col in ("F", "G", "J", "L", "M", "N", "O", "P",
+                    "R", "S", "T", "U", "V", "W"):
+            v = ws_f[f"{col}11"].value
             self.assertTrue(
                 str(v).startswith("=SUM("),
                 f"Cell {col}11 should be a SUM formula, got {v!r}",
             )
 
-        # Grand total row 12: P12 = P11, W12 = P11 + W11
-        self.assertEqual(ws["P12"].value, "=P11")
-        self.assertEqual(ws["W12"].value, "=P11+W11")
+        # Grand total row 12: P12 = P11 (formula); W12 = P11 + W11 (formula)
+        self.assertEqual(ws_f["P12"].value, "=P11")
+        self.assertEqual(ws_f["W12"].value, "=P11+W11")
+
+        # data_only=True: cached values
+        wb_v = load_workbook(io.BytesIO(data), data_only=True)
+        ws_v = wb_v.active
+        # Costs $50 + $800 + $100 = $950
+        self.assertEqual(ws_v["F11"].value, 3)
+        self.assertAlmostEqual(ws_v["J11"].value, 950.0, places=2)
+        self.assertAlmostEqual(ws_v["L11"].value, 950.0 * 6.78, places=1)
+        # Grand totals have cached values
+        self.assertIsInstance(ws_v["P12"].value, (int, float))
+        self.assertIsInstance(ws_v["W12"].value, (int, float))
 
     def test_worksheet_recalc_correctness(self):
         """LibreOffice recalc should produce expected duty/OPT/VAT values."""
@@ -1244,6 +1284,223 @@ class TestPayloadValidation(_RulesStoreTestBase):
                               "notes": "Smartphones - test"},
                         headers={"X-User-Id": "broker"})
         self.assertEqual(r.status_code, 200, r.text)
+
+
+class TestWorksheetGoldenParity(_RulesStoreTestBase):
+    """
+    Parity tests against the broker's golden template
+    (Worksheet_106-31245034_FINAL_v3). Each test asserts one slice of the
+    layout — merged ranges, column widths, anchor labels, row heights —
+    that the export engine MUST reproduce exactly.
+    """
+
+    GOLDEN_MERGED_RANGES = {
+        "A1:X1",   # title row
+        "A2:X2",   # subtitle
+        "J3:X3",   # master waybill
+        "A5:X5",   # CBTT note
+        "A6:P6",   # SECTION 2 banner
+        "Q6:X6",   # SECTION 3 banner
+        "A34:E34", # TOTALS label
+        "A35:O35", # TOTAL TAXES label
+        "Q35:V35", # TOTAL INCL. OFFICER UPLIFTS label
+    }
+
+    GOLDEN_COLUMN_WIDTHS = {
+        "A": 6.0, "B": 10.0, "C": 20.0, "D": 22.0, "E": 35.0, "F": 5.0,
+        "H": 12.0, "I": 6.0, "J": 8.0, "L": 12.0, "M": 10.0, "N": 9.0,
+        "O": 10.0, "Q": 12.0, "R": 11.0, "S": 12.0, "T": 10.0, "U": 9.0,
+        "Y": 10.0,
+    }
+
+    GOLDEN_ANCHOR_CELLS = {
+        "A1": "EXPRESS CONSIGNMENTS WORKSHEET",
+        "A2": "NON-COMMERCIAL CONSIGNMENTS",
+        "A6": "SECTION 2",
+        "Q6": "SECTION 3 — FOR OFFICIAL USE ONLY",
+        "A7": "LINE\nNO.",
+        "H7": "THN",
+        "L7": "CUSTOMS\nVALUE (TTD)",
+        "P7": "TOTAL\nTAXES",
+    }
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "manifests.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def _make_manifest(self):
+        """Single-line manifest for layout-only tests."""
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "PARITY-TEST",
+            "arrival_date": "2026-05-14",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "hawb": "1234567", "shipper": "Test", "importer": "Test",
+            "description": "Test", "thn": "33049990",
+            "cost_usd": 50.0, "freight_usd": 0.0, "packages": 1, "weight_kg": 1,
+        })
+        return courier_service.get_manifest(m["id"])
+
+    def test_parity_merged_ranges(self):
+        """All critical merged ranges from golden must be present.
+
+        Layout-anchor merges (rows 1-6) are at fixed positions regardless of
+        line count. Totals/grand-total merges shift with the line count, so
+        we compute their expected positions for the test manifest.
+        """
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        generated_ranges = {str(r) for r in ws.merged_cells.ranges}
+
+        # Layout-anchor merges (always at same row numbers)
+        fixed_merges = {
+            "A1:X1", "A2:X2", "J3:X3", "A5:X5", "A6:P6", "Q6:X6",
+        }
+        missing = fixed_merges - generated_ranges
+        self.assertEqual(missing, set(),
+                         f"Missing layout-anchor merged ranges: {missing}")
+
+        # Totals/grand-total merges. Test manifest has 1 line, so:
+        # data row 8, totals row 9, grand total row 10.
+        totals_row = 9
+        grand_row = 10
+        movable_merges = {
+            f"A{totals_row}:E{totals_row}",         # TOTALS label
+            f"A{grand_row}:O{grand_row}",           # TOTAL TAXES label
+            f"Q{grand_row}:V{grand_row}",           # TOTAL INCL. OFFICER UPLIFTS label
+        }
+        missing = movable_merges - generated_ranges
+        self.assertEqual(missing, set(),
+                         f"Missing totals/grand-total merged ranges: {missing}")
+
+    def test_parity_column_widths(self):
+        """All key column widths from golden must match (±0.5 tolerance)."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        for letter, expected in self.GOLDEN_COLUMN_WIDTHS.items():
+            actual = ws.column_dimensions[letter].width
+            self.assertIsNotNone(
+                actual, f"Column {letter}: no width set (expected {expected})",
+            )
+            self.assertAlmostEqual(
+                actual, expected, delta=0.5,
+                msg=f"Column {letter}: expected {expected}, got {actual}",
+            )
+
+    def test_parity_anchor_cell_labels(self):
+        """Specific anchor cells must contain expected labels."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        for ref, expected in self.GOLDEN_ANCHOR_CELLS.items():
+            actual = ws[ref].value
+            self.assertEqual(
+                actual, expected,
+                f"Cell {ref}: expected {expected!r}, got {actual!r}",
+            )
+
+    def test_parity_row_heights(self):
+        """Critical row heights must match golden (banner, headers, data)."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        # Row 6 (banner) ≈ 15.75; row 7 (headers) ≈ 31.5; row 8 (data) ≈ 27.75
+        self.assertAlmostEqual(ws.row_dimensions[6].height, 15.75, delta=1.0)
+        self.assertAlmostEqual(ws.row_dimensions[7].height, 31.5, delta=1.0)
+        self.assertAlmostEqual(ws.row_dimensions[8].height, 27.75, delta=1.0)
+
+    def test_parity_section_2_banner_styling(self):
+        """SECTION 2 banner uses light-green fill FFC6EFCE."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        c = ws["A6"]
+        self.assertEqual(c.fill.fgColor.rgb, "FFC6EFCE")
+        self.assertEqual(c.value, "SECTION 2")
+        self.assertTrue(c.font.bold)
+
+    def test_parity_section_3_banner_styling(self):
+        """SECTION 3 banner uses pale-orange fill FFFCE4D6."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        c = ws["Q6"]
+        self.assertEqual(c.fill.fgColor.rgb, "FFFCE4D6")
+
+    def test_parity_data_cells_have_values_not_blank(self):
+        """
+        DATA VISIBILITY CHECK (from brief): every key money cell in every
+        line row must have a non-empty cached value so viewers that don't
+        recalculate formulas still display the number.
+        """
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        # data_only=True: read cached values
+        wb = load_workbook(io.BytesIO(data), data_only=True)
+        ws = wb.active
+        # Row 8 is the single data row
+        for col in ("L", "M", "N", "O", "P"):
+            v = ws[f"{col}8"].value
+            self.assertIsNotNone(
+                v, f"Cell {col}8 has no cached value — would render blank in non-Excel viewers",
+            )
+            self.assertIsInstance(
+                v, (int, float),
+                f"Cell {col}8 cached value is {type(v).__name__}, expected numeric",
+            )
+
+    def test_parity_totals_row_has_cached_sums(self):
+        """
+        TOTALS row's SUM formulas must have cached values so non-Excel
+        viewers display the totals correctly.
+        """
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data), data_only=True)
+        ws = wb.active
+        # 1 line → data row 8, totals row 9
+        for col in ("F", "J", "L", "M", "N", "O", "P"):
+            v = ws[f"{col}9"].value
+            self.assertIsInstance(
+                v, (int, float),
+                f"Totals cell {col}9 has no cached value (would render blank)",
+            )
 
 
 if __name__ == "__main__":

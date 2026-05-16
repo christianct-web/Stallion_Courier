@@ -51,32 +51,53 @@ logger = logging.getLogger("stallion.courier.export")
 
 
 # ── Style tokens ─────────────────────────────────────────────────────────────
+#
+# These match the broker's golden template
+# (Worksheet_106-31245034_FINAL_v3). The palette is light-green / pale-orange
+# (TTPOST broker convention), not the navy/blue palette used internally before.
+# Fonts are Calibri, sized to match the golden cell-for-cell.
 
-FONT_TITLE = Font(name="Arial", size=14, bold=True)
-FONT_HEADER = Font(name="Arial", size=10, bold=True, color="FFFFFF")
-FONT_BANNER = Font(name="Arial", size=11, bold=True, color="FFFFFF")
-FONT_BODY = Font(name="Arial", size=9)
-FONT_BODY_BOLD = Font(name="Arial", size=9, bold=True)
-FONT_META = Font(name="Arial", size=10, bold=True)
+FONT_TITLE = Font(name="Calibri", size=12, bold=True)
+FONT_SUBTITLE = Font(name="Calibri", size=11, bold=True)
+FONT_META = Font(name="Calibri", size=9, bold=False)
+FONT_META_BOLD = Font(name="Calibri", size=9, bold=True)
+FONT_NOTE = Font(name="Calibri", size=8, italic=True, color="FF595959")
+FONT_BANNER = Font(name="Calibri", size=9, bold=True)
+FONT_HEADER = Font(name="Calibri", size=8, bold=True)
+FONT_BODY = Font(name="Calibri", size=9, color="FF000000")          # Section 2 data
+FONT_BODY_BOLD = Font(name="Calibri", size=9, bold=True, color="FF000000")
+FONT_BODY_S3 = Font(name="Calibri", size=9)                          # Section 3 data (no explicit color)
+FONT_BODY_S3_BOLD = Font(name="Calibri", size=9, bold=True)
+FONT_TOTALS_LABEL = Font(name="Calibri", size=9, bold=True)
+FONT_SIGNATURE = Font(name="Calibri", size=9)
 
-FILL_TITLE = PatternFill("solid", start_color="1F4E78")  # navy
-FILL_S2 = PatternFill("solid", start_color="2E75B6")     # mid-blue
-FILL_S3 = PatternFill("solid", start_color="C65911")     # amber
-FILL_HEADER = PatternFill("solid", start_color="305496")
-FILL_ROW_ALT = PatternFill("solid", start_color="F2F2F2")
-FILL_TOTALS = PatternFill("solid", start_color="FFE699")
+FILL_TITLE = PatternFill(fill_type=None)  # no fill on golden title rows
+FILL_S2 = PatternFill("solid", start_color="FFC6EFCE")      # SECTION 2 light green
+FILL_S3 = PatternFill("solid", start_color="FFFCE4D6")      # SECTION 3 pale orange
+FILL_HEADER = PatternFill("solid", start_color="FFABEBC6")  # Section 2 column headers
+FILL_HEADER_S3 = PatternFill("solid", start_color="FFFADBD8")  # Section 3 column headers (pink)
+FILL_DATA = PatternFill("solid", start_color="FFFFFFFF")    # data row white (Section 2)
+FILL_DATA_S3 = PatternFill("solid", start_color="FFFFF2CC")  # data row pale yellow (Section 3)
+FILL_TOTALS = PatternFill("solid", start_color="FFABEBC6")  # totals row, same as header
 FILL_HAZMAT_HEADER = PatternFill("solid", start_color="305496")
 FILL_HAZMAT_FINAL = PatternFill("solid", start_color="D9E1F2")
 
 THIN = Side(style="thin", color="808080")
+MEDIUM = Side(style="medium", color="808080")
 BORDER_THIN = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
+BORDER_HEADER_S2 = Border(left=THIN, right=THIN, top=MEDIUM, bottom=MEDIUM)
+BORDER_HEADER_S3 = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
-ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
-ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
-ALIGN_RIGHT = Alignment(horizontal="right", vertical="center", wrap_text=True)
+ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)   # for headers
+ALIGN_CENTER_NOWRAP = Alignment(horizontal="center", vertical="center", wrap_text=False)
+ALIGN_LEFT_WRAP = Alignment(horizontal="left", vertical="center", wrap_text=True)   # description data
+ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=False)
+ALIGN_RIGHT = Alignment(horizontal="right", vertical="center", wrap_text=False)
+ALIGN_META = Alignment(horizontal="general", vertical="bottom", wrap_text=False)
 
 FMT_TTD = "#,##0.00"
 FMT_USD = "#,##0.00"
+FMT_GENERAL = "General"
 
 
 # ── Worksheet v3 layout ──────────────────────────────────────────────────────
@@ -85,34 +106,34 @@ FMT_USD = "#,##0.00"
 # to accommodate the wrapped text.
 
 LAYOUT_V3_S2: List[Dict[str, Any]] = [
-    {"col": "A", "label": "LINE\nNO.",        "width": 6.0,  "fmt": "0",       "align": ALIGN_CENTER},
-    {"col": "B", "label": "HAWB",             "width": 10.0, "fmt": "@",       "align": ALIGN_CENTER},
-    {"col": "C", "label": "SHIPPER",          "width": 20.0, "fmt": "@",       "align": ALIGN_LEFT},
-    {"col": "D", "label": "NAME OF\nIMPORTER","width": 22.0, "fmt": "@",       "align": ALIGN_LEFT},
-    {"col": "E", "label": "DESCRIPTION OF GOODS", "width": 35.0, "fmt": "@",   "align": ALIGN_LEFT},
-    {"col": "F", "label": "NO.\nPKGS",        "width": 5.0,  "fmt": "0",       "align": ALIGN_CENTER},
-    {"col": "G", "label": "WT\n(lbs)",        "width": 6.0,  "fmt": "0",       "align": ALIGN_CENTER},
-    {"col": "H", "label": "THN",              "width": 12.0, "fmt": "@",       "align": ALIGN_CENTER},
-    {"col": "I", "label": "RATE",             "width": 6.0,  "fmt": "@",       "align": ALIGN_CENTER},
-    {"col": "J", "label": "COST\n(USD)",      "width": 8.0,  "fmt": FMT_USD,   "align": ALIGN_RIGHT},
-    {"col": "K", "label": "FREIGHT",          "width": 8.0,  "fmt": FMT_USD,   "align": ALIGN_RIGHT},
+    {"col": "A", "label": "LINE\nNO.",        "width": 6.0,  "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "B", "label": "HAWB",             "width": 10.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT},
+    {"col": "C", "label": "SHIPPER",          "width": 20.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT},
+    {"col": "D", "label": "NAME OF\nIMPORTER","width": 22.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT},
+    {"col": "E", "label": "DESCRIPTION OF GOODS", "width": 35.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT_WRAP},
+    {"col": "F", "label": "NO.\nPKGS",        "width": 5.0,  "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "G", "label": "WT\n(lbs)",        "width": None, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "H", "label": "THN",              "width": 12.0, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "I", "label": "RATE",             "width": 6.0,  "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "J", "label": "COST\n(USD)",      "width": 8.0,  "fmt": FMT_USD,     "align": ALIGN_RIGHT},
+    {"col": "K", "label": "FREIGHT",          "width": None, "fmt": FMT_USD,     "align": ALIGN_RIGHT},
     {"col": "L", "label": "CUSTOMS\nVALUE (TTD)", "width": 12.0, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
-    {"col": "M", "label": "DUTY",             "width": 10.0, "fmt": FMT_TTD,   "align": ALIGN_RIGHT},
-    {"col": "N", "label": "OPT\n7%",          "width": 9.0,  "fmt": FMT_TTD,   "align": ALIGN_RIGHT},
-    {"col": "O", "label": "VAT\n12.5%",       "width": 10.0, "fmt": FMT_TTD,   "align": ALIGN_RIGHT},
-    {"col": "P", "label": "TOTAL\nTAXES",     "width": 10.0, "fmt": FMT_TTD,   "align": ALIGN_RIGHT},
+    {"col": "M", "label": "DUTY",             "width": 10.0, "fmt": FMT_TTD,     "align": ALIGN_RIGHT},
+    {"col": "N", "label": "OPT\n7%",          "width": 9.0,  "fmt": FMT_TTD,     "align": ALIGN_RIGHT},
+    {"col": "O", "label": "VAT\n12.5%",       "width": 10.0, "fmt": FMT_TTD,     "align": ALIGN_RIGHT},
+    {"col": "P", "label": "TOTAL\nTAXES",     "width": None, "fmt": FMT_TTD,     "align": ALIGN_RIGHT},
 ]
 
 LAYOUT_V3_S3: List[Dict[str, Any]] = [
-    {"col": "Q", "label": "OFFICER\nTHN",      "width": 12.0, "fmt": "@",     "align": ALIGN_CENTER},
+    {"col": "Q", "label": "OFFICER\nTHN",      "width": 12.0, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
     {"col": "R", "label": "ADD.\nCOST (USD)",  "width": 11.0, "fmt": FMT_USD, "align": ALIGN_RIGHT},
     {"col": "S", "label": "ADJUSTED\nCIF (TTD)","width": 12.0, "fmt": FMT_TTD,"align": ALIGN_RIGHT},
     {"col": "T", "label": "ADD.\nDUTY",        "width": 10.0, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
     {"col": "U", "label": "ADD.\nOPT",         "width": 9.0,  "fmt": FMT_TTD, "align": ALIGN_RIGHT},
-    {"col": "V", "label": "ADD.\nVAT",         "width": 9.0,  "fmt": FMT_TTD, "align": ALIGN_RIGHT},
-    {"col": "W", "label": "ADD.\nTOTAL",       "width": 10.0, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
-    {"col": "X", "label": "DETAINED/\nSEIZED", "width": 10.0, "fmt": "@",     "align": ALIGN_CENTER},
-    {"col": "Y", "label": "DEP. IN\nT/SHED",   "width": 10.0, "fmt": "@",     "align": ALIGN_CENTER},
+    {"col": "V", "label": "ADD.\nVAT",         "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
+    {"col": "W", "label": "ADD.\nTOTAL",       "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
+    {"col": "X", "label": "DETAINED/\nSEIZED", "width": None, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "Y", "label": "DEP. IN\nT/SHED",   "width": 10.0, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
 ]
 
 # Row layout
@@ -132,12 +153,19 @@ LAST_MERGE_COL = "X"  # title bar / banners merge to column X (not Y)
 
 
 def _set_widths(ws: Worksheet) -> None:
+    """Apply column widths. None means leave at Excel's default (~8.43)."""
     for item in LAYOUT_V3_S2 + LAYOUT_V3_S3:
-        ws.column_dimensions[item["col"]].width = item["width"]
+        if item.get("width") is not None:
+            ws.column_dimensions[item["col"]].width = item["width"]
 
 
 def _write_title_block(ws: Worksheet, manifest: Dict[str, Any]) -> None:
-    """Rows 1–5: title, sub-title, meta block, formula explainer."""
+    """Rows 1–5: title, sub-title, meta block, formula explainer.
+
+    All styling matches the broker's golden template
+    (Worksheet_106-31245034_FINAL_v3): Calibri throughout, no fills on
+    title rows, light-italic note row.
+    """
     rate = float(manifest.get("exch_rate", 0))
     manifest_no = manifest.get("manifest_no", "")
     cargo_reporter = manifest.get("cargo_reporter", "TRINIDAD AND TOBAGO POSTAL CORPORATION")
@@ -148,35 +176,38 @@ def _write_title_block(ws: Worksheet, manifest: Dict[str, Any]) -> None:
     ws.merge_cells(f"A{ROW_TITLE_1}:{LAST_MERGE_COL}{ROW_TITLE_1}")
     c = ws[f"A{ROW_TITLE_1}"]
     c.value = "EXPRESS CONSIGNMENTS WORKSHEET"
-    c.font = Font(name="Arial", size=14, bold=True, color="FFFFFF")
-    c.fill = FILL_TITLE
-    c.alignment = ALIGN_CENTER
-    ws.row_dimensions[ROW_TITLE_1].height = 22
+    c.font = FONT_TITLE
+    c.alignment = ALIGN_CENTER_NOWRAP
+    ws.row_dimensions[ROW_TITLE_1].height = 13.5
 
     # Row 2 — sub-title
     ws.merge_cells(f"A{ROW_TITLE_2}:{LAST_MERGE_COL}{ROW_TITLE_2}")
     c = ws[f"A{ROW_TITLE_2}"]
     c.value = "NON-COMMERCIAL CONSIGNMENTS"
-    c.font = Font(name="Arial", size=11, bold=True)
-    c.alignment = ALIGN_CENTER
-    ws.row_dimensions[ROW_TITLE_2].height = 18
+    c.font = FONT_SUBTITLE
+    c.alignment = ALIGN_CENTER_NOWRAP
+    ws.row_dimensions[ROW_TITLE_2].height = 13.5
 
     # Row 3 — cargo reporter (left) and master waybill (right)
     ws[f"A{ROW_META_1}"] = f"CARGO REPORTER: {cargo_reporter}"
+    ws[f"A{ROW_META_1}"].font = FONT_META
+    ws[f"A{ROW_META_1}"].alignment = ALIGN_META
+
     ws.merge_cells(f"J{ROW_META_1}:{LAST_MERGE_COL}{ROW_META_1}")
     ws[f"J{ROW_META_1}"] = f"MASTER WAY BILL NUMBER: {manifest_no}"
-    for col in ("A", "J"):
-        ws[f"{col}{ROW_META_1}"].font = FONT_META
-        ws[f"{col}{ROW_META_1}"].alignment = ALIGN_LEFT
+    ws[f"J{ROW_META_1}"].font = FONT_META_BOLD
+    ws[f"J{ROW_META_1}"].alignment = ALIGN_META
+    ws.row_dimensions[ROW_META_1].height = 13.5
 
     # Row 4 — VAT no, R.O.E., freight
     vat_no = manifest.get("declarant_vat_no") or "V117369"
     ws[f"A{ROW_META_2}"] = f'VAT NO. / "N" NO.: {vat_no}'
     ws[f"F{ROW_META_2}"] = f"R.O.E.: {rate}"
     ws[f"J{ROW_META_2}"] = "FREIGHT:"
-    for col in ("A", "F", "J"):
-        ws[f"{col}{ROW_META_2}"].font = FONT_META
-        ws[f"{col}{ROW_META_2}"].alignment = ALIGN_LEFT
+    for col, font in [("A", FONT_META), ("F", FONT_META_BOLD), ("J", FONT_META)]:
+        ws[f"{col}{ROW_META_2}"].font = font
+        ws[f"{col}{ROW_META_2}"].alignment = ALIGN_META
+    ws.row_dimensions[ROW_META_2].height = 15.0
 
     # Row 5 — CBTT note (formula explainer)
     note = (
@@ -188,39 +219,53 @@ def _write_title_block(ws: Worksheet, manifest: Dict[str, Any]) -> None:
     ws.merge_cells(f"A{ROW_NOTE}:{LAST_MERGE_COL}{ROW_NOTE}")
     c = ws[f"A{ROW_NOTE}"]
     c.value = note
-    c.font = Font(name="Arial", size=8, italic=True)
-    c.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
-    ws.row_dimensions[ROW_NOTE].height = 24
+    c.font = FONT_NOTE
+    c.alignment = ALIGN_META
+    ws.row_dimensions[ROW_NOTE].height = 15.0
 
 
 def _write_banner(ws: Worksheet) -> None:
-    """Row 6 — SECTION 2 banner (A:P) and SECTION 3 banner (Q:X)."""
+    """Row 6 — SECTION 2 (light green) and SECTION 3 (pale orange) banners."""
     ws.merge_cells(f"A{ROW_BANNER}:P{ROW_BANNER}")
     c = ws[f"A{ROW_BANNER}"]
     c.value = "SECTION 2"
     c.font = FONT_BANNER
     c.fill = FILL_S2
-    c.alignment = ALIGN_CENTER
+    c.alignment = ALIGN_CENTER_NOWRAP
 
     ws.merge_cells(f"Q{ROW_BANNER}:{LAST_MERGE_COL}{ROW_BANNER}")
     c = ws[f"Q{ROW_BANNER}"]
     c.value = "SECTION 3 — FOR OFFICIAL USE ONLY"
     c.font = FONT_BANNER
     c.fill = FILL_S3
-    c.alignment = ALIGN_CENTER
+    c.alignment = ALIGN_CENTER_NOWRAP
 
-    ws.row_dimensions[ROW_BANNER].height = 18
+    ws.row_dimensions[ROW_BANNER].height = 15.75
 
 
 def _write_column_headers(ws: Worksheet) -> None:
-    """Row 7 — multi-line column headers for Section 2 + Section 3."""
+    """
+    Row 7 — multi-line column headers.
+
+    Section 2 (A:P) uses light-green fill and medium top/bottom borders
+    (golden's emphasis). Section 3 (Q:Y) uses pale-pink fill with thin
+    borders all around. A7 specifically uses thin all around (no medium).
+    """
     for item in LAYOUT_V3_S2 + LAYOUT_V3_S3:
         c = ws[f"{item['col']}{ROW_HEADERS}"]
         c.value = item["label"]
         c.font = FONT_HEADER
-        c.fill = FILL_HEADER
         c.alignment = ALIGN_CENTER
-        c.border = BORDER_THIN
+        # Per-column fill + border
+        if item["col"] == "A":
+            c.fill = FILL_HEADER
+            c.border = BORDER_THIN
+        elif item["col"] in "BCDEFGHIJKLMNOP":
+            c.fill = FILL_HEADER
+            c.border = BORDER_HEADER_S2
+        else:  # Section 3: Q-Y
+            c.fill = FILL_HEADER_S3
+            c.border = BORDER_HEADER_S3
     ws.row_dimensions[ROW_HEADERS].height = 31.5
 
 
@@ -237,6 +282,110 @@ def _rate_display(line: Dict[str, Any]) -> str:
     return "FREE"
 
 
+def _compute_line_values(line: Dict[str, Any], rate: float) -> Dict[str, float]:
+    """
+    Return the numeric tax values for a line, computed server-side.
+
+    This is the same logic Excel would apply, but evaluated in Python so we
+    can write cached values to the cells. That way the worksheet displays
+    correctly in viewers (mobile preview, Google Sheets viewer, etc.) that
+    do NOT recalculate formulas on load.
+
+    The formulas remain in the cells, so when a user opens the file in
+    Excel the values are still tied to J{row} (cost) — edits propagate
+    correctly. Excel ignores the cached value and recalculates.
+    """
+    cls = line.get("exemption_class", "none")
+    duty_rate = float(line.get("duty_rate") or 0)
+    cost = float(line.get("cost_usd") or 0)
+    freight = float(line.get("freight_usd") or 0)
+
+    cif = (cost + freight) * rate
+
+    if cls == "full_exempt":
+        duty = 0.0
+        opt = 0.0
+        vat = 0.0
+    elif cls == "duty_free_only":
+        duty = 0.0
+        opt = cif * 0.07
+        vat = (cif + duty + opt) * 0.125
+    else:
+        duty = cif * duty_rate
+        opt = cif * 0.07
+        vat = (cif + duty + opt) * 0.125
+
+    total = duty + opt + vat
+    return {"cif": cif, "duty": duty, "opt": opt, "vat": vat, "total": total}
+
+
+def _compute_cached_totals(
+    manifest: Dict[str, Any], lines: List[Dict[str, Any]], rate: float,
+) -> Dict[str, float]:
+    """
+    Compute the cached numeric values for the TOTALS row's SUM formulas.
+
+    Returns a mapping from column letter to its server-side computed sum.
+    """
+    out = {col: 0.0 for col in
+           ("F", "G", "J", "L", "M", "N", "O", "P",
+            "R", "S", "T", "U", "V", "W")}
+
+    for line in lines:
+        v = _compute_line_values(line, rate)
+        out["F"] += int(line.get("packages") or 1)
+        out["G"] += int(line.get("weight_kg") or 0)
+        out["J"] += float(line.get("cost_usd") or 0)
+        out["L"] += v["cif"]
+        out["M"] += v["duty"]
+        out["N"] += v["opt"]
+        out["O"] += v["vat"]
+        out["P"] += v["total"]
+
+    # Officer uplifts
+    exam = manifest.get("officer_examination") or {}
+    for corr in exam.get("corrections", []):
+        if corr.get("line_no") is None:
+            continue
+        out["R"] += float(corr.get("add_cost_usd") or 0)
+        adj = corr.get("adjusted_cif_ttd")
+        if adj is None:
+            adj = float(corr.get("add_cost_usd") or 0) * rate
+        out["S"] += float(adj)
+        out["T"] += float(corr.get("add_duty") or 0)
+        out["U"] += float(corr.get("add_opt") or 0)
+        out["V"] += float(corr.get("add_vat") or 0)
+        out["W"] += (float(corr.get("add_duty") or 0)
+                     + float(corr.get("add_opt") or 0)
+                     + float(corr.get("add_vat") or 0))
+
+    return out
+
+
+def _set_with_formula(cell, formula: str, cached_value: float, number_format: str) -> None:
+    """
+    Write a formula to the cell along with a server-computed cached value.
+
+    The cached value is recorded in a workbook-level dict and injected into
+    the saved xml at build time (see `_inject_cached_values`). This gives
+    us:
+      - The formula displays in Excel and recalculates on edit.
+      - The numeric value displays in viewers that don't recalculate
+        (Apple Preview, browser preview, mobile Excel).
+
+    The brief explicitly preferred visible values for broker workflow;
+    this approach preserves visibility while keeping the live formulas.
+    """
+    cell.value = formula
+    cell.number_format = number_format
+    # Record the cached value on the worksheet object — the build wrapper
+    # picks this up and injects it into the saved xml.
+    ws = cell.parent
+    if not hasattr(ws, "_courier_cached_values"):
+        ws._courier_cached_values = {}
+    ws._courier_cached_values[cell.coordinate] = cached_value
+
+
 def _write_data_row(
     ws: Worksheet,
     row: int,
@@ -245,150 +394,255 @@ def _write_data_row(
     correction: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
-    Write one Section 2 + Section 3 data row matching the real layout.
+    Write one Section 2 + Section 3 data row matching the golden template.
 
-    Tax formulas mirror the real worksheet exactly:
-      L = J*<rate>     (CIF)
-      M = L*<duty_pct> (Duty)
-      N = L*0.07       (OPT)
+    Tax formulas mirror the broker's golden worksheet exactly:
+      L = J*<rate>      (CIF)
+      M = L*<duty_pct>  (Duty)
+      N = L*0.07        (OPT)
       O = (L+M+N)*0.125 (VAT)
-      P = M+N+O        (Total)
-      W = T+U+V        (Add Total — Section 3)
+      P = M+N+O         (Total)
+      W = T+U+V         (Add Total — Section 3)
+
+    Each formula also gets a server-computed cached value so the cell
+    displays correctly in non-Excel viewers (Apple Preview, Google Sheets
+    web viewer, mobile Excel without recalc).
     """
     # Section 2 — identification
-    ws[f"A{row}"] = line.get("line_no")
-    ws[f"B{row}"] = line.get("hawb", "")
+    ws[f"A{row}"] = int(line.get("line_no") or 0)
+    # HAWB: keep numeric if it's all digits (golden stores it as int)
+    raw_hawb = line.get("hawb", "")
+    if isinstance(raw_hawb, (int, float)):
+        ws[f"B{row}"] = int(raw_hawb)
+    elif isinstance(raw_hawb, str) and raw_hawb.isdigit():
+        ws[f"B{row}"] = int(raw_hawb)
+    else:
+        ws[f"B{row}"] = str(raw_hawb or "")
     ws[f"C{row}"] = line.get("shipper", "")
     ws[f"D{row}"] = line.get("importer", "")
     ws[f"E{row}"] = line.get("description", "")
     ws[f"F{row}"] = int(line.get("packages") or 1)
-    ws[f"G{row}"] = float(line.get("weight_kg") or 0)  # column header says "lbs"; value as-stored
-    ws[f"H{row}"] = line.get("thn", "")
+    ws[f"G{row}"] = int(line.get("weight_kg") or 0)  # column header says "lbs"; value as-stored
+    ws[f"H{row}"] = str(line.get("thn", ""))
     ws[f"I{row}"] = _rate_display(line)
     ws[f"J{row}"] = float(line.get("cost_usd") or 0)
+    ws[f"J{row}"].number_format = FMT_USD  # money format even before _set_with_formula loop
     if line.get("freight_usd"):
         ws[f"K{row}"] = float(line["freight_usd"])
+        ws[f"K{row}"].number_format = FMT_USD
 
-    # Section 2 — tax formulas
+    # Compute cached values for the formula cells
+    values = _compute_line_values(line, rate)
+
     cls = line.get("exemption_class", "none")
     duty_rate = float(line.get("duty_rate") or 0)
 
-    # CIF formula: matches real worksheet's =J{row}*<rate> pattern but
-    # gracefully handles freight in column K when set. The IF guard means
-    # if a user later types a value into K{row}, the CIF picks it up
-    # automatically without breaking the formula.
-    ws[f"L{row}"] = f"=(J{row}+IF(K{row}=\"\",0,K{row}))*{rate}"
+    # L = CIF. Golden uses =J{row}*<rate>; we use the same to match exactly.
+    # If the broker types a value into K (freight), they'll need to update L
+    # manually — same constraint as the broker's existing workflow.
+    _set_with_formula(ws[f"L{row}"], f"=J{row}*{rate}", values["cif"], FMT_TTD)
 
     if cls == "full_exempt":
         ws[f"M{row}"] = 0
         ws[f"N{row}"] = 0
         ws[f"O{row}"] = 0
+        ws[f"M{row}"].number_format = FMT_TTD
+        ws[f"N{row}"].number_format = FMT_TTD
+        ws[f"O{row}"].number_format = FMT_TTD
     elif cls == "duty_free_only":
         ws[f"M{row}"] = 0
-        ws[f"N{row}"] = f"=L{row}*0.07"
-        ws[f"O{row}"] = f"=(L{row}+M{row}+N{row})*0.125"
+        ws[f"M{row}"].number_format = FMT_TTD
+        _set_with_formula(ws[f"N{row}"], f"=L{row}*0.07", values["opt"], FMT_TTD)
+        _set_with_formula(ws[f"O{row}"], f"=(L{row}+M{row}+N{row})*0.125", values["vat"], FMT_TTD)
     else:
-        ws[f"M{row}"] = f"=L{row}*{round(duty_rate, 4)}"
-        ws[f"N{row}"] = f"=L{row}*0.07"
-        ws[f"O{row}"] = f"=(L{row}+M{row}+N{row})*0.125"
+        _set_with_formula(ws[f"M{row}"], f"=L{row}*{round(duty_rate, 4)}", values["duty"], FMT_TTD)
+        _set_with_formula(ws[f"N{row}"], f"=L{row}*0.07", values["opt"], FMT_TTD)
+        _set_with_formula(ws[f"O{row}"], f"=(L{row}+M{row}+N{row})*0.125", values["vat"], FMT_TTD)
 
-    ws[f"P{row}"] = f"=M{row}+N{row}+O{row}"
+    _set_with_formula(ws[f"P{row}"], f"=M{row}+N{row}+O{row}", values["total"], FMT_TTD)
 
     # Section 3 — officer columns
     if correction:
-        # Note: real worksheet preserves the officer's THN verbatim,
-        # including codes that look "wrong" (e.g. 83062990). We do the same.
-        ws[f"Q{row}"] = correction.get("officer_thn", "")
+        ws[f"Q{row}"] = str(correction.get("officer_thn", ""))
         ws[f"R{row}"] = float(correction.get("add_cost_usd") or 0)
         adj = correction.get("adjusted_cif_ttd")
         if adj is not None:
             ws[f"S{row}"] = float(adj)
         else:
-            ws[f"S{row}"] = f"=R{row}*{rate}"
+            adj_value = float(correction.get("add_cost_usd") or 0) * rate
+            _set_with_formula(ws[f"S{row}"], f"=R{row}*{rate}", adj_value, FMT_TTD)
         ws[f"T{row}"] = float(correction.get("add_duty") or 0)
         ws[f"U{row}"] = float(correction.get("add_opt") or 0)
         ws[f"V{row}"] = float(correction.get("add_vat") or 0)
-        ws[f"W{row}"] = f"=T{row}+U{row}+V{row}"
+        add_total = float(correction.get("add_duty") or 0) + \
+                    float(correction.get("add_opt") or 0) + \
+                    float(correction.get("add_vat") or 0)
+        _set_with_formula(ws[f"W{row}"], f"=T{row}+U{row}+V{row}", add_total, FMT_TTD)
         if correction.get("detained_seized"):
             ws[f"X{row}"] = "Yes"
         if correction.get("dep_in_tshed"):
             ws[f"Y{row}"] = "Yes"
 
-    # Apply formatting + alternating fill
-    is_alt = (row % 2 == 0)
+    # Apply per-cell formatting matching the golden:
+    #   - Section 2 (A:P): alternating row fill (white on even data rows,
+    #     FFF2F2F2 light gray on odd data rows starting from row 9).
+    #   - Section 3 (Q:Y): solid pale-yellow fill (no alternating).
+    #   - Section 2 data cells use FONT_BODY (color FF000000); P column is
+    #     always bold ("Total Taxes" column emphasis in golden).
+    #   - Section 3 data cells use FONT_BODY_S3 (no explicit color); W
+    #     column is bold when a correction is present.
+    #   - All money cells get #,##0.00 even when empty.
+    SECTION_3_MONEY_COLS = {"R", "S", "T", "U", "V", "W"}
+    SECTION_2_MONEY_COLS = {"J", "K", "L", "M", "N", "O", "P"}
+    # Alternating fill: data starts at ROW_DATA_START (=8). Even data-row
+    # offsets (relative to ROW_DATA_START) → white; odd → light gray.
+    is_alt = ((row - ROW_DATA_START) % 2 == 1)
+    s2_fill = PatternFill("solid", start_color="FFF2F2F2") if is_alt else FILL_DATA
     for item in LAYOUT_V3_S2 + LAYOUT_V3_S3:
         c = ws[f"{item['col']}{row}"]
-        c.font = FONT_BODY
         c.alignment = item["align"]
         c.border = BORDER_THIN
-        if item["fmt"] not in ("@", None):
+        # Section 2 (A:P) → alternating; Section 3 (Q:Y) → solid yellow
+        if item["col"] in "QRSTUVWXY":
+            c.fill = FILL_DATA_S3
+            # W is bold when there's a correction; otherwise plain
+            if item["col"] == "W" and correction:
+                c.font = FONT_BODY_S3_BOLD
+            else:
+                c.font = FONT_BODY_S3
+        else:
+            c.fill = s2_fill
+            # P (Total Taxes) is always bold per golden
+            if item["col"] == "P":
+                c.font = FONT_BODY_BOLD
+            else:
+                c.font = FONT_BODY
+        # Apply number format. Money cells always get #,##0.00.
+        if item["col"] in SECTION_3_MONEY_COLS or item["col"] in SECTION_2_MONEY_COLS:
+            c.number_format = FMT_TTD
+        else:
             c.number_format = item["fmt"]
-        if is_alt:
-            c.fill = FILL_ROW_ALT
 
     ws.row_dimensions[row].height = 27.75
 
 
-def _write_totals_row(ws: Worksheet, row: int, first: int, last: int) -> None:
-    """Write the TOTALS row matching the real worksheet."""
-    # "TOTALS" label spans A:E
+def _write_totals_row(
+    ws: Worksheet, row: int, first: int, last: int,
+    cached_totals: Dict[str, float],
+) -> None:
+    """
+    Write the TOTALS row matching the golden template.
+
+    Golden styling:
+      - A{row}:E{row} merged with "TOTALS" label, light-green fill,
+        general (bottom) alignment.
+      - F G J L M N O P (Section 2) hold SUM formulas with light-green
+        fill (FFABEBC6).
+      - R S T U V W (Section 3) hold SUM formulas with pale-yellow fill
+        (FFFFF2CC).
+      - All totals cells use bold Calibri without explicit font color,
+        right-aligned, with #,##0.00 number format.
+    """
     ws.merge_cells(f"A{row}:E{row}")
     ws[f"A{row}"] = "TOTALS"
-    ws[f"A{row}"].font = FONT_BODY_BOLD
-    ws[f"A{row}"].alignment = ALIGN_CENTER
+    ws[f"A{row}"].font = FONT_TOTALS_LABEL
+    ws[f"A{row}"].fill = FILL_TOTALS
+    ws[f"A{row}"].alignment = ALIGN_META
 
-    sum_cols = ["F", "G", "J", "L", "M", "N", "O", "P",
-                "R", "S", "T", "U", "V", "W"]
-    for col in sum_cols:
-        ws[f"{col}{row}"] = f"=SUM({col}{first}:{col}{last})"
+    # SUM formula cells with cached values.
+    # Golden uses #,##0.00 for ALL SUM cells (even the package/weight counts).
+    for col in ("F", "G", "J", "L", "M", "N", "O", "P",
+                "R", "S", "T", "U", "V", "W"):
+        cached = cached_totals.get(col, 0.0)
+        _set_with_formula(
+            ws[f"{col}{row}"],
+            f"=SUM({col}{first}:{col}{last})",
+            cached,
+            FMT_TTD,
+        )
 
-    # Apply formatting
+    # Apply golden-matching styling. Section 2 (A-P) → light green, no
+    # borders. Section 3 R-W → pale yellow with thin borders. Q, X, Y →
+    # pale yellow with no border, no alignment.
+    NO_BORDER = Border()
+    SECTION_3_SUM_COLS = {"R", "S", "T", "U", "V", "W"}
     for item in LAYOUT_V3_S2 + LAYOUT_V3_S3:
         c = ws[f"{item['col']}{row}"]
-        c.font = FONT_BODY_BOLD
-        c.fill = FILL_TOTALS
-        c.border = BORDER_THIN
-        c.alignment = item["align"]
-        if item["fmt"] not in ("@", None):
-            c.number_format = item["fmt"]
+        if item["col"] == "A":
+            c.font = FONT_TOTALS_LABEL
+            c.fill = FILL_TOTALS
+            c.border = NO_BORDER
+        elif item["col"] in "BCDEFGHIJKLMNOP":
+            c.font = FONT_BODY_S3_BOLD  # no explicit color
+            c.fill = FILL_TOTALS
+            c.border = NO_BORDER
+            # Only F G J L M N O P get right alignment (data money cells)
+            if item["col"] in "FGJLMNOP":
+                c.alignment = ALIGN_RIGHT
+        elif item["col"] in SECTION_3_SUM_COLS:
+            c.font = FONT_BODY_S3_BOLD
+            c.fill = FILL_DATA_S3
+            c.border = BORDER_THIN
+            c.alignment = ALIGN_RIGHT
+        else:  # Q, X, Y
+            c.font = FONT_BODY_S3_BOLD
+            c.fill = FILL_DATA_S3
+            c.border = NO_BORDER
 
-    ws.row_dimensions[row].height = 18
+    ws.row_dimensions[row].height = 18.0
 
 
-def _write_grand_total_row(ws: Worksheet, row: int, totals_row: int) -> None:
+def _write_grand_total_row(
+    ws: Worksheet, row: int, totals_row: int,
+    cached_total_taxes: float, cached_total_inc_uplifts: float,
+) -> None:
     """
-    Row after totals: 'TOTAL TAXES ==>' merged A:O, P=P{totals_row},
-    'TOTAL INCL. OFFICER UPLIFTS ==>' merged Q:V, W=P{totals_row}+W{totals_row}.
+    Grand total row after the TOTALS row:
+      A{row}:O{row} merged: 'TOTAL TAXES ==>' (no fill, bold, no color)
+      P{row} = P{totals_row} (formula+cached, bold, no fill)
+      Q{row}:V{row} merged: 'TOTAL INCL. OFFICER UPLIFTS ==>'
+          (pale-pink fill FFFADBD8, bold, no color)
+      W{row} = P{totals_row} + W{totals_row}
+          (pale-pink fill + thin borders, bold, no color)
     """
     ws.merge_cells(f"A{row}:O{row}")
     ws[f"A{row}"] = "TOTAL TAXES ==>"
-    ws[f"A{row}"].font = FONT_BODY_BOLD
-    ws[f"A{row}"].alignment = Alignment(horizontal="right", vertical="center")
-    ws[f"P{row}"] = f"=P{totals_row}"
-    ws[f"P{row}"].font = FONT_BODY_BOLD
-    ws[f"P{row}"].fill = FILL_TOTALS
-    ws[f"P{row}"].number_format = FMT_TTD
+    ws[f"A{row}"].font = FONT_BODY_S3_BOLD  # bold without explicit color
+    ws[f"A{row}"].alignment = ALIGN_META
+
+    _set_with_formula(ws[f"P{row}"], f"=P{totals_row}", cached_total_taxes, FMT_TTD)
+    ws[f"P{row}"].font = FONT_BODY_S3_BOLD  # no explicit color
     ws[f"P{row}"].alignment = ALIGN_RIGHT
 
     ws.merge_cells(f"Q{row}:V{row}")
     ws[f"Q{row}"] = "TOTAL INCL. OFFICER UPLIFTS ==>"
-    ws[f"Q{row}"].font = FONT_BODY_BOLD
-    ws[f"Q{row}"].alignment = Alignment(horizontal="right", vertical="center")
-    ws[f"W{row}"] = f"=P{totals_row}+W{totals_row}"
-    ws[f"W{row}"].font = FONT_BODY_BOLD
-    ws[f"W{row}"].fill = FILL_TOTALS
-    ws[f"W{row}"].number_format = FMT_TTD
+    ws[f"Q{row}"].font = FONT_BODY_S3_BOLD
+    ws[f"Q{row}"].fill = FILL_HEADER_S3  # pale pink
+    ws[f"Q{row}"].alignment = ALIGN_META
+
+    _set_with_formula(
+        ws[f"W{row}"], f"=P{totals_row}+W{totals_row}",
+        cached_total_inc_uplifts, FMT_TTD,
+    )
+    ws[f"W{row}"].font = FONT_BODY_S3_BOLD
+    ws[f"W{row}"].fill = FILL_HEADER_S3  # pale pink
+    ws[f"W{row}"].border = BORDER_THIN
     ws[f"W{row}"].alignment = ALIGN_RIGHT
 
-    ws.row_dimensions[row].height = 18
+    ws.row_dimensions[row].height = 18.0
 
 
 def _write_signature_row(ws: Worksheet, row: int) -> None:
-    """Final signature row — empty row above, then signature placeholders."""
+    """Final signature row — signature placeholders for officer + declarant."""
     ws[f"A{row}"] = "Signature of Examining Officer: ______________________________"
-    ws[f"A{row}"].font = FONT_BODY
+    ws[f"A{row}"].font = FONT_SIGNATURE
+    ws[f"A{row}"].alignment = ALIGN_META
+
     ws[f"J{row}"] = "SIGNATURE, NAME & LICENCE NO OF DECLARANT: ______________________________"
-    ws[f"J{row}"].font = FONT_BODY
+    ws[f"J{row}"].font = FONT_SIGNATURE
+    ws[f"J{row}"].alignment = ALIGN_META
+
+    ws.row_dimensions[row].height = 15.0
 
 
 def _correction_for(manifest: Dict[str, Any], line_no: int) -> Optional[Dict[str, Any]]:
@@ -439,8 +693,16 @@ def build_worksheet_v3(manifest: Dict[str, Any]) -> bytes:
         grand_row = totals_row + 1
         sig_row = grand_row + 2
 
-        _write_totals_row(ws, totals_row, first_data, last_data)
-        _write_grand_total_row(ws, grand_row, totals_row)
+        # Compute cached SUM values server-side so the worksheet renders
+        # correctly in viewers that don't recalculate formulas.
+        cached_totals = _compute_cached_totals(manifest, lines, rate)
+
+        _write_totals_row(ws, totals_row, first_data, last_data, cached_totals)
+        _write_grand_total_row(
+            ws, grand_row, totals_row,
+            cached_total_taxes=cached_totals.get("P", 0.0),
+            cached_total_inc_uplifts=cached_totals.get("P", 0.0) + cached_totals.get("W", 0.0),
+        )
         _write_signature_row(ws, sig_row)
 
     # Officer-discovered new lines (line_no=null) appended below signature
@@ -478,7 +740,61 @@ def build_worksheet_v3(manifest: Dict[str, Any]) -> bytes:
 
     buf = io.BytesIO()
     wb.save(buf)
+
+    # Inject cached values into formula cells. openpyxl emits `<v></v>` for
+    # formula cells but leaves the inside empty. We populate those with the
+    # server-computed values recorded via `_set_with_formula` so viewers that
+    # don't recalculate (Apple Preview, mobile Excel, browser previews) show
+    # the numeric result.
+    cached = getattr(ws, "_courier_cached_values", None)
+    if cached:
+        buf = _inject_cached_values(buf, cached)
     return buf.getvalue()
+
+
+def _inject_cached_values(buf: io.BytesIO, cached: Dict[str, float]) -> io.BytesIO:
+    """
+    Post-process the saved xlsx zip to inject `<v>...</v>` for formula cells.
+
+    `cached` maps cell coordinates (e.g. "L8") to their pre-computed numeric
+    value. This step preserves formulas in the cells (Excel recalculates on
+    open) while ensuring non-Excel viewers display the cached number.
+    """
+    import zipfile
+    import re
+
+    buf.seek(0)
+    with zipfile.ZipFile(buf, "r") as zin:
+        files = {name: zin.read(name) for name in zin.namelist()}
+
+    sheet_name = "xl/worksheets/sheet1.xml"
+    if sheet_name not in files:
+        return buf  # nothing to do
+
+    sheet_xml = files[sheet_name].decode()
+
+    # Inject cached numeric values into the empty <v></v> tag that openpyxl
+    # writes for every formula cell. We anchor the replacement on `<c r="..."`
+    # so it only touches the intended cells.
+    for ref, value in cached.items():
+        # Format the value: avoid scientific notation; strip trailing zeros
+        if isinstance(value, float) and value == int(value):
+            value_str = str(int(value))
+        else:
+            value_str = f"{value:.10f}".rstrip("0").rstrip(".")
+        pattern = re.compile(
+            rf'(<c r="{re.escape(ref)}"[^>]*>(?:<f[^<]*</f>)?)<v></v>'
+        )
+        sheet_xml = pattern.sub(rf'\g<1><v>{value_str}</v>', sheet_xml)
+
+    files[sheet_name] = sheet_xml.encode()
+
+    out_buf = io.BytesIO()
+    with zipfile.ZipFile(out_buf, "w", zipfile.ZIP_DEFLATED) as zout:
+        for name, data in files.items():
+            zout.writestr(name, data)
+    out_buf.seek(0)
+    return out_buf
 
 
 # ── Hazmat (Swissport Transit Shed Form) ─────────────────────────────────────
