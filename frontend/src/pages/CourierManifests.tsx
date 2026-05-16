@@ -224,7 +224,7 @@ export default function CourierManifests() {
               fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 36,
               color: C.ink, margin: 0, letterSpacing: "-0.01em",
             }}>
-              TTPOST Express Manifests
+              Non Trade Express Worksheets
             </h1>
             <p style={{
               fontFamily: "'Fraunces', serif", fontSize: 14, color: C.inkLight,
@@ -241,7 +241,7 @@ export default function CourierManifests() {
               background: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4,
               color: "#fff", cursor: "pointer", fontWeight: 600,
             }}>
-              ↑ Upload TTPOST Worksheet
+              ↑ Upload Manifest
             </button>
             <button onClick={() => setShowNew(true)} style={{
               padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
@@ -249,7 +249,7 @@ export default function CourierManifests() {
               background: C.ink, border: `1px solid ${C.ink}`, borderRadius: 4,
               color: C.paper, cursor: "pointer", fontWeight: 600,
             }}>
-              + New Manifest
+              + Manual Worksheet
             </button>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function CourierManifests() {
                 No manifests yet
               </div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkLight, fontStyle: "italic" }}>
-                Click "New Manifest" to start your first TTPOST worksheet.
+                Click "Manual Worksheet" to start your first non-trade worksheet.
               </div>
             </div>
           ) : (

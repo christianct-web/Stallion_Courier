@@ -103,6 +103,7 @@ export interface CourierManifest {
   cargo_reporter: string;
   notes: string;
   status: "draft" | "submitted" | "examined" | "finalised";
+  declarant_vat_no?: string;
   lines: CourierLine[];
   officer_examination: OfficerExamination | null;
   totals: {
@@ -453,4 +454,75 @@ export function worksheetDownloadUrl(manifestId: string): string {
 
 export function hazmatDownloadUrl(manifestId: string): string {
   return `${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`;
+}
+
+/**
+ * Fields the broker fills in on the Hazmat form modal. Every field is
+ * optional — the broker can leave any blank and the export still
+ * generates (the blank cells just render empty in the XLSX).
+ */
+export interface HazmatFormFields {
+  date?: string;
+  ntde_no?: string;
+  ced_receipt_no?: string;
+  vat_no?: string;
+  carrier?: string;
+  date_of_arrival?: string;
+  rot_no?: string;
+  no_of_skids?: number | string;
+  no_of_boxes?: number | string;
+  no_of_bags?: number | string;
+  no_of_commercial_pcs?: number | string;
+  no_of_non_commercial_pcs?: number | string;
+  total_no_of_pkgs?: number | string;
+  no_of_pkgs_detained?: number | string;
+  no_of_pkgs_seized?: number | string;
+  no_of_pkgs_bonded?: number | string;
+}
+
+/**
+ * Download the Hazmat XLSX with broker-filled form fields. POSTs the
+ * fields, reads the binary response, and triggers a browser save dialog.
+ *
+ * Unlike a regular `<a href download>` link, this lets us POST the form
+ * data. The server returns the XLSX bytes, which we wrap in a Blob and
+ * hand off to the browser via a temporary object URL.
+ */
+export async function downloadHazmatWithFields(
+  manifestId: string, fields: HazmatFormFields,
+): Promise<void> {
+  const res = await fetch(
+    `${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    },
+  );
+  if (!res.ok) {
+    let msg = `Hazmat export failed (${res.status})`;
+    try {
+      const err = await res.json();
+      msg = extractErrorMessage(err, msg);
+    } catch {
+      // response wasn't JSON
+    }
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+
+  // Try to read the filename from Content-Disposition; fall back to a sensible default
+  const cd = res.headers.get("Content-Disposition") || "";
+  const match = cd.match(/filename="?([^";]+)"?/i);
+  const filename = match ? match[1] : `manifest_${manifestId}_hazmat.xlsx`;
+
+  // Trigger download
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 }

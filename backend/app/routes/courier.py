@@ -6,7 +6,7 @@ examination, THN classification, and worksheet/hazmat exports.
 """
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
@@ -281,12 +281,63 @@ def export_worksheet(manifest_id: str):
 
 @router.get("/manifests/{manifest_id}/hazmat")
 def export_hazmat(manifest_id: str):
-    """Generate Courier Data Form Hazmat XLSX for the manifest."""
+    """
+    Generate Courier Data Form Hazmat XLSX for the manifest.
+
+    GET variant kept for backwards compatibility — produces a hazmat
+    worksheet with the courier-data fields empty. To pre-fill the fields
+    (Date, NTDE No, CED Receipt No, VAT No, Carrier, Date of Arrival,
+    Rot No, package counts, etc.), use the POST endpoint below.
+    """
     manifest = courier_service.get_manifest(manifest_id)
     if not manifest:
         raise HTTPException(status_code=404, detail="Manifest not found")
     try:
         data = courier_export.build_hazmat(manifest)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {e}")
+    fname = _safe_filename(manifest.get("manifest_no")) + "_hazmat.xlsx"
+    return Response(
+        content=data,
+        media_type=XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
+@router.post("/manifests/{manifest_id}/hazmat")
+def export_hazmat_with_form(manifest_id: str, fields: Dict[str, Any]):
+    """
+    Generate Courier Data Form Hazmat XLSX with custom courier-data fields.
+
+    Body shape (all fields optional — missing ones render blank):
+      {
+        "date": "15.05.2026",
+        "ntde_no": "...",
+        "ced_receipt_no": "...",
+        "vat_no": "V123990",
+        "carrier": "...",
+        "date_of_arrival": "...",
+        "rot_no": "...",
+        "no_of_skids": 0,
+        "no_of_boxes": 0,
+        "no_of_bags": 0,
+        "no_of_commercial_pcs": 0,
+        "no_of_non_commercial_pcs": 0,
+        "total_no_of_pkgs": 19,
+        "no_of_pkgs_detained": 0,
+        "no_of_pkgs_seized": 0,
+        "no_of_pkgs_bonded": 0
+      }
+
+    All fields are optional — the broker can download with any combination
+    of fields filled in (the form modal in the UI doesn't require any of
+    them to be populated).
+    """
+    manifest = courier_service.get_manifest(manifest_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail="Manifest not found")
+    try:
+        data = courier_export.build_hazmat(manifest, courier_data_fields=fields or {})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Export failed: {e}")
     fname = _safe_filename(manifest.get("manifest_no")) + "_hazmat.xlsx"

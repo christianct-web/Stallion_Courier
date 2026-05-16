@@ -24,6 +24,7 @@ import {
 } from "@/services/courierApi";
 import { C, fmtTtd, fmtUsd, ratePillStyle } from "@/components/courier/tokens";
 import { ThnClassifyCell } from "@/components/courier/ThnClassifyCell";
+import { HazmatFormDialog } from "@/components/courier/HazmatFormDialog";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -341,7 +342,7 @@ function LineRow({ manifestId, line, onChanged, onDelete }: {
   };
 
   const cellStyle: React.CSSProperties = {
-    padding: "10px 12px",
+    padding: "8px 8px",
     fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
     color: C.inkMid, verticalAlign: "middle",
   };
@@ -464,6 +465,10 @@ export default function CourierWorkbench() {
   const [manifest, setManifest] = useState<CourierManifest | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState<CourierLine | null>(null);
+  // Hazmat form modal (opens when user clicks "Hazmat XLSX" on the uplifted
+  // workbench view). The modal collects courier-data fields then triggers a
+  // server-side hazmat XLSX generation with those fields filled in.
+  const [hazmatModalOpen, setHazmatModalOpen] = useState(false);
 
   // Header edit state
   const [arrivalDate, setArrivalDate] = useState("");
@@ -560,10 +565,14 @@ export default function CourierWorkbench() {
           <div>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-              letterSpacing: "0.12em", color: C.amber, textTransform: "uppercase",
+              letterSpacing: "0.12em",
+              color: manifest.officer_examination ? "#7CE38B" : C.amber,
+              textTransform: "uppercase",
               marginBottom: 4,
             }}>
-              Manifest
+              {manifest.officer_examination
+                ? "Uplifted Worksheet · Section 2 + 3"
+                : "Non Trade Worksheet · Section 2"}
             </div>
             <div style={{
               fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 600,
@@ -598,16 +607,28 @@ export default function CourierWorkbench() {
               color: C.paper, textDecoration: "none",
               background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
             }}>
-              ⬇ Worksheet XLSX
+              {manifest.officer_examination ? "⬇ Uplifted Worksheet" : "⬇ Worksheet XLSX"}
             </a>
-            <a href={hazmatDownloadUrl(manifest.id)} download style={{
-              padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
-              color: C.paper, textDecoration: "none",
-              background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
-            }}>
-              ⬇ Hazmat XLSX
-            </a>
+            {/*
+              Hazmat is only generated AFTER officer examination — it summarises
+              additional taxes assessed at exam vs. originals declared on the
+              worksheet. Before exam there's nothing additional to report, so
+              the button is hidden on the pre-exam workbench.
+            */}
+            {manifest.officer_examination && (
+              <button
+                onClick={() => setHazmatModalOpen(true)}
+                style={{
+                  padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                  color: C.paper, textDecoration: "none",
+                  background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
+                  cursor: "pointer",
+                }}
+              >
+                ⬇ Hazmat XLSX
+              </button>
+            )}
             <button
               onClick={() => navigate(`/stallion/courier/${manifest.id}/exam`)}
               style={{
@@ -617,13 +638,18 @@ export default function CourierWorkbench() {
                 color: "#fff", cursor: "pointer", fontWeight: 600,
               }}
             >
-              Officer Exam →
+              {manifest.officer_examination ? "Edit Examination" : "Officer Exam →"}
             </button>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1480, margin: "0 auto", padding: "24px 28px", display: "grid", gridTemplateColumns: "1fr 280px", gap: 24 }}>
+      <div style={{
+        maxWidth: 1600, margin: "0 auto", padding: "24px 28px",
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr) 260px",
+        gap: 20,
+      }}>
         {/* Lines table + add form */}
         <div>
           <div style={{
@@ -640,14 +666,14 @@ export default function CourierWorkbench() {
               Section 2 — Declared Lines ({manifest.lines.length})
             </div>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1100 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
                 <thead>
                   <tr style={{ background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}` }}>
                     {["#", "HAWB", "Description", "THN", "Rate", "Cost", "CIF", "Duty", "OPT", "VAT", "Total", ""]
                       .map((h, i) => (
                         <th key={i} style={{
                           textAlign: ["Cost", "CIF", "Duty", "OPT", "VAT", "Total"].includes(h) ? "right" : "left",
-                          padding: "8px 12px",
+                          padding: "8px 8px",
                           fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
                           letterSpacing: "0.08em", color: C.inkLight, fontWeight: 600,
                           textTransform: "uppercase",
@@ -689,7 +715,7 @@ export default function CourierWorkbench() {
             letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
             fontWeight: 700, marginBottom: 12,
           }}>
-            Manifest Totals
+            Non Trade Worksheet Totals
           </div>
           {[
             ["Total CIF", t.total_cif_ttd],
@@ -754,6 +780,16 @@ export default function CourierWorkbench() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {hazmatModalOpen && (
+        <HazmatFormDialog
+          manifestId={manifest.id}
+          manifestNo={manifest.manifest_no}
+          arrivalDate={manifest.arrival_date}
+          declarantVatNo={manifest.declarant_vat_no}
+          onClose={() => setHazmatModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

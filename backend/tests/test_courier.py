@@ -1503,5 +1503,174 @@ class TestWorksheetGoldenParity(_RulesStoreTestBase):
             )
 
 
+class TestHazmatFormFields(_RulesStoreTestBase):
+    """
+    Tests for the Hazmat XLSX export with broker-fillable courier-data
+    form fields. Covers the new POST /courier/manifests/{id}/hazmat
+    endpoint that accepts a JSON body of optional form fields.
+
+    Critical property: EVERY field is optional. The broker should be able
+    to download the hazmat with zero, some, or all fields filled in.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "manifests.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def _make_manifest_with_line(self):
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "106-31244603",
+            "arrival_date": "15.05.2026",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Test", "thn": "61046900",
+            "cost_usd": 50.0, "packages": 1, "weight_kg": 1,
+        })
+        return courier_service.get_manifest(m["id"])
+
+    def test_hazmat_with_all_fields_populated(self):
+        """All form fields land in the right cells in the XLSX."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest_with_line()
+        fields = {
+            "date": "15.05.2026",
+            "ntde_no": "TEST-NTDE-001",
+            "ced_receipt_no": "CED-12345",
+            "vat_no": "V123990",
+            "carrier": "TTPOST",
+            "date_of_arrival": "14.05.2026",
+            "rot_no": "ROT-2026-99",
+            "no_of_skids": 0,
+            "no_of_boxes": 5,
+            "no_of_bags": 2,
+            "no_of_commercial_pcs": 0,
+            "no_of_non_commercial_pcs": 19,
+            "total_no_of_pkgs": 19,
+            "no_of_pkgs_detained": 1,
+            "no_of_pkgs_seized": 0,
+            "no_of_pkgs_bonded": 0,
+        }
+        data = courier_export.build_hazmat(m, courier_data_fields=fields)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+
+        # Check every field
+        self.assertEqual(ws["C5"].value, "15.05.2026")
+        self.assertEqual(ws["F5"].value, "TEST-NTDE-001")
+        self.assertEqual(ws["K5"].value, "CED-12345")
+        self.assertEqual(ws["N5"].value, "V123990")
+        self.assertEqual(ws["D8"].value, "14.05.2026")
+        self.assertEqual(ws["H8"].value, "ROT-2026-99")
+        self.assertEqual(ws["L8"].value, "TTPOST")
+        self.assertEqual(ws["D9"].value, 0)
+        self.assertEqual(ws["D10"].value, 5)
+        self.assertEqual(ws["D13"].value, 2)
+        self.assertEqual(ws["I10"].value, 0)
+        self.assertEqual(ws["I13"].value, 19)
+        self.assertEqual(ws["F11"].value, 19)  # explicit override
+        self.assertEqual(ws["D16"].value, 1)
+        self.assertEqual(ws["I16"].value, 0)
+        self.assertEqual(ws["D18"].value, 0)
+
+    def test_hazmat_with_no_fields_still_generates(self):
+        """Empty form body must still produce a valid XLSX (every field optional)."""
+        from app.services import courier_export
+
+        m = self._make_manifest_with_line()
+        data = courier_export.build_hazmat(m, courier_data_fields={})
+        self.assertIsInstance(data, bytes)
+        self.assertGreater(len(data), 5000)  # non-trivial XLSX
+
+    def test_hazmat_with_no_kwarg_still_generates(self):
+        """Calling without courier_data_fields kwarg works (backwards compat)."""
+        from app.services import courier_export
+
+        m = self._make_manifest_with_line()
+        data = courier_export.build_hazmat(m)
+        self.assertIsInstance(data, bytes)
+
+    def test_hazmat_partial_fields_blanks_rest(self):
+        """Partial form: only some fields filled, others empty."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest_with_line()
+        data = courier_export.build_hazmat(m, courier_data_fields={
+            "date": "15.05.2026", "vat_no": "V999",
+        })
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        self.assertEqual(ws["C5"].value, "15.05.2026")
+        self.assertEqual(ws["N5"].value, "V999")
+        # NTDE and CED Receipt should be empty/None
+        self.assertIn(ws["F5"].value, (None, ""))
+        self.assertIn(ws["K5"].value, (None, ""))
+        # Counts should be empty
+        self.assertIn(ws["D9"].value, (None, ""))
+
+    def test_hazmat_total_pkgs_auto_sums_when_not_provided(self):
+        """When total_no_of_pkgs is omitted, hazmat uses =I13+I10 formula."""
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest_with_line()
+        # Don't provide total_no_of_pkgs
+        data = courier_export.build_hazmat(m, courier_data_fields={
+            "no_of_commercial_pcs": 5, "no_of_non_commercial_pcs": 10,
+        })
+        wb = load_workbook(io.BytesIO(data), data_only=False)
+        ws = wb.active
+        # F11 should be the formula
+        self.assertEqual(ws["F11"].value, "=I13+I10")
+
+    def test_hazmat_post_endpoint(self):
+        """The POST /courier/manifests/{id}/hazmat HTTP endpoint works."""
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from app.routes.courier import router as courier_router
+        from app.services import courier_service
+
+        m = courier_service.create_manifest({
+            "manifest_no": "HAZMAT-HTTP",
+            "arrival_date": "15.05.2026",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "Test", "thn": "61046900",
+            "cost_usd": 50.0, "packages": 1, "weight_kg": 1,
+        })
+
+        app = FastAPI()
+        app.include_router(courier_router)
+        client = TestClient(app)
+
+        # POST with fields
+        r = client.post(
+            f"/courier/manifests/{m['id']}/hazmat",
+            json={"date": "15.05.2026", "carrier": "TTPOST"},
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(
+            r.headers["content-type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertIn("hazmat", r.headers["content-disposition"].lower())
+        self.assertGreater(len(r.content), 5000)
+
+        # POST with empty body
+        r = client.post(f"/courier/manifests/{m['id']}/hazmat", json={})
+        self.assertEqual(r.status_code, 200)
+        self.assertGreater(len(r.content), 5000)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

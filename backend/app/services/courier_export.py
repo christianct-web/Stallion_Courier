@@ -851,14 +851,27 @@ def _hzm_apply_money_format(ws: Worksheet, rows: List[int]) -> None:
             cell.border = BORDER_THIN
 
 
-def _write_hazmat_meta(ws: Worksheet, manifest: Dict[str, Any]) -> None:
-    """Top of Hazmat form: title block, courier, AWB, package counts."""
+def _write_hazmat_meta(
+    ws: Worksheet, manifest: Dict[str, Any], fields: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Top of Hazmat form: title block, courier, AWB, package counts.
+
+    `fields` (optional) populates broker-fillable cells. All keys are
+    optional; missing keys leave the cell blank for the broker to fill
+    in manually after print.
+    """
+    fields = fields or {}
     rate = float(manifest.get("exch_rate", 0))
     awb = manifest.get("manifest_no", "")
     arrival = manifest.get("arrival_date", "")
     cargo_reporter = manifest.get("cargo_reporter", "TTPOST")
     if cargo_reporter == "TRINIDAD AND TOBAGO POSTAL CORPORATION":
         cargo_reporter = "TTPOST"
+
+    def field(name: str, default: Any = "") -> Any:
+        v = fields.get(name)
+        return v if v not in (None, "") else default
 
     # Big title (rows 2-4 merged)
     ws.merge_cells("B2:O4")
@@ -873,12 +886,13 @@ def _write_hazmat_meta(ws: Worksheet, manifest: Dict[str, Any]) -> None:
 
     # Row 5 — Date / NTDE No / CED Receipt / VAT No
     ws["B5"] = "Date:"
-    ws["C5"] = arrival
+    ws["C5"] = field("date", arrival)
     ws["E5"] = "NTDE No:"
-    ws["F5"] = ""  # broker fills in
+    ws["F5"] = field("ntde_no")
     ws["I5"] = "CED Receipt No."
+    ws["K5"] = field("ced_receipt_no")
     ws["M5"] = "VAT No:"
-    ws["N5"] = manifest.get("declarant_vat_no") or "V117369"
+    ws["N5"] = field("vat_no", manifest.get("declarant_vat_no") or "V117369")
     for col in ("B", "E", "I", "M"):
         ws[f"{col}5"].font = FONT_META
 
@@ -892,31 +906,43 @@ def _write_hazmat_meta(ws: Worksheet, manifest: Dict[str, Any]) -> None:
 
     # Row 8 — Date of arrival / Rot. No / Carrier
     ws["B8"] = "Date of Arrival:"
-    ws["D8"] = arrival
+    ws["D8"] = field("date_of_arrival", arrival)
     ws["G8"] = "Rot. No"
+    ws["H8"] = field("rot_no")
     ws["K8"] = "Carrier:"
-    ws["L8"] = ""  # broker fills in
+    ws["L8"] = field("carrier")
     for col in ("B", "G", "K"):
         ws[f"{col}8"].font = FONT_META
 
     # Rows 9–18 — package counts
     ws["B9"] = "No. of Skids."
+    ws["D9"] = field("no_of_skids")
     ws["B10"] = "No. of Boxes."
-    ws["D10"] = ""  # broker fills count
+    ws["D10"] = field("no_of_boxes")
     ws["G10"] = "No. of Commercial Pcs"
+    ws["I10"] = field("no_of_commercial_pcs", 0)
 
-    n_pkgs = sum(int(l.get("packages") or 0) for l in manifest.get("lines", []))
+    # Total pkgs: prefer manual override; fall back to commercial + non-commercial sum
+    explicit_total = field("total_no_of_pkgs")
+    n_pkgs_auto = sum(int(l.get("packages") or 0) for l in manifest.get("lines", []))
     ws["E11"] = "Total No of Pkgs"
-    ws["F11"] = "=I13+I10"   # commercial + non-commercial
+    if explicit_total != "":
+        ws["F11"] = explicit_total
+    else:
+        ws["F11"] = "=I13+I10"   # commercial + non-commercial
 
     ws["B13"] = "No. of bags"
+    ws["D13"] = field("no_of_bags")
     ws["G13"] = "No. of Non Commercial Pcs"
-    ws["I13"] = n_pkgs
+    ws["I13"] = field("no_of_non_commercial_pcs", n_pkgs_auto)
 
     ws["B16"] = "No. of Pkgs Detained"
+    ws["D16"] = field("no_of_pkgs_detained")
     ws["G16"] = "No. of Pkgs Seized"
+    ws["I16"] = field("no_of_pkgs_seized")
 
     ws["B18"] = "No. of Pkgs Bonded"
+    ws["D18"] = field("no_of_pkgs_bonded")
 
     for r in (5, 7, 8, 9, 10, 11, 13, 16, 18):
         for col in "BCDEFGHIJKLMN":
@@ -1067,8 +1093,20 @@ def _set_hazmat_widths(ws: Worksheet) -> None:
         ws.column_dimensions[col].width = w
 
 
-def build_hazmat(manifest: Dict[str, Any]) -> bytes:
-    """Build the Swissport Transit Shed Courier Data Form XLSX as bytes."""
+def build_hazmat(
+    manifest: Dict[str, Any],
+    courier_data_fields: Optional[Dict[str, Any]] = None,
+) -> bytes:
+    """
+    Build the Swissport Transit Shed Courier Data Form XLSX as bytes.
+
+    `courier_data_fields` (all optional, missing fields render blank):
+      - date, ntde_no, ced_receipt_no, vat_no
+      - carrier, date_of_arrival, rot_no
+      - no_of_skids, no_of_boxes, no_of_bags
+      - no_of_commercial_pcs, no_of_non_commercial_pcs, total_no_of_pkgs
+      - no_of_pkgs_detained, no_of_pkgs_seized, no_of_pkgs_bonded
+    """
     wb = Workbook()
     ws = wb.active
     ws.title = "Sheet1"
@@ -1086,7 +1124,7 @@ def build_hazmat(manifest: Dict[str, Any]) -> bytes:
     ws.page_margins.bottom = 0.5
 
     _set_hazmat_widths(ws)
-    _write_hazmat_meta(ws, manifest)
+    _write_hazmat_meta(ws, manifest, courier_data_fields or {})
     _write_hazmat_tax_table(ws, manifest)
 
     buf = io.BytesIO()
