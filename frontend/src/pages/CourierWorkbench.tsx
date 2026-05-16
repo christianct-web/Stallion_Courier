@@ -702,6 +702,142 @@ export default function CourierWorkbench() {
             </div>
           </div>
 
+          {/* Section 3 — Officer corrections, only shown after examination */}
+          {manifest.officer_examination
+            && manifest.officer_examination.corrections.length > 0 && (() => {
+            // Cell style for Section 3 rows. Same Calibri/monospace look as
+            // Section 2 cells but with the pale-yellow background used in
+            // the worksheet XLSX, so the broker recognises this on screen
+            // as the same Section 3 region they'll see in the file.
+            const cellStyleS3: React.CSSProperties = {
+              padding: "8px 8px",
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+              color: C.inkMid, verticalAlign: "middle",
+            };
+            return (
+            <div style={{
+              background: C.paper, border: `1px solid ${C.paperBorder}`,
+              borderRadius: 4, overflow: "hidden", marginTop: 16,
+            }}>
+              <div style={{
+                padding: "10px 14px", background: "#FCE4D6",
+                borderBottom: `1px solid ${C.paperBorder}`,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                letterSpacing: "0.1em", color: "#3D3830", textTransform: "uppercase",
+                fontWeight: 700,
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span>
+                  Section 3 — Officer Corrections ({manifest.officer_examination.corrections.length})
+                </span>
+                <span style={{
+                  fontFamily: "'Fraunces', serif", fontStyle: "italic",
+                  fontSize: 11, color: "#6B6560", letterSpacing: "normal",
+                  textTransform: "none", fontWeight: 400,
+                }}>
+                  Examined by {manifest.officer_examination.examining_officer || "—"}
+                  {manifest.officer_examination.examined_at
+                    ? ` · ${manifest.officer_examination.examined_at}` : ""}
+                </span>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+                  <thead>
+                    <tr style={{ background: "#FADBD8", borderBottom: `1px solid ${C.paperBorder}` }}>
+                      {[
+                        "Line", "Description", "Officer THN", "Kind",
+                        "Add Cost USD", "Adj. CIF TTD", "Add Duty", "Add OPT",
+                        "Add VAT", "Add Total", "Flags",
+                      ].map((h, i) => (
+                        <th key={i} style={{
+                          textAlign: ["Add Cost USD", "Adj. CIF TTD", "Add Duty",
+                                      "Add OPT", "Add VAT", "Add Total"].includes(h)
+                            ? "right" : "left",
+                          padding: "8px 8px",
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                          letterSpacing: "0.08em", color: C.inkMid, fontWeight: 700,
+                          textTransform: "uppercase",
+                        }}>
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {manifest.officer_examination.corrections.map((corr, idx) => {
+                      // Look up the original line for context (description shown
+                      // in the row so the officer can see what was uplifted).
+                      const originalLine = corr.line_no != null
+                        ? manifest.lines.find(l => l.line_no === corr.line_no)
+                        : null;
+                      const isNewLine = corr.line_no == null || corr.kind === "new_line";
+                      const flags: string[] = [];
+                      if (corr.detained_seized) flags.push("Detained/Seized");
+                      if (corr.dep_in_tshed) flags.push("Dep. in T/Shed");
+                      const fillS3 = "#FFF2CC";  // pale yellow, matches XLSX Section 3
+                      return (
+                        <tr key={idx} style={{
+                          background: fillS3,
+                          borderBottom: `1px solid ${C.paperBorder}`,
+                        }}>
+                          <td style={{
+                            ...cellStyleS3, fontWeight: 600,
+                            color: isNewLine ? "#C65911" : C.ink,
+                          }}>
+                            {corr.line_no != null ? `#${corr.line_no}` : "NEW"}
+                          </td>
+                          <td style={{ ...cellStyleS3, fontFamily: "'Fraunces', serif", fontSize: 12 }}>
+                            {corr.new_description
+                              || (originalLine && originalLine.description)
+                              || (isNewLine ? "(officer-discovered)" : "—")}
+                          </td>
+                          <td style={cellStyleS3}>
+                            {corr.officer_thn || "—"}
+                          </td>
+                          <td style={{
+                            ...cellStyleS3, fontSize: 10,
+                            color: C.inkLight, textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                          }}>
+                            {corr.kind}
+                          </td>
+                          <td style={{ ...cellStyleS3, textAlign: "right" }}>
+                            {fmtUsd(corr.add_cost_usd || 0)}
+                          </td>
+                          <td style={{ ...cellStyleS3, textAlign: "right" }}>
+                            {fmtTtd(corr.adjusted_cif_ttd || 0)}
+                          </td>
+                          <td style={{ ...cellStyleS3, textAlign: "right" }}>
+                            {fmtTtd(corr.add_duty || 0)}
+                          </td>
+                          <td style={{ ...cellStyleS3, textAlign: "right" }}>
+                            {fmtTtd(corr.add_opt || 0)}
+                          </td>
+                          <td style={{ ...cellStyleS3, textAlign: "right" }}>
+                            {fmtTtd(corr.add_vat || 0)}
+                          </td>
+                          <td style={{
+                            ...cellStyleS3, textAlign: "right",
+                            fontWeight: 700, color: C.ink,
+                          }}>
+                            {fmtTtd(corr.add_total
+                              || ((corr.add_duty || 0)
+                                  + (corr.add_opt || 0)
+                                  + (corr.add_vat || 0)))}
+                          </td>
+                          <td style={{ ...cellStyleS3, fontSize: 10 }}>
+                            {flags.length ? flags.join(" · ") : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            );
+          })()}
+
           <AddLineRow manifestId={manifest.id} onAdded={load} />
         </div>
 
@@ -744,20 +880,79 @@ export default function CourierWorkbench() {
             All amounts in TTD. Exchange rate {manifest.exch_rate.toFixed(5)} TTD/USD.
           </div>
 
-          {manifest.officer_examination && (
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px dashed ${C.paperBorder}` }}>
+          {manifest.officer_examination && (() => {
+            // Aggregate the additional taxes from officer corrections so the
+            // broker sees the uplifted totals at a glance.
+            const corrs = manifest.officer_examination.corrections;
+            const addDuty = corrs.reduce((s, c) => s + (c.add_duty || 0), 0);
+            const addOpt = corrs.reduce((s, c) => s + (c.add_opt || 0), 0);
+            const addVat = corrs.reduce((s, c) => s + (c.add_vat || 0), 0);
+            const addTotal = addDuty + addOpt + addVat;
+            const grandTotal = t.total_taxes + addTotal;
+            return (
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
-                fontWeight: 700, marginBottom: 6,
+                marginTop: 18, paddingTop: 14,
+                borderTop: `1px dashed ${C.paperBorder}`,
               }}>
-                Examined
+                <div style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                  letterSpacing: "0.1em", color: "#7CE38B",
+                  textTransform: "uppercase", fontWeight: 700, marginBottom: 8,
+                }}>
+                  Section 3 · Additional Taxes
+                </div>
+                {[
+                  ["Add. Duty", addDuty],
+                  ["Add. OPT", addOpt],
+                  ["Add. VAT", addVat],
+                ].map(([label, val]) => (
+                  <div key={label as string} style={{
+                    display: "flex", justifyContent: "space-between",
+                    alignItems: "baseline", padding: "6px 0",
+                    borderBottom: `1px solid ${C.paperBorder}`,
+                  }}>
+                    <div style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                      color: C.inkLight, letterSpacing: "0.04em",
+                    }}>
+                      {label as string}
+                    </div>
+                    <div style={{
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                      color: C.inkMid, fontWeight: 600,
+                    }}>
+                      {fmtTtd(val as number)}
+                    </div>
+                  </div>
+                ))}
+                <div style={{
+                  display: "flex", justifyContent: "space-between",
+                  alignItems: "baseline", padding: "10px 0 4px 0",
+                }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                    color: C.ink, letterSpacing: "0.06em",
+                    textTransform: "uppercase", fontWeight: 700,
+                  }}>
+                    Uplifted Total
+                  </div>
+                  <div style={{
+                    fontFamily: "'Fraunces', serif", fontSize: 22,
+                    color: C.ink, fontWeight: 700,
+                  }}>
+                    {fmtTtd(grandTotal)}
+                  </div>
+                </div>
+                <div style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 11,
+                  color: C.inkLight, fontStyle: "italic", marginTop: 4,
+                }}>
+                  Section 2 ({fmtTtd(t.total_taxes)}) + Section 3 ({fmtTtd(addTotal)})
+                  across {corrs.length} correction{corrs.length === 1 ? "" : "s"}.
+                </div>
               </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: C.inkMid }}>
-                {manifest.officer_examination.corrections.length} correction(s) recorded
-              </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </div>
 
