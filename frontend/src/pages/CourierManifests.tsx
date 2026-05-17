@@ -235,6 +235,14 @@ export default function CourierManifests() {
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => navigate("/stallion/courier/tariff")} style={{
+              padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
+              background: "transparent", border: `1px solid ${C.paperMid}`,
+              borderRadius: 4, color: C.inkMid, cursor: "pointer", fontWeight: 600,
+            }}>
+              ⊞ Tariff Database
+            </button>
             <button onClick={() => setShowUpload(true)} style={{
               padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",

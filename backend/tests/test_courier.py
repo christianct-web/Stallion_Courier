@@ -75,9 +75,20 @@ class TestCourierDutyEngine(_RulesStoreTestBase):
         result = courier_duty.classify("85183000")
         self.assertEqual(result.exemption_class, "full_exempt")
 
-    def test_classify_full_exempt_plastic_case(self):
+    def test_classify_plastic_catchall_not_blanket_exempt(self):
+        """
+        39269090 is a catch-all ("Other articles of plastics") that must
+        NOT be blanket-exempt. Generic items under this code pay 20%.
+        Cellphone accessories under it are exempted per-LINE by the matcher
+        (see TestPhoneCaseExemption), not by a THN rule here.
+        """
         result = courier_duty.classify("39269090")
-        self.assertEqual(result.exemption_class, "full_exempt")
+        self.assertNotEqual(
+            result.exemption_class, "full_exempt",
+            "39269090 must not be blanket-exempt — it's a catch-all code",
+        )
+        # Base rate should be the corrected 20%
+        self.assertEqual(result.duty_rate, 0.2)
 
     def test_classify_duty_free_only_generic_device(self):
         result = courier_duty.classify("85176900")
@@ -535,13 +546,13 @@ class TestWorksheetExport(_RulesStoreTestBase):
         self.assertEqual(ws["I8"].value, "20%")
         self.assertAlmostEqual(ws["J8"].value, 50.0, places=2)
 
-    def test_worksheet_formulas_match_real_template(self):
+    def test_worksheet_values_no_formulas(self):
         """
-        Data cells contain BOTH formulas (for Excel recalc) AND cached
-        numeric values (for viewers that don't recalculate).
+        Generated worksheet contains EXACT VALUES, never formulas.
 
-        Verified by loading the workbook twice — once with data_only=False
-        (formulas) and once with data_only=True (cached values).
+        Formulas were removed entirely because Excel recalculation drifts
+        from the workbench figures. Every computed cell must be a plain
+        number matching what the broker saw on screen.
         """
         from openpyxl import load_workbook
         from app.services import courier_export
@@ -550,42 +561,65 @@ class TestWorksheetExport(_RulesStoreTestBase):
         m = self._make_manifest()
         data = courier_export.build_worksheet_v3(m)
 
-        # data_only=False: read formulas
-        wb_f = load_workbook(io.BytesIO(data), data_only=False)
-        ws_f = wb_f.active
-        self.assertIn("J8", str(ws_f["L8"].value))
-        self.assertIn("6.78", str(ws_f["L8"].value))
-        self.assertEqual(ws_f["M8"].value, "=L8*0.2")
-        self.assertEqual(ws_f["N8"].value, "=L8*0.07")
-        self.assertEqual(ws_f["O8"].value, "=(L8+M8+N8)*0.125")
-        self.assertEqual(ws_f["P8"].value, "=M8+N8+O8")
+        wb = load_workbook(io.BytesIO(data), data_only=False)
+        ws = wb.active
 
-        # data_only=True: read cached values
-        wb_v = load_workbook(io.BytesIO(data), data_only=True)
-        ws_v = wb_v.active
-        # Row 8: body cream — standard 20% line at cost $50.00, rate 6.78
-        # Expected: L = 50 * 6.78 = 339.00, M = L*0.2 = 67.80, etc.
-        self.assertAlmostEqual(ws_v["L8"].value, 339.00, places=2)
-        self.assertAlmostEqual(ws_v["M8"].value, 67.80, places=2)
-        self.assertAlmostEqual(ws_v["N8"].value, 23.73, places=2)
-        self.assertAlmostEqual(ws_v["O8"].value, 53.82, places=2)
-        self.assertAlmostEqual(
-            ws_v["P8"].value,
-            ws_v["M8"].value + ws_v["N8"].value + ws_v["O8"].value, places=2,
-        )
+        # No cell anywhere may contain a formula string
+        for row in ws.iter_rows():
+            for cell in row:
+                if isinstance(cell.value, str):
+                    self.assertFalse(
+                        cell.value.startswith("="),
+                        f"Cell {cell.coordinate} contains a formula: {cell.value!r}",
+                    )
 
-        # Row 9: smartphone — full_exempt, hard zeros (no formula)
-        self.assertEqual(ws_f["I9"].value, "FREE")
-        self.assertEqual(ws_f["M9"].value, 0)
-        self.assertEqual(ws_f["N9"].value, 0)
-        self.assertEqual(ws_f["O9"].value, 0)
+        # Row 8 (body cream): values must equal the stored line values.
+        line1 = m["lines"][0]
+        self.assertAlmostEqual(ws["L8"].value, line1["cif_ttd"], places=2)
+        self.assertAlmostEqual(ws["M8"].value, line1["duty"], places=2)
+        self.assertAlmostEqual(ws["N8"].value, line1["opt"], places=2)
+        self.assertAlmostEqual(ws["O8"].value, line1["vat"], places=2)
+        self.assertAlmostEqual(ws["P8"].value, line1["total_taxes"], places=2)
 
-        # Row 10: smart device — duty_free_only (duty=0, OPT/VAT formulas)
-        self.assertEqual(ws_f["I10"].value, "FREE")
-        self.assertEqual(ws_f["M10"].value, 0)
-        # OPT and VAT must be present as cached values
-        self.assertGreater(ws_v["N10"].value or 0, 0)
-        self.assertGreater(ws_v["O10"].value or 0, 0)
+        # Row 9: smartphone — full_exempt, hard zeros
+        self.assertEqual(ws["I9"].value, "FREE")
+        self.assertEqual(ws["M9"].value, 0)
+        self.assertEqual(ws["N9"].value, 0)
+        self.assertEqual(ws["O9"].value, 0)
+
+        # Row 10: smart device — duty_free_only (duty=0, OPT/VAT > 0)
+        self.assertEqual(ws["I10"].value, "FREE")
+        self.assertEqual(ws["M10"].value, 0)
+        self.assertGreater(ws["N10"].value or 0, 0)
+        self.assertGreater(ws["O10"].value or 0, 0)
+
+    def test_worksheet_values_match_workbench_exactly(self):
+        """
+        Every Section 2 money cell equals the value stored on the line —
+        zero drift. This is the core guarantee: the XLSX shows EXACTLY
+        what the broker saw in the workbench.
+        """
+        from openpyxl import load_workbook
+        from app.services import courier_export
+        import io
+
+        m = self._make_manifest()
+        data = courier_export.build_worksheet_v3(m)
+        wb = load_workbook(io.BytesIO(data), data_only=False)
+        ws = wb.active
+
+        for i, line in enumerate(m["lines"]):
+            r = 8 + i
+            self.assertEqual(ws[f"L{r}"].value, line["cif_ttd"],
+                             f"CIF mismatch row {r}")
+            self.assertEqual(ws[f"M{r}"].value, line["duty"],
+                             f"Duty mismatch row {r}")
+            self.assertEqual(ws[f"N{r}"].value, line["opt"],
+                             f"OPT mismatch row {r}")
+            self.assertEqual(ws[f"O{r}"].value, line["vat"],
+                             f"VAT mismatch row {r}")
+            self.assertEqual(ws[f"P{r}"].value, line["total_taxes"],
+                             f"Total mismatch row {r}")
 
     def test_worksheet_with_officer_corrections(self):
         """Officer examination data lands in Section 3 of the right rows."""
@@ -620,22 +654,18 @@ class TestWorksheetExport(_RulesStoreTestBase):
         self.assertAlmostEqual(ws["R8"].value, 25.0, places=2)
         self.assertAlmostEqual(ws["S8"].value, 169.50, places=2)
         self.assertAlmostEqual(ws["T8"].value, 33.90, places=2)
-        # W8 is a formula =T8+U8+V8
-        self.assertEqual(ws["W8"].value, "=T8+U8+V8")
-        # And its cached value is the server-computed sum
-        wb_v = load_workbook(io.BytesIO(data), data_only=True)
-        ws_v = wb_v.active
-        self.assertAlmostEqual(ws_v["W8"].value, 72.68, places=2)
+        # W8 is the exact value (no formula): 33.90 + 11.87 + 26.91 = 72.68
+        self.assertNotIsInstance(ws["W8"].value, str,
+                                 "W8 must be a number, never a formula")
+        self.assertAlmostEqual(ws["W8"].value, 72.68, places=2)
 
         # Line 2 → row 9, S3 empty
         self.assertIn(ws["Q9"].value, (None, ""))
 
-    def test_worksheet_totals_match_real_template(self):
+    def test_worksheet_totals_are_exact_values(self):
         """
-        TOTALS row uses =SUM formulas with cached numeric values.
-
-        Formulas: =SUM(col{first}:col{last}) per column.
-        Cached values are the server-computed sums.
+        TOTALS row holds exact summed VALUES (no =SUM formulas). The totals
+        equal the sum of the stored line values, with zero recalc drift.
         """
         from openpyxl import load_workbook
         from app.services import courier_export
@@ -644,80 +674,79 @@ class TestWorksheetExport(_RulesStoreTestBase):
         m = self._make_manifest()
         data = courier_export.build_worksheet_v3(m)
 
-        # data_only=False: formulas
-        wb_f = load_workbook(io.BytesIO(data), data_only=False)
-        ws_f = wb_f.active
-        self.assertEqual(ws_f["A11"].value, "TOTALS")
+        wb = load_workbook(io.BytesIO(data), data_only=False)
+        ws = wb.active
+        self.assertEqual(ws["A11"].value, "TOTALS")
+
+        # No SUM formulas anywhere — every total is a plain number
         for col in ("F", "G", "J", "L", "M", "N", "O", "P",
                     "R", "S", "T", "U", "V", "W"):
-            v = ws_f[f"{col}11"].value
-            self.assertTrue(
-                str(v).startswith("=SUM("),
-                f"Cell {col}11 should be a SUM formula, got {v!r}",
+            v = ws[f"{col}11"].value
+            self.assertNotIsInstance(
+                v, str,
+                f"Cell {col}11 must be a number, got formula/string {v!r}",
             )
 
-        # Grand total row 12: P12 = P11 (formula); W12 = P11 + W11 (formula)
-        self.assertEqual(ws_f["P12"].value, "=P11")
-        self.assertEqual(ws_f["W12"].value, "=P11+W11")
+        # Grand total row 12 also values, not formulas
+        self.assertNotIsInstance(ws["P12"].value, str)
+        self.assertNotIsInstance(ws["W12"].value, str)
 
-        # data_only=True: cached values
-        wb_v = load_workbook(io.BytesIO(data), data_only=True)
-        ws_v = wb_v.active
-        # Costs $50 + $800 + $100 = $950
-        self.assertEqual(ws_v["F11"].value, 3)
-        self.assertAlmostEqual(ws_v["J11"].value, 950.0, places=2)
-        self.assertAlmostEqual(ws_v["L11"].value, 950.0 * 6.78, places=1)
-        # Grand totals have cached values
-        self.assertIsInstance(ws_v["P12"].value, (int, float))
-        self.assertIsInstance(ws_v["W12"].value, (int, float))
+        # Totals must equal the exact sum of stored line values
+        lines = m["lines"]
+        exp_cif = sum(l["cif_ttd"] for l in lines)
+        exp_duty = sum(l["duty"] for l in lines)
+        exp_opt = sum(l["opt"] for l in lines)
+        exp_vat = sum(l["vat"] for l in lines)
+        exp_total = sum(l["total_taxes"] for l in lines)
+        self.assertEqual(ws["F11"].value, 3)        # 3 packages
+        self.assertAlmostEqual(ws["J11"].value, 950.0, places=2)
+        self.assertAlmostEqual(ws["L11"].value, exp_cif, places=2)
+        self.assertAlmostEqual(ws["M11"].value, exp_duty, places=2)
+        self.assertAlmostEqual(ws["N11"].value, exp_opt, places=2)
+        self.assertAlmostEqual(ws["O11"].value, exp_vat, places=2)
+        self.assertAlmostEqual(ws["P11"].value, exp_total, places=2)
 
-    def test_worksheet_recalc_correctness(self):
-        """LibreOffice recalc should produce expected duty/OPT/VAT values."""
-        import shutil
-        import subprocess
-
-        recalc_script = Path("/mnt/skills/public/xlsx/scripts/recalc.py")
-        if not recalc_script.exists() or not (
-            shutil.which("libreoffice") or shutil.which("soffice")
-        ):
-            self.skipTest("LibreOffice/recalc.py not available")
-
+    def test_worksheet_values_stable_across_reopen(self):
+        """
+        Since there are no formulas, opening the file (with or without a
+        recalc engine) must yield the SAME values. This is the whole point
+        of removing formulas — zero drift between generation and viewing.
+        """
         from openpyxl import load_workbook
         from app.services import courier_export
+        import io
 
         m = self._make_manifest()
         data = courier_export.build_worksheet_v3(m)
-        out = Path(self.tmpdir) / "ws.xlsx"
-        out.write_bytes(data)
 
-        try:
-            result = subprocess.run(
-                ["python3", str(recalc_script), str(out)],
-                capture_output=True, text=True, timeout=60,
-            )
-        except subprocess.TimeoutExpired:
-            self.skipTest("Recalc timed out")
-        if result.returncode != 0:
-            self.skipTest(f"Recalc script failed: {result.stderr}")
+        # data_only=True and data_only=False must agree (no formulas means
+        # the "cached value" and the "cell value" are identical).
+        wb_f = load_workbook(io.BytesIO(data), data_only=False).active
+        wb_v = load_workbook(io.BytesIO(data), data_only=True).active
 
-        wb = load_workbook(out, data_only=True)
-        ws = wb.active
+        for r in (8, 9, 10):
+            for col in ("L", "M", "N", "O", "P"):
+                self.assertEqual(
+                    wb_f[f"{col}{r}"].value, wb_v[f"{col}{r}"].value,
+                    f"{col}{r} differs between formula/value reads — "
+                    f"means a formula leaked in",
+                )
 
-        # Row 8 (body cream, $50, 6.78, 20%):
-        # cif = 339, duty = 67.80, opt = 23.73, vat ≈ 53.82, total ≈ 145.35
-        self.assertAlmostEqual(ws["L8"].value, 339.0, places=2)
-        self.assertAlmostEqual(ws["M8"].value, 67.80, places=2)
-        self.assertAlmostEqual(ws["N8"].value, 23.73, places=2)
+        # Row 8 (body cream): exact stored values
+        line1 = m["lines"][0]
+        self.assertEqual(wb_f["L8"].value, line1["cif_ttd"])
+        self.assertEqual(wb_f["M8"].value, line1["duty"])
+        self.assertEqual(wb_f["N8"].value, line1["opt"])
 
         # Row 9 (smartphone, full_exempt): all zero
-        self.assertEqual(ws["M9"].value, 0)
-        self.assertEqual(ws["N9"].value, 0)
-        self.assertEqual(ws["O9"].value, 0)
+        self.assertEqual(wb_f["M9"].value, 0)
+        self.assertEqual(wb_f["N9"].value, 0)
+        self.assertEqual(wb_f["O9"].value, 0)
 
-        # Row 10 (smart device, duty_free_only): duty 0, OPT 47.46, VAT 90.68
-        self.assertEqual(ws["M10"].value, 0)
-        self.assertAlmostEqual(ws["N10"].value, 47.46, places=2)
-        self.assertAlmostEqual(ws["O10"].value, 90.68, places=2)
+        # Row 10 (smart device, duty_free_only): duty 0, OPT/VAT > 0
+        self.assertEqual(wb_f["M10"].value, 0)
+        self.assertGreater(wb_f["N10"].value or 0, 0)
+        self.assertGreater(wb_f["O10"].value or 0, 0)
 
 
 class TestHazmatExport(_RulesStoreTestBase):
@@ -1670,6 +1699,185 @@ class TestHazmatFormFields(_RulesStoreTestBase):
         r = client.post(f"/courier/manifests/{m['id']}/hazmat", json={})
         self.assertEqual(r.status_code, 200)
         self.assertGreater(len(r.content), 5000)
+
+
+class TestPhoneCaseExemption(_RulesStoreTestBase):
+    """
+    Issue #2: 39269090 is a catch-all. Phone cases under it are exempt
+    per-LINE; generic plastics under the same THN pay 20%.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "m.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def test_phone_case_is_per_line_exempt(self):
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "PC-TEST", "arrival_date": "2026-05-06",
+            "exch_rate": 6.78,
+        })
+        line = courier_service.add_line_with_auto_thn(m["id"], {
+            "description": "PHONE CASE", "cost_usd": 7.0,
+            "packages": 1, "weight_kg": 1,
+        })
+        self.assertEqual(line["thn"], "39269090")
+        self.assertEqual(line["exemption_class"], "full_exempt")
+        self.assertEqual(line["duty"], 0.0)
+        self.assertEqual(line["total_taxes"], 0.0)
+
+    def test_generic_39269090_pays_duty(self):
+        """An explicit 39269090 with a non-accessory description pays 20%."""
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "GP-TEST", "arrival_date": "2026-05-06",
+            "exch_rate": 6.78,
+        })
+        line = courier_service.add_line(m["id"], {
+            "description": "HOME PRODUCT", "thn": "39269090",
+            "cost_usd": 28.0, "packages": 1, "weight_kg": 1,
+        })
+        self.assertEqual(line["thn"], "39269090")
+        self.assertNotEqual(line["exemption_class"], "full_exempt")
+        self.assertEqual(line["duty_rate"], 0.2)
+        self.assertGreater(line["duty"], 0)
+
+    def test_screen_protector_is_exempt(self):
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "SP-TEST", "arrival_date": "2026-05-06",
+            "exch_rate": 6.78,
+        })
+        line = courier_service.add_line_with_auto_thn(m["id"], {
+            "description": "tempered glass screen protector",
+            "cost_usd": 5.0, "packages": 1, "weight_kg": 1,
+        })
+        self.assertEqual(line["exemption_class"], "full_exempt")
+        self.assertEqual(line["duty"], 0.0)
+
+
+class TestCorrectionServerRecalc(_RulesStoreTestBase):
+    """
+    Issue #5: officer corrections must be recomputed server-side so a THN
+    change always yields correct duty/OPT/VAT, regardless of frontend math.
+    """
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "m.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def _manifest(self):
+        from app.services import courier_service
+        m = courier_service.create_manifest({
+            "manifest_no": "REC-TEST", "arrival_date": "2026-05-06",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "CLOTHING", "thn": "61046900",
+            "cost_usd": 50.0, "packages": 1, "weight_kg": 1,
+        })
+        return courier_service.get_manifest(m["id"])
+
+    def test_server_recomputes_dutiable_thn(self):
+        """Officer THN 61046900 (20%) → server recomputes correct duty."""
+        from app.services import courier_service
+        m = self._manifest()
+        # Frontend sends WRONG values (all zeros) — server must fix them.
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-06", "examining_officer": "Officer",
+            "corrections": [{
+                "line_no": 1, "kind": "uplift", "officer_thn": "61046900",
+                "add_cost_usd": 10.0, "adjusted_cif_ttd": 0,
+                "add_duty": 0, "add_opt": 0, "add_vat": 0,
+            }],
+        })
+        mm = courier_service.get_manifest(m["id"])
+        corr = mm["officer_examination"]["corrections"][0]
+        # cif = 10 * 6.78 = 67.80; duty = 67.80 * 0.2 = 13.56
+        self.assertAlmostEqual(corr["adjusted_cif_ttd"], 67.80, places=2)
+        self.assertAlmostEqual(corr["add_duty"], 13.56, places=2)
+        self.assertGreater(corr["add_opt"], 0)
+        self.assertGreater(corr["add_vat"], 0)
+
+    def test_server_recomputes_exempt_thn_to_zero(self):
+        """Officer changes THN to a full_exempt code → all additions zero."""
+        from app.services import courier_service
+        m = self._manifest()
+        # Frontend (wrongly) sends non-zero duty for an exempt THN.
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-06", "examining_officer": "Officer",
+            "corrections": [{
+                "line_no": 1, "kind": "reclass", "officer_thn": "85171300",
+                "add_cost_usd": 10.0, "adjusted_cif_ttd": 67.80,
+                "add_duty": 13.56, "add_opt": 4.75, "add_vat": 10.76,
+            }],
+        })
+        mm = courier_service.get_manifest(m["id"])
+        corr = mm["officer_examination"]["corrections"][0]
+        # 85171300 is full_exempt — server must zero everything
+        self.assertEqual(corr["add_duty"], 0.0)
+        self.assertEqual(corr["add_opt"], 0.0)
+        self.assertEqual(corr["add_vat"], 0.0)
+
+    def test_server_preserves_negative_tax_removal(self):
+        """Tax-removal corrections (negatives) are intentional — keep them."""
+        from app.services import courier_service
+        m = self._manifest()
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-06", "examining_officer": "Officer",
+            "corrections": [{
+                "line_no": 1, "kind": "reclass", "officer_thn": "85171300",
+                "add_cost_usd": 0,
+                "add_duty": -33.89, "add_opt": -11.86, "add_vat": -26.90,
+            }],
+        })
+        mm = courier_service.get_manifest(m["id"])
+        corr = mm["officer_examination"]["corrections"][0]
+        self.assertEqual(corr["add_duty"], -33.89)
+        self.assertEqual(corr["add_opt"], -11.86)
+
+
+class TestDescriptionChangeInSection3(_RulesStoreTestBase):
+    """Issue #4: an officer description change must surface in the export."""
+
+    def setUp(self):
+        super().setUp()
+        from app import store_courier
+        store_courier.COURIER_FILE = Path(self.tmpdir) / "m.json"
+        store_courier.COURIER_FILE.write_text("[]")
+
+    def test_changed_description_appears_in_worksheet(self):
+        import io
+        from openpyxl import load_workbook
+        from app.services import courier_service, courier_export
+        m = courier_service.create_manifest({
+            "manifest_no": "DESC-TEST", "arrival_date": "2026-05-06",
+            "exch_rate": 6.78,
+        })
+        courier_service.add_line(m["id"], {
+            "description": "TAGS", "thn": "39269090",
+            "cost_usd": 7.0, "packages": 1, "weight_kg": 1,
+        })
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-06", "examining_officer": "Officer",
+            "corrections": [{
+                "line_no": 1, "kind": "description",
+                "officer_thn": "39269090",
+                "new_description": "PLASTIC LUGGAGE TAGS",
+                "add_cost_usd": 7.0,
+            }],
+        })
+        mm = courier_service.get_manifest(m["id"])
+        data = courier_export.build_worksheet_v3(mm)
+        wb = load_workbook(io.BytesIO(data))
+        ws = wb.active
+        e8 = str(ws["E8"].value)
+        self.assertIn("PLASTIC LUGGAGE TAGS", e8)
+        self.assertIn("TAGS", e8)  # original preserved in parentheses
 
 
 if __name__ == "__main__":

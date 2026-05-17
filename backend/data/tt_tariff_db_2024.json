@@ -30519,13 +30519,13 @@
     {
       "code": "3926.90.90",
       "description": "Other articles of plastics and articles of other materials of - ",
-      "dutyPct": 0,
+      "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
-      "dutyRate": "Free + 12.5% VAT",
-      "notes": "CET 2024 rate unparsed, chapter 39, page 244",
+      "dutyRate": "20% + 12.5% VAT",
+      "notes": "CET 2024 rate 20% (corrected from unparsed OCR); catch-all 'Other articles of plastics'. Cellphone accessories under this code are exempt per-line via matcher.",
       "thn": "39269090",
-      "isExempt": true,
+      "isExempt": false,
       "chapter": 39,
       "unit": "kg"
     },

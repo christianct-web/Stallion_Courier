@@ -94,23 +94,47 @@ function CorrectionCard({
 }) {
   const isNewLine = draft.line_no == null;
 
-  // Recompute helper: when officer_thn or add_cost_usd changes, optionally
-  // re-derive the tax fields from the lookup'd duty rate.
+  // Recompute helper: when officer_thn or add_cost_usd changes, re-derive
+  // the tax fields from the looked-up THN's duty rate AND exemption class.
   const recomputeFromCost = useCallback(async () => {
     if (!draft.officer_thn) { toast.error("Set officer THN first"); return; }
     const cost = parseFloat(draft.add_cost_usd);
     if (!(cost > 0)) { toast.error("Set add cost USD first"); return; }
     try {
       const res = await lookupThn(draft.officer_thn);
-      const r = computeUpliftFromCost(cost, exchRate, res.duty_rate || 0);
+      const cls = res.exemption_class;
+      const dutyRate = res.duty_rate || 0;
+      const r = computeUpliftFromCost(cost, exchRate, dutyRate);
+
+      // Apply the exemption class CORRECTLY:
+      //   full_exempt    → duty = OPT = VAT = 0
+      //   duty_free_only → duty = 0, OPT and VAT still apply
+      //   none           → all apply at the looked-up rate
+      let addDuty = r.add_duty;
+      let addOpt = r.add_opt;
+      let addVat = r.add_vat;
+      if (cls === "full_exempt") {
+        addDuty = 0;
+        addOpt = 0;
+        addVat = 0;
+      } else if (cls === "duty_free_only") {
+        addDuty = 0;
+        // OPT/VAT recompute WITHOUT duty in the base
+        addOpt = +(r.adj_cif * 0.07).toFixed(2);
+        addVat = +((r.adj_cif + 0 + addOpt) * 0.125).toFixed(2);
+      }
+
       onChange({
         ...draft,
         adjusted_cif_ttd: String(r.adj_cif),
-        add_duty: String(r.duty_rate === 0 && res.exemption_class === "full_exempt" ? 0 : r.add_duty),
-        add_opt: String(res.exemption_class === "full_exempt" ? 0 : r.add_opt),
-        add_vat: String(res.exemption_class === "full_exempt" ? 0 : r.add_vat),
+        add_duty: String(addDuty),
+        add_opt: String(addOpt),
+        add_vat: String(addVat),
       });
-      toast.success(`Recomputed at ${Math.round((res.duty_rate || 0) * 100)}%`);
+      const label = cls === "full_exempt" ? "EXEMPT"
+        : cls === "duty_free_only" ? "FREE (OPT+VAT only)"
+        : `${Math.round(dutyRate * 100)}%`;
+      toast.success(`Recomputed at ${label}`);
     } catch (e: any) {
       toast.error(e.message || "Lookup failed");
     }

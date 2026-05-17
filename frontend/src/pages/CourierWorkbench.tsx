@@ -787,9 +787,34 @@ export default function CourierWorkbench() {
                             {corr.line_no != null ? `#${corr.line_no}` : "NEW"}
                           </td>
                           <td style={{ ...cellStyleS3, fontFamily: "'Fraunces', serif", fontSize: 12 }}>
-                            {corr.new_description
-                              || (originalLine && originalLine.description)
-                              || (isNewLine ? "(officer-discovered)" : "—")}
+                            {(() => {
+                              const orig = originalLine ? originalLine.description : "";
+                              const nu = (corr.new_description || "").trim();
+                              // Description was genuinely changed by the officer
+                              // when a new_description is present AND differs
+                              // from the original line's description.
+                              const changed = nu && nu !== orig;
+                              if (changed) {
+                                return (
+                                  <span>
+                                    <span style={{
+                                      textDecoration: "line-through",
+                                      color: C.inkLight, fontSize: 11,
+                                    }}>
+                                      {orig || "—"}
+                                    </span>
+                                    <span style={{
+                                      display: "block", fontWeight: 600,
+                                      color: "#C65911",
+                                    }}>
+                                      → {nu}
+                                    </span>
+                                  </span>
+                                );
+                              }
+                              return nu || orig
+                                || (isNewLine ? "(officer-discovered)" : "—");
+                            })()}
                           </td>
                           <td style={cellStyleS3}>
                             {corr.officer_thn || "—"}

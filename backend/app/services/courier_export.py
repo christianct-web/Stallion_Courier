@@ -284,39 +284,31 @@ def _rate_display(line: Dict[str, Any]) -> str:
 
 def _compute_line_values(line: Dict[str, Any], rate: float) -> Dict[str, float]:
     """
-    Return the numeric tax values for a line, computed server-side.
+    Return the tax values for a line EXACTLY as stored on the line.
 
-    This is the same logic Excel would apply, but evaluated in Python so we
-    can write cached values to the cells. That way the worksheet displays
-    correctly in viewers (mobile preview, Google Sheets viewer, etc.) that
-    do NOT recalculate formulas on load.
+    The Stallion workbench computes and stores `cif_ttd`, `duty`, `opt`,
+    `vat`, `total_taxes` on each line (rounded to 2 d.p. — what the broker
+    sees on screen). We write those exact stored numbers into the XLSX so
+    the worksheet matches the workbench cell-for-cell with zero drift.
 
-    The formulas remain in the cells, so when a user opens the file in
-    Excel the values are still tied to J{row} (cost) — edits propagate
-    correctly. Excel ignores the cached value and recalculates.
+    We do NOT recompute here. Recomputing in the exporter (even with the
+    same formula) reintroduces floating-point divergence from what the
+    broker saw. The line is the single source of truth.
     """
-    cls = line.get("exemption_class", "none")
-    duty_rate = float(line.get("duty_rate") or 0)
-    cost = float(line.get("cost_usd") or 0)
-    freight = float(line.get("freight_usd") or 0)
-
-    cif = (cost + freight) * rate
-
-    if cls == "full_exempt":
-        duty = 0.0
-        opt = 0.0
-        vat = 0.0
-    elif cls == "duty_free_only":
-        duty = 0.0
-        opt = cif * 0.07
-        vat = (cif + duty + opt) * 0.125
-    else:
-        duty = cif * duty_rate
-        opt = cif * 0.07
-        vat = (cif + duty + opt) * 0.125
-
-    total = duty + opt + vat
-    return {"cif": cif, "duty": duty, "opt": opt, "vat": vat, "total": total}
+    cif = float(line.get("cif_ttd") or 0)
+    duty = float(line.get("duty") or 0)
+    opt = float(line.get("opt") or 0)
+    vat = float(line.get("vat") or 0)
+    total = line.get("total_taxes")
+    if total is None:
+        total = duty + opt + vat
+    return {
+        "cif": cif,
+        "duty": duty,
+        "opt": opt,
+        "vat": vat,
+        "total": float(total),
+    }
 
 
 def _compute_cached_totals(
@@ -342,11 +334,11 @@ def _compute_cached_totals(
         out["O"] += v["vat"]
         out["P"] += v["total"]
 
-    # Officer uplifts
+    # Officer uplifts / corrections / discovered lines.
+    # NOTE: officer-discovered lines have line_no == None but STILL carry
+    # additional taxes that must roll into the Section 3 totals.
     exam = manifest.get("officer_examination") or {}
     for corr in exam.get("corrections", []):
-        if corr.get("line_no") is None:
-            continue
         out["R"] += float(corr.get("add_cost_usd") or 0)
         adj = corr.get("adjusted_cif_ttd")
         if adj is None:
@@ -355,35 +347,33 @@ def _compute_cached_totals(
         out["T"] += float(corr.get("add_duty") or 0)
         out["U"] += float(corr.get("add_opt") or 0)
         out["V"] += float(corr.get("add_vat") or 0)
-        out["W"] += (float(corr.get("add_duty") or 0)
-                     + float(corr.get("add_opt") or 0)
-                     + float(corr.get("add_vat") or 0))
+        add_total = corr.get("add_total")
+        if add_total is None:
+            add_total = (float(corr.get("add_duty") or 0)
+                         + float(corr.get("add_opt") or 0)
+                         + float(corr.get("add_vat") or 0))
+        out["W"] += float(add_total)
 
     return out
 
 
 def _set_with_formula(cell, formula: str, cached_value: float, number_format: str) -> None:
     """
-    Write a formula to the cell along with a server-computed cached value.
+    Write the exact computed value to the cell. NO FORMULA.
 
-    The cached value is recorded in a workbook-level dict and injected into
-    the saved xml at build time (see `_inject_cached_values`). This gives
-    us:
-      - The formula displays in Excel and recalculates on edit.
-      - The numeric value displays in viewers that don't recalculate
-        (Apple Preview, browser preview, mobile Excel).
+    Formulas were removed entirely because Excel recalculates them on open,
+    and the recalculated result drifts from the value the broker saw in the
+    Stallion workbench (floating-point rounding, rate precision, order of
+    operations all differ between our Python math and Excel's). The broker
+    needs the worksheet to show EXACTLY the figures from the workbench, so
+    we populate plain numeric values.
 
-    The brief explicitly preferred visible values for broker workflow;
-    this approach preserves visibility while keeping the live formulas.
+    The `formula` argument is intentionally ignored — kept only so the many
+    call sites don't all need to change. The cell becomes a static number.
     """
-    cell.value = formula
+    _ = formula  # deliberately unused — no formulas in generated sheets
+    cell.value = cached_value
     cell.number_format = number_format
-    # Record the cached value on the worksheet object — the build wrapper
-    # picks this up and injects it into the saved xml.
-    ws = cell.parent
-    if not hasattr(ws, "_courier_cached_values"):
-        ws._courier_cached_values = {}
-    ws._courier_cached_values[cell.coordinate] = cached_value
 
 
 def _write_data_row(
@@ -420,7 +410,18 @@ def _write_data_row(
         ws[f"B{row}"] = str(raw_hawb or "")
     ws[f"C{row}"] = line.get("shipper", "")
     ws[f"D{row}"] = line.get("importer", "")
-    ws[f"E{row}"] = line.get("description", "")
+    # Description: if the officer changed it during examination, show the
+    # new description with the original in parentheses so the change is
+    # visible on the worksheet (Issue #4). Otherwise just the declared desc.
+    base_desc = line.get("description", "")
+    if correction and (correction.get("new_description") or "").strip():
+        new_desc = correction["new_description"].strip()
+        if new_desc and new_desc != base_desc:
+            ws[f"E{row}"] = f"{new_desc}  (was: {base_desc})"
+        else:
+            ws[f"E{row}"] = base_desc
+    else:
+        ws[f"E{row}"] = base_desc
     ws[f"F{row}"] = int(line.get("packages") or 1)
     ws[f"G{row}"] = int(line.get("weight_kg") or 0)  # column header says "lbs"; value as-stored
     ws[f"H{row}"] = str(line.get("thn", ""))
@@ -741,60 +742,10 @@ def build_worksheet_v3(manifest: Dict[str, Any]) -> bytes:
     buf = io.BytesIO()
     wb.save(buf)
 
-    # Inject cached values into formula cells. openpyxl emits `<v></v>` for
-    # formula cells but leaves the inside empty. We populate those with the
-    # server-computed values recorded via `_set_with_formula` so viewers that
-    # don't recalculate (Apple Preview, mobile Excel, browser previews) show
-    # the numeric result.
-    cached = getattr(ws, "_courier_cached_values", None)
-    if cached:
-        buf = _inject_cached_values(buf, cached)
+    # No formula injection needed any more — every computed cell holds a
+    # plain numeric value (see _set_with_formula). What the broker sees in
+    # the workbench is written verbatim into the XLSX with no recalculation.
     return buf.getvalue()
-
-
-def _inject_cached_values(buf: io.BytesIO, cached: Dict[str, float]) -> io.BytesIO:
-    """
-    Post-process the saved xlsx zip to inject `<v>...</v>` for formula cells.
-
-    `cached` maps cell coordinates (e.g. "L8") to their pre-computed numeric
-    value. This step preserves formulas in the cells (Excel recalculates on
-    open) while ensuring non-Excel viewers display the cached number.
-    """
-    import zipfile
-    import re
-
-    buf.seek(0)
-    with zipfile.ZipFile(buf, "r") as zin:
-        files = {name: zin.read(name) for name in zin.namelist()}
-
-    sheet_name = "xl/worksheets/sheet1.xml"
-    if sheet_name not in files:
-        return buf  # nothing to do
-
-    sheet_xml = files[sheet_name].decode()
-
-    # Inject cached numeric values into the empty <v></v> tag that openpyxl
-    # writes for every formula cell. We anchor the replacement on `<c r="..."`
-    # so it only touches the intended cells.
-    for ref, value in cached.items():
-        # Format the value: avoid scientific notation; strip trailing zeros
-        if isinstance(value, float) and value == int(value):
-            value_str = str(int(value))
-        else:
-            value_str = f"{value:.10f}".rstrip("0").rstrip(".")
-        pattern = re.compile(
-            rf'(<c r="{re.escape(ref)}"[^>]*>(?:<f[^<]*</f>)?)<v></v>'
-        )
-        sheet_xml = pattern.sub(rf'\g<1><v>{value_str}</v>', sheet_xml)
-
-    files[sheet_name] = sheet_xml.encode()
-
-    out_buf = io.BytesIO()
-    with zipfile.ZipFile(out_buf, "w", zipfile.ZIP_DEFLATED) as zout:
-        for name, data in files.items():
-            zout.writestr(name, data)
-    out_buf.seek(0)
-    return out_buf
 
 
 # ── Hazmat (Swissport Transit Shed Form) ─────────────────────────────────────

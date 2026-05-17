@@ -466,6 +466,58 @@ def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, A
     return suggestions
 
 
+# ── Per-line exemption intent ────────────────────────────────────────────────
+#
+# Some THNs are catch-all codes (e.g. 39269090 "Other articles of plastics")
+# that are NOT uniformly exempt. A plastic phone case under 39269090 IS
+# exempt (cellphone-accessory breakout), but a generic "HOME PRODUCT" or
+# "ACCESSORIES" under the SAME code pays the normal 20%.
+#
+# A blanket THN-level exemption rule gets this wrong (it would exempt every
+# 39269090 line). The correct model is a PER-LINE exemption: only the line
+# whose description genuinely identifies a cellphone accessory gets exempted.
+#
+# These patterns identify the genuine cellphone-accessory items. When the
+# description matches one of these AND the matched THN is a known catch-all,
+# the matcher tags the suggestion with `exemption_intent="full_exempt"` so
+# the service layer sets a per-LINE exemption override instead of relying on
+# a (removed) blanket THN rule.
+
+EXEMPT_ACCESSORY_PATTERNS = [
+    r"\b(phone\s*case|phone\s*cover|phone\s*holder|cellphone\s*case|"
+    r"cell\s*phone\s*case|smart\s*phone\s*case|smartphone\s*case|"
+    r"iphone\s*case|phone\s*pouch|phone\s*skin)\b",
+    r"\b(screen\s*protector|tempered\s*glass|phone\s*film|phone\s*screen|"
+    r"screen\s*guard)\b",
+]
+
+# THNs that are catch-all codes where the exemption must be per-line, never
+# blanket. If the matcher lands on one of these for a genuine accessory it
+# applies the per-line exemption; otherwise the line pays the normal rate.
+CATCH_ALL_THNS = {"39269090"}
+
+
+def _exemption_intent_for(description: str, thn: str) -> Optional[str]:
+    """
+    Return "full_exempt" if the description genuinely identifies a
+    cellphone accessory that should be exempt on a per-line basis,
+    else None.
+
+    Only applies when the matched THN is a known catch-all code — for a
+    dedicated exempt THN (e.g. 85171300 smartphones) the existing
+    classify() exemption already handles it correctly and uniformly.
+    """
+    if thn not in CATCH_ALL_THNS:
+        return None
+    norm = _normalize(description)
+    if not norm:
+        return None
+    for pat in EXEMPT_ACCESSORY_PATTERNS:
+        if re.search(pat, norm):
+            return "full_exempt"
+    return None
+
+
 def suggest_thns(description: str, limit: int = 5) -> Dict[str, Any]:
     """
     Public entry point: suggest THNs for a courier item description.
@@ -508,11 +560,18 @@ def suggest_thns(description: str, limit: int = 5) -> Dict[str, Any]:
                     added = True
             if added:
                 source = "hybrid"
+        best = out[0] if out else None
+        if best:
+            intent = _exemption_intent_for(description, best["thn"])
+            if intent:
+                best = dict(best)
+                best["exemption_intent"] = intent
+                out[0] = best
         return {
             "description": description,
             "suggestions": out[:limit],
             "source": source,
-            "best_match": out[0] if out else None,
+            "best_match": best,
         }
 
     # 2. Keyword index gave nothing — fall back to full-text

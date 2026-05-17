@@ -401,11 +401,68 @@ def add_line_with_auto_thn(manifest_id: str, payload: Dict[str, Any]) -> Optiona
             ):
                 payload["duty_rate_override"] = best["duty_rate"]
 
+            # Per-line exemption intent: for catch-all THNs (e.g. 39269090),
+            # only THIS line gets exempted if the description genuinely
+            # identifies a cellphone accessory. Generic items under the same
+            # THN keep paying the normal rate. This replaces the old blanket
+            # THN-level exemption that wrongly exempted every 39269090 line.
+            if best.get("exemption_intent"):
+                payload["exemption_override"] = best["exemption_intent"]
+
     line = add_line(manifest_id, payload)
     return line
 
 
 # ── Officer examination ──────────────────────────────────────────────────────
+
+
+def _recalc_correction(corr: Dict[str, Any], rate: float) -> Dict[str, Any]:
+    """
+    Recompute a correction's tax fields server-side from officer_thn +
+    add_cost_usd, applying the THN's exemption class correctly.
+
+    This is a safety net for Issue #5: the frontend computes these too,
+    but if it sends stale/wrong values (e.g. after the officer changes the
+    THN), the server is the source of truth. We only recompute when there's
+    enough input (officer_thn + a positive add_cost_usd) AND the correction
+    didn't explicitly supply negative adjustments (tax-removal corrections
+    intentionally carry negative values — we leave those alone).
+    """
+    from . import courier_duty
+
+    officer_thn = (corr.get("officer_thn") or "").replace(".", "").strip()
+    add_cost = float(corr.get("add_cost_usd") or 0)
+
+    # Tax-removal corrections (negative add_duty etc.) are intentional —
+    # don't clobber them.
+    if any(float(corr.get(k) or 0) < 0 for k in ("add_duty", "add_opt", "add_vat")):
+        return corr
+
+    # Not enough info to recompute — keep whatever the frontend sent.
+    if not officer_thn or add_cost <= 0:
+        return corr
+
+    cls = courier_duty.classify(officer_thn)
+    cif = round(add_cost * rate, 2)
+
+    if cls.exemption_class == "full_exempt":
+        duty = opt = vat = 0.0
+    elif cls.exemption_class == "duty_free_only":
+        duty = 0.0
+        opt = round(cif * 0.07, 2)
+        vat = round((cif + duty + opt) * 0.125, 2)
+    else:
+        duty = round(cif * cls.duty_rate, 2)
+        opt = round(cif * 0.07, 2)
+        vat = round((cif + duty + opt) * 0.125, 2)
+
+    out = dict(corr)
+    out["adjusted_cif_ttd"] = cif
+    out["add_duty"] = duty
+    out["add_opt"] = opt
+    out["add_vat"] = vat
+    out["add_total"] = round(duty + opt + vat, 2)
+    return out
 
 
 def record_examination(manifest_id: str, exam: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -439,10 +496,16 @@ def record_examination(manifest_id: str, exam: Dict[str, Any]) -> Optional[Dict[
         return None
 
     manifest = items[midx]
+    rate = _ensure_float(manifest.get("exch_rate")) or 0.0
+    raw_corrections = exam.get("corrections") or []
+    # Recompute every correction server-side so officer THN changes always
+    # produce correct duty/OPT/VAT, regardless of what the frontend sent.
+    corrections = [_recalc_correction(c, rate) for c in raw_corrections]
+
     manifest["officer_examination"] = {
         "examined_at": (exam.get("examined_at") or "").strip(),
         "examining_officer": (exam.get("examining_officer") or "").strip(),
-        "corrections": exam.get("corrections") or [],
+        "corrections": corrections,
         "recorded_at": _utcnow(),
     }
     manifest["status"] = "examined"

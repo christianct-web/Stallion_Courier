@@ -15,6 +15,7 @@ const ClientsPage = lazy(() => import("./pages/Clients"));
 const CourierManifests = lazy(() => import("./pages/CourierManifests"));
 const CourierWorkbench = lazy(() => import("./pages/CourierWorkbench"));
 const CourierExam = lazy(() => import("./pages/CourierExam"));
+const CourierTariff = lazy(() => import("./pages/CourierTariff"));
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/stallion/log" element={<ActivityLog />} />
             <Route path="/stallion/clients" element={<ClientsPage />} />
             <Route path="/stallion/courier" element={<CourierManifests />} />
+            <Route path="/stallion/courier/tariff" element={<CourierTariff />} />
             <Route path="/stallion/courier/:manifestId" element={<CourierWorkbench />} />
             <Route path="/stallion/courier/:manifestId/exam" element={<CourierExam />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
