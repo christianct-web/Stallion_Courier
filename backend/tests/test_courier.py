@@ -397,6 +397,49 @@ class TestCourierMatcher(_RulesStoreTestBase):
         result = courier_matcher.suggest_thns("portable air pump")
         self.assertEqual(result["best_match"]["thn"], "84148000")
 
+    def test_generic_clothing_classifies(self):
+        """Bare 'CLOTHING' must classify (was returning empty)."""
+        r = courier_matcher.suggest_thns("CLOTHING")
+        self.assertIsNotNone(r["best_match"])
+        self.assertEqual(r["best_match"]["thn"], "61046900")
+
+    def test_generic_jewelry_classifies(self):
+        r = courier_matcher.suggest_thns("JEWELRY")
+        self.assertIsNotNone(r["best_match"])
+        self.assertEqual(r["best_match"]["thn"], "71171900")
+
+    def test_thn_never_empty_even_for_gibberish(self):
+        """
+        The core promise: the THN field is NEVER blank. Even an
+        unclassifiable description must return a fallback flagged for
+        review rather than nothing.
+        """
+        for desc in ["SOCCER GAME SET", "xyzzy random thing",
+                     "STORY BOARD", "miscellaneous goods", "qwerty"]:
+            r = courier_matcher.suggest_thns(desc)
+            self.assertIsNotNone(
+                r["best_match"],
+                f"{desc!r} returned no THN — must always fall back",
+            )
+            self.assertTrue(
+                r["best_match"]["thn"],
+                f"{desc!r} returned empty THN string",
+            )
+
+    def test_fallback_flagged_for_review(self):
+        """Last-resort fallbacks must carry needs_review=True."""
+        r = courier_matcher.suggest_thns("zxcvbnm unclassifiable")
+        self.assertEqual(r["source"], "fallback")
+        self.assertTrue(r["best_match"].get("needs_review"))
+
+    def test_low_confidence_returns_multiple_options(self):
+        """Vague descriptions should surface several review options."""
+        r = courier_matcher.suggest_thns("CLOTHING", limit=5)
+        self.assertGreaterEqual(
+            len(r["suggestions"]), 3,
+            "vague terms should give the broker several options to pick from",
+        )
+
     def test_user_tariff_override_visible_in_matcher(self):
         """If user overrides a tariff rate, the matcher reflects it."""
         courier_rules.add_tariff_entry(

@@ -149,6 +149,9 @@ export interface ThnSuggestion {
   confidence: number;
   match_reason: string;
   is_unknown?: boolean;
+  /** Set by the matcher when the result is a low-confidence guess /
+   *  last-resort fallback the broker should verify before finalising. */
+  needs_review?: boolean;
 }
 
 export interface ClassifyResponse {

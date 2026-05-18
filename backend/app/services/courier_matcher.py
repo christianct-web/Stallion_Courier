@@ -135,6 +135,63 @@ COURIER_KEYWORD_INDEX: List[Tuple[str, str, float, float, str]] = [
         "61159500", 0.20, 0.75, "Socks / stockings"),
     (r"\b(hat|cap|beanie|headwear)\b",
         "65050090", 0.20, 0.75, "Hat / cap"),
+    # Generic "clothing/clothes/apparel/garment" — couriers write this
+    # constantly. 61046900 (knitted garments) is the broker's go-to default
+    # for mixed apparel. Moderate confidence so it flags for review but is
+    # NEVER left blank.
+    (r"\b(cloth(?:ing|es)?|apparel|garment|wearing\s*apparel|outfit)\b",
+        "61046900", 0.20, 0.62, "Generic clothing — defaulted to knitted garments, verify"),
+    (r"\b(scarf|scarves|shawl|bandana)\b",
+        "61171000", 0.20, 0.78, "Scarf / shawl"),
+    (r"\b(glove|gloves|mitten)\b",
+        "61169900", 0.20, 0.68, "Gloves (textile — nitrile/medical differ, verify)"),
+    (r"\b(belt|waist\s*belt)\b",
+        "42033000", 0.20, 0.72, "Belt (leather most common)"),
+    (r"\b(necktie|bow\s*tie)\b",
+        "62151000", 0.20, 0.76, "Necktie"),
+    (r"\b(swimwear|swimsuit|bikini|bathing\s*suit)\b",
+        "61124100", 0.20, 0.78, "Swimwear"),
+    (r"\b(pajama|pyjama|sleepwear|nightgown|nightwear|bathrobe)\b",
+        "61083100", 0.20, 0.76, "Sleepwear"),
+    (r"\b(uniform|jersey|sportswear|tracksuit|track\s*suit|activewear)\b",
+        "61046900", 0.20, 0.70, "Sportswear / uniform — knitted garments"),
+
+    # ── Jewelry & accessories ────────────────────────────────────────────
+    # Generic "JEWELRY/JEWELLERY" — imitation jewelry (71171900) is by far
+    # the most common in courier shipments.
+    (r"\b(jewel(?:le)?ry|jewel(?:le)?ery|imitation\s*jewel|costume\s*jewel)\b",
+        "71171900", 0.20, 0.70, "Jewelry — imitation jewelry most common, verify"),
+    (r"\b(necklace|pendant|locket)\b",
+        "71171900", 0.20, 0.78, "Necklace / pendant (imitation)"),
+    (r"\b(earring|ear\s*ring)\b",
+        "71171900", 0.20, 0.78, "Earrings (imitation)"),
+    (r"\b(bracelet|bangle|anklet)\b",
+        "71171900", 0.20, 0.78, "Bracelet / bangle (imitation)"),
+    (r"\b(brooch|cufflink|tiara|jewelry\s*set)\b",
+        "71171900", 0.20, 0.74, "Jewelry accessory (imitation)"),
+    (r"\b(eyelash(?:es)?|false\s*lash|lash\s*extension)\b",
+        "67049000", 0.20, 0.76, "False eyelashes"),
+    # Generic "accessories/accessory" with no other context — very common
+    # and ambiguous. Default to plastic articles (39269090) but LOW
+    # confidence so it always flags for review.
+    (r"\b(accessor(?:y|ies))\b",
+        "39269090", 0.20, 0.52, "Generic accessories — catch-all, verify (often plastic 20%)"),
+
+    # ── Generic catch-alls couriers use ──────────────────────────────────
+    # These are vague but extremely common. Each gets a sensible default at
+    # LOW confidence so the THN is never blank and always flags for review.
+    (r"\b(replacement\s*parts?|spare\s*parts?|repair\s*parts?)\b",
+        "84799000", 0.0, 0.55, "Generic replacement parts — verify (machinery parts default)"),
+    (r"\b(home\s*products?|household\s*items?|home\s*goods?|home\s*decor)\b",
+        "39269090", 0.20, 0.50, "Generic home product — catch-all plastic, verify"),
+    (r"\b(thread|sewing\s*thread)\b",
+        "52041100", 0.20, 0.74, "Sewing thread (cotton)"),
+    (r"\b(yarn|knitting\s*yarn|wool\s*yarn)\b",
+        "51091000", 0.20, 0.72, "Yarn (wool/textile)"),
+    (r"\b(fabric|textile|cloth\s*material|material)\b",
+        "60063200", 0.20, 0.55, "Fabric / textile material — verify"),
+    (r"\b(general\s*(?:goods?|merchandise|item)|misc(?:ellaneous)?|sundry|sundries|assorted\s*items?)\b",
+        "39269090", 0.20, 0.45, "Unspecified goods — catch-all, MUST verify"),
 
     # ── Bags ─────────────────────────────────────────────────────────────
     (r"\b(handbag|hand\s*bag|purse|wallet|clutch)\b",
@@ -402,7 +459,11 @@ def suggest_thns_keyword_index(description: str) -> List[Dict[str, Any]]:
     return suggestions
 
 
-FULL_TEXT_CONFIDENCE_FLOOR = 0.50
+# Lowered from 0.50 → 0.28. The user wants the field populated even at low
+# confidence rather than left blank, and wants MORE varied options when
+# reviewing a low-confidence THN. A weak full-text hit flagged for review is
+# strictly better than an empty field that forces manual classification.
+FULL_TEXT_CONFIDENCE_FLOOR = 0.28
 
 def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
@@ -462,6 +523,10 @@ def suggest_thns_full_text(description: str, limit: int = 5) -> List[Dict[str, A
             f"Keyword match (score {score:.0f}) on '{entry.get('description', '')[:50]}'",
         )
         if s:
+            # Anything below 0.55 should be reviewed by the broker before
+            # the worksheet is finalised — surface that in the UI.
+            if confidence < 0.55:
+                s["needs_review"] = True
             suggestions.append(s)
     return suggestions
 
@@ -582,6 +647,40 @@ def suggest_thns(description: str, limit: int = 5) -> Dict[str, Any]:
             "suggestions": full[:limit],
             "source": "full_text",
             "best_match": full[0],
+        }
+
+    # 3. LAST-RESORT FALLBACK — never leave the THN blank.
+    #
+    # The whole point of the tool is to speed up worksheet creation. An
+    # empty THN forces the broker to classify from scratch, which defeats
+    # the purpose. So even when nothing matches, we return a low-confidence
+    # best guess explicitly flagged for review. The broker can accept it or
+    # change it, but they're never staring at a blank field.
+    #
+    # 39269090 ("Other articles of plastics", 20%) is the broker's standard
+    # catch-all for unidentifiable courier goods. We surface it plus a small
+    # spread of common alternatives so the review picker has real options.
+    fallback_thns = [
+        ("39269090", 0.30, "Unclassified — catch-all (Other articles of plastics, 20%). REVIEW."),
+        ("61046900", 0.20, "Alternative: generic apparel (20%)"),
+        ("84799000", 0.18, "Alternative: machinery/replacement parts"),
+        ("71171900", 0.16, "Alternative: imitation jewelry/accessories"),
+        ("33049990", 0.15, "Alternative: cosmetics/beauty"),
+    ]
+    fb_suggestions: List[Dict[str, Any]] = []
+    for thn, conf, reason in fallback_thns:
+        s = _build_suggestion(thn, conf, reason)
+        if s:
+            s["needs_review"] = True
+            fb_suggestions.append(s)
+        if len(fb_suggestions) >= limit:
+            break
+    if fb_suggestions:
+        return {
+            "description": description,
+            "suggestions": fb_suggestions,
+            "source": "fallback",
+            "best_match": fb_suggestions[0],
         }
 
     return {"description": description, "suggestions": [], "source": "none", "best_match": None}

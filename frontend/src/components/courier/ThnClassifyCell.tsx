@@ -39,6 +39,11 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
     duty_rate: number;
   } | null>(null);
   const [fresh, setFresh] = useState<ThnSuggestion[] | null>(null);
+  // Description-search: lets the broker type plain words ("kids clothing",
+  // "phone case") and get THN options, instead of needing the 8-digit code.
+  const [descQuery, setDescQuery] = useState("");
+  const [descResults, setDescResults] = useState<ThnSuggestion[] | null>(null);
+  const [descSearching, setDescSearching] = useState(false);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
@@ -143,6 +148,30 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       toast.error(e.message || "Failed to update THN");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Search the classifier by free-text description. Lets the broker type
+  // what the item actually is ("kids clothing", "phone case", "yarn") and
+  // get ranked THN options to pick from — no need to know the code.
+  const searchByDescription = async () => {
+    const q = descQuery.trim();
+    if (!q) {
+      toast.error("Type what the item is");
+      return;
+    }
+    setDescSearching(true);
+    try {
+      const res = await classifyDescription(q, 8);
+      setDescResults(res.suggestions || []);
+      if (!res.suggestions || res.suggestions.length === 0) {
+        toast.error("No matches — try simpler words");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Search failed");
+      setDescResults(null);
+    } finally {
+      setDescSearching(false);
     }
   };
 
@@ -346,6 +375,111 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
               </div>
             </div>
           )}
+
+          {/* Search by description */}
+          <div style={{
+            paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
+            display: "flex", flexDirection: "column", gap: 6,
+          }}>
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+              letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
+              fontWeight: 600,
+            }}>
+              Search by description
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                value={descQuery}
+                onChange={(e) => setDescQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") searchByDescription();
+                }}
+                placeholder="e.g. kids clothing, phone case, yarn"
+                style={{
+                  flex: 1,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                  padding: "6px 8px",
+                  border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+                  background: "#fff", color: C.ink, outline: "none",
+                }}
+              />
+              <button
+                onClick={searchByDescription}
+                disabled={descSearching || !descQuery.trim()}
+                style={{
+                  padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 10, background: C.ink, color: C.paper,
+                  border: `1px solid ${C.ink}`, borderRadius: 3,
+                  letterSpacing: "0.06em", cursor: "pointer",
+                  fontWeight: 600, textTransform: "uppercase",
+                  opacity: descSearching || !descQuery.trim() ? 0.5 : 1,
+                }}
+              >
+                {descSearching ? "…" : "Search"}
+              </button>
+            </div>
+            {descResults && descResults.length > 0 && (
+              <div style={{
+                display: "flex", flexDirection: "column", gap: 4,
+                maxHeight: 220, overflowY: "auto", marginTop: 2,
+              }}>
+                {descResults.map((s, i) => {
+                  const pill = thnConfidenceStyle(s.confidence ?? 0);
+                  return (
+                    <button
+                      key={`${s.thn}-${i}`}
+                      onClick={async () => {
+                        setBusy(true);
+                        try {
+                          await onUpdate({ thn: s.thn });
+                          setOpen(false);
+                          toast.success(`THN set to ${s.thn}`);
+                        } catch (e: any) {
+                          toast.error(e.message || "Failed to update THN");
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                      style={{
+                        textAlign: "left", cursor: "pointer",
+                        background: C.paperAlt, border: `1px solid ${C.paperBorder}`,
+                        borderRadius: 3, padding: "6px 8px",
+                        display: "flex", flexDirection: "column", gap: 2,
+                      }}
+                    >
+                      <div style={{
+                        display: "flex", justifyContent: "space-between",
+                        alignItems: "center", gap: 8,
+                      }}>
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: 12, fontWeight: 700, color: C.ink,
+                        }}>
+                          {s.thn}
+                        </span>
+                        <span style={{
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                          padding: "1px 6px", borderRadius: 2,
+                          background: pill.bg, color: pill.fg,
+                          fontWeight: 700,
+                        }}>
+                          {Math.round((s.confidence ?? 0) * 100)}%
+                          {s.needs_review ? " · REVIEW" : ""}
+                        </span>
+                      </div>
+                      <div style={{
+                        fontFamily: "'Fraunces', serif", fontSize: 11,
+                        color: C.inkMid,
+                      }}>
+                        {s.description || s.match_reason}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Manual entry */}
           <div style={{
