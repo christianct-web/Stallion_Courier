@@ -1,0 +1,118 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "manufacture",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "manufacture",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 0.48,
+      "hsCode": "69",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Ceramic products",
+      "children": [
+        {
+          "confidence": 0.48,
+          "hsCode": "6902",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Refractory bricks, blocks, tiles and similar refractory ceramic constructional goods, other than those of siliceous fossil meals or similar siliceous earths.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 0.48,
+              "hsCode": "69029000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 0.43,
+      "hsCode": "34",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster",
+      "children": [
+        {
+          "confidence": 0.43,
+          "hsCode": "3405",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Polishes and creams, for footwear, furniture, floors, coachwork, glass or metal, scouring pastes and powders and similar preparations (whether or not in the form of paper, wadding, felt, nonwovens, cellular plastics or cellular rubber, impregnated, coated or covered with such preparations), excluding waxes of heading 34.04.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 0.43,
+              "hsCode": "34054000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Scouring pastes and powders and other scouring preparations",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 0.39,
+      "hsCode": "83",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Miscellaneous articles of base metal",
+      "children": [
+        {
+          "confidence": 0.39,
+          "hsCode": "8309",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Stoppers, caps and lids (including crown corks, screw caps and pouring stoppers), capsules for bottles, threaded bungs, bung covers, seals and other packing accessories, of base metal.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 0.39,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 0.39,
+                  "hsCode": "83099010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Bottle caps",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 0.39,
+                  "hsCode": "83099090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

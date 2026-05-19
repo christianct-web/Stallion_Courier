@@ -1,0 +1,119 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "metal",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "metal",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 4.97,
+      "hsCode": "83",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Miscellaneous articles of base metal",
+      "children": [
+        {
+          "confidence": 4.97,
+          "hsCode": "8306",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.97,
+              "hsCode": "83062900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 4.2,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 4.2,
+          "hsCode": "8483",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Transmission shafts (including cam shafts and crank shafts) and cranks; bearing housings and plain shaft bearings; gears and gearing; ball or roller screws; gear boxes and other speed changers, including torque converters; flywheels and pulleys, including pulley blocks; clutches and shaft couplings (including universal joints).",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.2,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - - - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 4.2,
+                  "hsCode": "84839019",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 3.51,
+      "hsCode": "73",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of iron or steel",
+      "children": [
+        {
+          "confidence": 3.51,
+          "hsCode": "7326",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of iron or steel.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.51,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 3.51,
+                  "hsCode": "73269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

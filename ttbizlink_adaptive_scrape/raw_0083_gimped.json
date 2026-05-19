@@ -1,0 +1,62 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "gimped",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "gimped",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 17.61,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 17.61,
+          "hsCode": "8525",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Transmission apparatus for radio-broadcasting or television, whether or not incorporating reception apparatus or sound recording or reproducing apparatus; television cameras, digital cameras and video camera recorders.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 17.61,
+              "hsCode": "85258900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 9.49,
+          "hsCode": "8529",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Parts suitable for use solely or principally with the apparatus of headings 85.24 to 85.28",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 9.49,
+              "hsCode": "85299000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

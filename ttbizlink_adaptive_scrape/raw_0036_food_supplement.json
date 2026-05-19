@@ -1,0 +1,90 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "food supplement",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "food supplement",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 64.67,
+      "hsCode": "21",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Miscellaneous edible preparations",
+      "children": [
+        {
+          "confidence": 64.67,
+          "hsCode": "2106",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Food preparations not elsewhere specified or included.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 64.67,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 64.67,
+                  "hsCode": "21069070",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Preparations for infant use, put up for retail sale",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 13.4,
+                  "hsCode": "21061090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 2.94,
+      "hsCode": "29",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Organic chemicals",
+      "children": [
+        {
+          "confidence": 2.94,
+          "hsCode": "2936",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Provitamins and vitamins, natural or reproduced by synthesis (including natural concentrates), derivatives thereof used primarily as vitamins, and intermixtures of the foregoing, whether or not in any solvent.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.94,
+              "hsCode": "29362900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other vitamins and their derivatives",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

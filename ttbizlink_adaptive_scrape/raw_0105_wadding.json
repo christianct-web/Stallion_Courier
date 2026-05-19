@@ -1,0 +1,111 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "wadding",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "wadding",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 10.41,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 10.41,
+          "hsCode": "3923",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Articles for the conveyance or packing of goods, of plastics; stoppers, lids, caps and other closures, of plastics.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 10.41,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 10.41,
+                  "hsCode": "39239090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 9.76,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 9.76,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 9.76,
+                  "hsCode": "39269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 5.93,
+          "hsCode": "3924",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Tableware, kitchenware, other household articles and hygienic or toilet articles, of plastics.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 5.93,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 5.93,
+                  "hsCode": "39249090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

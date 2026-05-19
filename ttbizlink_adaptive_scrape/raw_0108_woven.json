@@ -1,0 +1,90 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "woven",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "woven",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 1.19,
+      "hsCode": "63",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Other made up textile articles; sets; worn clothing and worn textile articles; rags",
+      "children": [
+        {
+          "confidence": 1.19,
+          "hsCode": "6308",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.19,
+              "hsCode": "63080000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale.",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.06,
+      "hsCode": "56",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof",
+      "children": [
+        {
+          "confidence": 1.06,
+          "hsCode": "5603",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Nonwovens, whether or not impregnated, coated, covered or laminated.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.06,
+              "hsCode": "56039300",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Weighing more than 70 g/m2 but not more than 150 g/m2",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 0.95,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 0.95,
+                  "hsCode": "56039100",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - Weighing not more than 25 g/m2",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "moulded",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "moulded",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 46.25,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 46.25,
+          "hsCode": "8480",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Moulding boxes for metal foundry; mould bases; moulding patterns; moulds for metal (other than ingot moulds), metal carbides, glass, mineral materials, rubber or plastics.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 46.25,
+              "hsCode": "84807900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 14.17,
+              "hsCode": "84802000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Mould bases",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 13.95,
+              "hsCode": "84804900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

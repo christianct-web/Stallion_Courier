@@ -1,0 +1,71 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "soap",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "soap",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 38.51,
+      "hsCode": "34",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster",
+      "children": [
+        {
+          "confidence": 38.51,
+          "hsCode": "3401",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Soap; organic surface-active products and preparations for use as soap, in the form of bars, cakes, moulded pieces or shapes, whether or not containing soap; organic surface-active products and preparations for washing the skin, in the form ot liquid or cream and put up for retail sale, whether or not containing soap; paper, wadding, felt and non-wovens, impregnated, coated or covered with soap or detergent.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 38.51,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Soap in other forms:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 38.51,
+                  "hsCode": "34012090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 23.84,
+                  "hsCode": "34011120",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other, in the form of bars, cakes, moulded pieces or shapes",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 9.54,
+                  "hsCode": "34011190",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

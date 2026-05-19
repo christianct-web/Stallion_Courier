@@ -1,0 +1,52 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "connectors",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "connectors",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 30.04,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 30.04,
+          "hsCode": "8536",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electrical apparatus for switching or protecting electrical circuits, or for making connections to or in electrical circuits (for example, switches, relays, fuses, surge suppressors, plugs, sockets, lamp-holders and other connectors, junction boxes), for a voltage not exceeding 1,000 volts; connectors for optical fibres, optical Fibre bundles or cables.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 30.04,
+              "hsCode": "85366900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 18.2,
+              "hsCode": "85369000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other apparatus",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

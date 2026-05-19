@@ -1,0 +1,80 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "cakes",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "cakes",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 93.04,
+      "hsCode": "19",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Preparations of cereals, flour, starch or milk; pastrycooks' products",
+      "children": [
+        {
+          "confidence": 93.04,
+          "hsCode": "1905",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Bread, pastry, cakes, biscuits and other bakers' wares, whether or not containing cocoa; communion wafers, empty cachets of a kind suitable for pharmaceutical use, sealing wafers, rice paper and similar products.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 93.04,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 93.04,
+                  "hsCode": "19059010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Biscuits, unsweetened",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 93.04,
+                  "hsCode": "19059090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 93.04,
+                  "hsCode": "19059020",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Ice cream cones",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 0.6,
+                  "hsCode": "19053100",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - Sweet biscuits",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

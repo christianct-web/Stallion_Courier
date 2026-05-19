@@ -1,0 +1,81 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "machines",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "machines",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 4.46,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 4.46,
+          "hsCode": "8422",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Dish washing machines; machinery for cleaning or drying bottles or other containers; machinery for filling, closing, sealing or labelling bottles, cans, boxes, bags or other containers; machinery for capsuling bottles, jars, tubes and similar containers; other packing or wrapping machinery (including heat-shrink wrapping machinery); machinery for aerating beverages.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.46,
+              "hsCode": "84224000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other packing or wrapping machinery (including heat-shrink wrapping machinery)",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 3.24,
+          "hsCode": "8423",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Weighing machinery (excluding balances of a sensitivity of 5 eg or better), including weight operated counting or checking machines; weighing machine weights of all kinds.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.24,
+              "hsCode": "84238900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 2.83,
+          "hsCode": "8476",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Automatic goods-vending machines (for example, postage stamp, cigarette, food or beverage machines), including money-changing machines.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.83,
+              "hsCode": "84768900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

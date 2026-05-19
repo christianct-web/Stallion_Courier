@@ -1,0 +1,119 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "winding",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "winding",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 2.7,
+      "hsCode": "92",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Musical instruments; parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 2.7,
+          "hsCode": "9205",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Wind musical instruments (for example, keyboard pipe organs, accordions, clarinets, trumpets, bagpipes), other than fairground organs and mechanical street organs.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.7,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 2.7,
+                  "hsCode": "92059090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 2.32,
+      "hsCode": "33",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations",
+      "children": [
+        {
+          "confidence": 2.32,
+          "hsCode": "3302",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Mixtures of odoriferous substances and mixtures (including alcoholic solutions) with a basis of one or more of these substances, of a kind used as raw materials in industry; other preparations based on odoriferous substances, of a kind used for the manufacture of beverages.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.32,
+              "hsCode": "33029000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.28,
+      "hsCode": "49",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Printed books, newspapers, pictures and other products of the printing industry; manuscripts, typescripts and plans",
+      "children": [
+        {
+          "confidence": 1.28,
+          "hsCode": "4911",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other printed matter, including printed pictures and photographs.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.28,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.28,
+                  "hsCode": "49119990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

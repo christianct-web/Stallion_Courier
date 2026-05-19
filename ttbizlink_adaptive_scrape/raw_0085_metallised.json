@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "metallised",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "metallised",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 40.24,
+      "hsCode": "76",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Aluminium and articles thereof",
+      "children": [
+        {
+          "confidence": 40.24,
+          "hsCode": "7607",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0.2 mm.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 40.24,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Not backed:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 40.24,
+                  "hsCode": "76071100",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - Rolled but not further worked",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            },
+            {
+              "confidence": 2.72,
+              "hsCode": "76071900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 4.58,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 4.58,
+          "hsCode": "3920",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other plates, sheets, film, foil and strip, of plastics, non-cellular and not reinforced, laminated, supported or similarly combined with other materials.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.58,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Of polymers of propylene:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 4.58,
+                  "hsCode": "39202010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Shade netting",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "infant",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "infant",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 50.81,
+      "hsCode": "61",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of apparel and clothing accessories, knitted or crocheted",
+      "children": [
+        {
+          "confidence": 50.81,
+          "hsCode": "6111",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Babiesâ garments and clothing accessories, knitted or crocheted.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 50.81,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Of cotton:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 50.81,
+                  "hsCode": "61112010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Babies' suits, dresses, skirts, trousers, shirts, shorts and blouses",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 50.81,
+                  "hsCode": "61112090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.86,
+      "hsCode": "90",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof",
+      "children": [
+        {
+          "confidence": 1.86,
+          "hsCode": "9018",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Instruments and appliances used in medical, surgical, dental or veterinary sciences, including scintigraphic apparatus, other electro-medical apparatus and sight-testing instruments.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.86,
+              "hsCode": "90189000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other instruments and appliances",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.47,
+      "hsCode": "94",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings",
+      "children": [
+        {
+          "confidence": 1.47,
+          "hsCode": "9402",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Medical, surgical, dental or veterinary furniture (for example, operating tables, examination tables, hospital beds with mechanical fittings, dentistsâ chairs); barbersâ chairs and similar chairs, having rotating as well as both reclining and elevating movements; parts of the foregoing articles.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.47,
+              "hsCode": "94029000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

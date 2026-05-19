@@ -1,0 +1,118 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "powder",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "powder",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 17.47,
+      "hsCode": "33",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations",
+      "children": [
+        {
+          "confidence": 17.47,
+          "hsCode": "3304",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Beauty or make-up preparations and preparations for the care of the skin (other than medicaments), including sunscreen or sun tan preparations; manicure or pedicure preparations.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 17.47,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 17.47,
+                  "hsCode": "33049100",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - Powders, whether or not compressed",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            },
+            {
+              "confidence": 1.91,
+              "hsCode": "33049990",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.92,
+      "hsCode": "19",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Preparations of cereals, flour, starch or milk; pastrycooks' products",
+      "children": [
+        {
+          "confidence": 1.92,
+          "hsCode": "1901",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Malt extract; food preparations of flour, groats, meal, starch or malt extract, not containing cocoa or containing less than 40% by weight of cocoa calculated on a totally defatted basis, not elsewhere specified or included; food preparations of goods of headings 04.01 to 04.04, not containing cocoa or containing less than 5% by weight of cocoa calculated on a totally defatted basis, not elsewhere specified or included.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.92,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.92,
+                  "hsCode": "19019020",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Preparations of malt extract",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 1.92,
+                  "hsCode": "19019090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 1.92,
+                  "hsCode": "19019010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Malt extract",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

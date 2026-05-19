@@ -1,0 +1,43 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "earphones",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "earphones",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 60.94,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 60.94,
+          "hsCode": "8518",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Microphones and stands therefor; loud-speakers, whether or not mounted in their enclosures; headphones and earphones, whether or not combined with a microphone, and sets consisting of a microphone and one or more loudspeakers; audio-frequency electric amplifiers; electric sound amplifier sets.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 60.94,
+              "hsCode": "85183000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Headphones and earphones, whether or not combined with a microphone, and sets consisting of a microphone and one or more loudspeakers.",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "screen protector",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "screen protector",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 5.1,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 5.1,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 5.1,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 5.1,
+                  "hsCode": "39269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 2.04,
+                  "hsCode": "39269050",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Comers for suitcases, fasteners handbasgs; handles",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 3.79,
+      "hsCode": "40",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Rubber and articles thereof",
+      "children": [
+        {
+          "confidence": 3.79,
+          "hsCode": "4016",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of vulcanised rubber other than hard rubber.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.79,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 3.79,
+                  "hsCode": "40169990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

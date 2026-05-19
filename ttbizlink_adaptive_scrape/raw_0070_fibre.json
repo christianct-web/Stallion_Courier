@@ -1,0 +1,99 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "fibre",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "fibre",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 6.44,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 6.44,
+          "hsCode": "8544",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Insulated (including enamelled or anodized) wire, cable (including co-axial cable) and other insulated electric conductors, whether or not fitted with connectors; optical fibre cables, made up of individually sheathed fibres, whether or not assembled with electric conductors or fitted with connectors.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 6.44,
+              "hsCode": "85447000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Optical fibre cables",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 3.38,
+      "hsCode": "94",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings",
+      "children": [
+        {
+          "confidence": 3.38,
+          "hsCode": "9404",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Mattress supports; articles of bedding and similar furnishing (for example, mattresses, quilts, eiderdowns, cushions, pouffes and pillows) fitted with springs or stuffed or internally fitted with any material or of cellular rubber or plastics, whether or not covered.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.38,
+              "hsCode": "94042900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Of other materials",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.94,
+      "hsCode": "55",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Man-made staple fibres",
+      "children": [
+        {
+          "confidence": 1.94,
+          "hsCode": "5503",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Synthetic staple fibres, not carded, combed or otherwise processed for spinning.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.94,
+              "hsCode": "55032000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Of polyesters",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

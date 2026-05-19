@@ -1,0 +1,71 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "book",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "book",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 72.04,
+      "hsCode": "49",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Printed books, newspapers, pictures and other products of the printing industry; manuscripts, typescripts and plans",
+      "children": [
+        {
+          "confidence": 72.04,
+          "hsCode": "4901",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Printed books, brochures, leaflets and similar printed matter, whether or not in single sheets.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 72.04,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 72.04,
+                  "hsCode": "49019910",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Brochures and pamphlets",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 10.25,
+                  "hsCode": "49011010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Brochures, pamphlets and leaflets",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 6.29,
+                  "hsCode": "49019990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

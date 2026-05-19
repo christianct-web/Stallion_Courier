@@ -1,0 +1,127 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "cotton",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "cotton",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 43.19,
+      "hsCode": "56",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof",
+      "children": [
+        {
+          "confidence": 43.19,
+          "hsCode": "5601",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Wadding of textile materials and articles thereof; textile fibres, not exceeding 5 mm in length (flock), textile dust and mill neps.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 43.19,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Of cotton:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 43.19,
+                  "hsCode": "56012130",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Articles of wadding",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 43.19,
+                  "hsCode": "56012110",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Wadding for use in the manufacture of sanitary towels and tampons",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 43.19,
+                  "hsCode": "56012190",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 28.08,
+      "hsCode": "63",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Other made up textile articles; sets; worn clothing and worn textile articles; rags",
+      "children": [
+        {
+          "confidence": 28.08,
+          "hsCode": "6308",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 28.08,
+              "hsCode": "63080000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale.",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 2.66,
+      "hsCode": "61",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of apparel and clothing accessories, knitted or crocheted",
+      "children": [
+        {
+          "confidence": 2.66,
+          "hsCode": "6116",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Gloves, mittens and mitts, knitted or crocheted.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.66,
+              "hsCode": "61169200",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Of cotton",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "subheading",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "subheading",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 21.51,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 21.51,
+          "hsCode": "8414",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Air or vacuum pumps, air or other gas compressors and fans; ventilating or recycling hoods incorporating a fan, whether or not fitted with filters; gas-tight biological safety cabinets, whether or not fitted with filters.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 21.51,
+              "hsCode": "84148000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 4.3,
+      "hsCode": "03",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Fish and crustaceans, molluscs and other aquatic invertebrates",
+      "children": [
+        {
+          "confidence": 4.3,
+          "hsCode": "0305",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Fish, dried, salted or in brine; smoked fish, whether or not cooked before or during the smoking process.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.3,
+              "hsCode": "03055400",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Herrings (Clupea harengus, Clupea pallasii), anchovies (Engraulis spp.), sardines (Sardina pilchardus, Sardinops spp.), sardinella (Sardinella spp.), brisling or sprats (Sprattus sprattus), mackerel (Scomber scombrus, Scomber australasicus, Scomber japonicus), Indian mackerels (Rastrelliger spp.), seerfishes (Scomberomorus spp.), jack and horse mackerel (Trachurus spp.), jacks, crevalles (Caranx spp.), cobia (Rachycentron canadum), silver pomfrets (Pampus spp.), Pacific saury (Cololabis saira), scads (Decapterus spp.), capelin (Mallotus villosus), Sword fish (Xiphias gladius), Kawakawa (Euthynnus affinis), bonitos (Sarda spp.), marlins, sailfishes, spearfish (Istiophoridae)",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

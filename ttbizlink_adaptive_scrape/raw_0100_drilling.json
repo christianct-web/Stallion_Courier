@@ -1,0 +1,80 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "drilling",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "drilling",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 23.26,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 23.26,
+          "hsCode": "8459",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Machine-tools (including way-type unit head machines) for drilling, boring, milling, threading or tapping by removing metal, other than lathes (including turning centres) of heading 84.58.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 23.26,
+              "hsCode": "84592900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 18.04,
+      "hsCode": "82",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Tools, implements, cutlery, spoons and forks, of base metal; parts thereof of base metal",
+      "children": [
+        {
+          "confidence": 18.04,
+          "hsCode": "8207",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Interchangeable tools for hand tools, whether or not power-operated, or for machine-tools (for example, for pressing, stamping, punching, tapping, threading, drilling, boring, broaching, milling, turning or screw driving), including dies for drawing or extruding metal, and rock drilling or earth boring tools.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 18.04,
+              "hsCode": "82075000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Tools for drilling, other than for rock drilling",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 9.52,
+              "hsCode": "82071900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other, including parts",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

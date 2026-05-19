@@ -1,0 +1,81 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "lithium",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "lithium",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 40.76,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 40.76,
+          "hsCode": "8506",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Primary cells and primary batteries.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 40.76,
+              "hsCode": "85065000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Lithium",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 2.41,
+          "hsCode": "8504",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electrical transformers, static converters (for example, rectifiers) and inductors.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.41,
+              "hsCode": "85044000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Static converters",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 2.29,
+          "hsCode": "8516",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electric instantaneous or storage water heaters and immersion heaters; electric space heating apparatus and soil heating apparatus; electro-thermic hair-dressing apparatus (for example, hair dryers, hair curlers, curling tong heaters) and hand dryers; electric smoothing irons; other electrothermic appliances of a kind used for domestic purposes; electric heating resistors, other than those of heading 85.45",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.29,
+              "hsCode": "85169000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Parts",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

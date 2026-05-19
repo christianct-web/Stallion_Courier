@@ -1,0 +1,109 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "fitted",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "fitted",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 1.38,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 1.38,
+          "hsCode": "8536",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electrical apparatus for switching or protecting electrical circuits, or for making connections to or in electrical circuits (for example, switches, relays, fuses, surge suppressors, plugs, sockets, lamp-holders and other connectors, junction boxes), for a voltage not exceeding 1,000 volts; connectors for optical fibres, optical Fibre bundles or cables.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.38,
+              "hsCode": "85369000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other apparatus",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.35,
+      "hsCode": "82",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Tools, implements, cutlery, spoons and forks, of base metal; parts thereof of base metal",
+      "children": [
+        {
+          "confidence": 1.35,
+          "hsCode": "8205",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Hand tools (including glaziersâ diamonds), not elsewhere specified or included; blow lamps; vices, clamps and the like, other than accessories for and parts of, machine-tools or water-jet cutting machines; anvils; portable forges; hand or pedal-operated grinding wheels with frameworks.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.35,
+              "hsCode": "82055900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.17,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 1.17,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.17,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.17,
+                  "hsCode": "39269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

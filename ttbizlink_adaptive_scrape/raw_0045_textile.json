@@ -1,0 +1,80 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "textile",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "textile",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 15.4,
+      "hsCode": "59",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Impregnated, coated, covered or laminated textile fabrics; textile articles of a kind suitable for industrial use",
+      "children": [
+        {
+          "confidence": 15.4,
+          "hsCode": "5911",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Textile products and articles, for technical uses, specified in Note 8 to this Chapter.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 15.4,
+              "hsCode": "59111000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Textile fabrics, felt and felt-lined woven fabrics, coated, covered or laminated with rubber, leather or other material, of a kind used for card clothing, and similar fabrics of a kind used for other technical purposes, including narrow fabrics made of velvet impregnated with rubber, for covering weaving spindles (weaving beams)",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 3.86,
+              "hsCode": "59119000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 7.04,
+      "hsCode": "55",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Man-made staple fibres",
+      "children": [
+        {
+          "confidence": 7.04,
+          "hsCode": "5512",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Woven fabrics of synthetic staple fibres, containing 85% or more by weight of synthetic staple fibres.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 7.04,
+              "hsCode": "55121900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

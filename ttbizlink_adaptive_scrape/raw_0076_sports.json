@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "sports",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "sports",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 18.42,
+      "hsCode": "95",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Toys, games and sports requisites; parts and accessories thereof",
+      "children": [
+        {
+          "confidence": 18.42,
+          "hsCode": "9506",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 18.42,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 18.42,
+                  "hsCode": "95069990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - For other sports or outdoor games",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 13.14,
+                  "hsCode": "95069190",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 5.06,
+      "hsCode": "64",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Footwear, gaiters and the like; parts of such articles",
+      "children": [
+        {
+          "confidence": 5.06,
+          "hsCode": "6404",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Footwear with outer soles of rubber, plastics, leather or composition leather and uppers of textile materials.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 5.06,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Sports footwear, tennis shoes, basketball shoes, gym shoes, training shoes and the like:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 5.06,
+                  "hsCode": "64041110",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Sports footwear",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

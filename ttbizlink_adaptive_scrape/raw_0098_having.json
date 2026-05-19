@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "having",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "having",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 8.53,
+      "hsCode": "73",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of iron or steel",
+      "children": [
+        {
+          "confidence": 8.53,
+          "hsCode": "7326",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of iron or steel.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 8.53,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 8.53,
+                  "hsCode": "73269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 3.53,
+          "hsCode": "7308",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Structures (excluding prefabricated buildings of heading 94.06) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frame-works, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.53,
+              "hsCode": "73089000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 5.55,
+      "hsCode": "94",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings",
+      "children": [
+        {
+          "confidence": 5.55,
+          "hsCode": "9403",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other furniture and parts thereof.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 5.55,
+              "hsCode": "94031000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Metal furniture of a kind used in offices",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "scooters",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "scooters",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 80.24,
+      "hsCode": "95",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Toys, games and sports requisites; parts and accessories thereof",
+      "children": [
+        {
+          "confidence": 80.24,
+          "hsCode": "9503",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Tricycles, scooters, pedal cars and similar wheeled toys; dollsâ carriages; dolls; other toys; reduced-size (âscaleâ) models and similar recreational models, working or not; puzzles of all kinds.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 80.24,
+              "hsCode": "95030010",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - - Tricycles, scooters, pedal cars and similar wheeled toys",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 4.58,
+      "hsCode": "87",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Vehicles other than railway or tramway rolling-stock, and parts and accessories thereof",
+      "children": [
+        {
+          "confidence": 4.58,
+          "hsCode": "8711",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Motorcycles (including mopeds) and cycles fitted with an auxiliary motor, with or without side-cars; side-cars.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 4.58,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- With electric motor for propulsion:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 4.58,
+                  "hsCode": "87116090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 1.1,
+          "hsCode": "8714",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Parts and accessories of vehicles of headings 87.11 to 87.13.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.1,
+              "hsCode": "87141000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Of motorcycles (including mopeds):",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

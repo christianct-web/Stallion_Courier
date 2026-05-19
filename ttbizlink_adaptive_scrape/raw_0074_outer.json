@@ -1,0 +1,129 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "outer",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "outer",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 6.6,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 6.6,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 6.6,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 6.6,
+                  "hsCode": "39269050",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Comers for suitcases, fasteners handbasgs; handles",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.81,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 1.81,
+          "hsCode": "8483",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Transmission shafts (including cam shafts and crank shafts) and cranks; bearing housings and plain shaft bearings; gears and gearing; ball or roller screws; gear boxes and other speed changers, including torque converters; flywheels and pulleys, including pulley blocks; clutches and shaft couplings (including universal joints).",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.81,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Gears and gearing, other than toothed wheels, chain sprockets and other transmission elements presented separately; ball or roller screws, gear boxes and other speed changers, including torque converters:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.81,
+                  "hsCode": "84834090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.66,
+      "hsCode": "73",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of iron or steel",
+      "children": [
+        {
+          "confidence": 1.66,
+          "hsCode": "7326",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of iron or steel.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.66,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.66,
+                  "hsCode": "73269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

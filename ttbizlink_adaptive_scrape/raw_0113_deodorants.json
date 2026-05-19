@@ -1,0 +1,52 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "deodorants",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "deodorants",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 87.22,
+      "hsCode": "33",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations",
+      "children": [
+        {
+          "confidence": 87.22,
+          "hsCode": "3307",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorizers, whether or not perfumed or having disinfectant properties.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 87.22,
+              "hsCode": "33072000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Personal deodorants and antiperspirants",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 3.41,
+              "hsCode": "33074900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

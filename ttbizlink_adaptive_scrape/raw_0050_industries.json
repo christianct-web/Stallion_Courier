@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "industries",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "industries",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 1.86,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 1.86,
+          "hsCode": "8473",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Parts and accessories (other than covers, carrying cases and the like) suitable for use solely or principally with machines of headings 84.70 to 84.72.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.86,
+              "hsCode": "84733000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Parts and accessories of the machines of heading 84.71",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 0.84,
+          "hsCode": "8466",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Parts and accessories suitable for use solely or principally with the machines of headings 84.56 to 84.65, including work or tool holders, self-opening dieheads, dividing heads and other special attachments for the machines; tool holders for any type of tool for working in the hand.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 0.84,
+              "hsCode": "84669400",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - For machines of heading 84.62 or 84.63",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 1.79,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 1.79,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.79,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 1.79,
+                  "hsCode": "39269090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

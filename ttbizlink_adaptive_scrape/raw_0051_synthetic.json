@@ -1,0 +1,43 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "synthetic",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "synthetic",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 2.75,
+      "hsCode": "38",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Miscellaneous chemical products",
+      "children": [
+        {
+          "confidence": 2.75,
+          "hsCode": "3811",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Anti-knock preparations, oxidation inhibitors, gum inhibitors, viscosity improvers, anti-corrosive preparations and other prepared additives, for mineral oils (including gasoline) or for other liquids used for the same purposes as mineral oils.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.75,
+              "hsCode": "38112900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

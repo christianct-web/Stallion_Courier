@@ -1,0 +1,109 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "display",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "display",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 15.72,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 15.72,
+          "hsCode": "8531",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electric sound or visual signalling apparatus (for example, bells, sirens, indicator panels, burglar or fire alarms), other than those of heading 85.12 or 85.30.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 15.72,
+              "hsCode": "85312000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Indicator panels incorporating liquid crystal devices (LCD) or light-emitting diodes (LED)",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 3.81,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other apparatus:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 3.81,
+                  "hsCode": "85318010",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- Electric sound or visual signaling apparatus",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 3.81,
+                  "hsCode": "85318090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 5.67,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 5.67,
+          "hsCode": "3926",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 5.67,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 5.67,
+                  "hsCode": "39269050",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Comers for suitcases, fasteners handbasgs; handles",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

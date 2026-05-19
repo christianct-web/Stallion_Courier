@@ -1,0 +1,109 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "footwear",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "footwear",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 22.16,
+      "hsCode": "64",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Footwear, gaiters and the like; parts of such articles",
+      "children": [
+        {
+          "confidence": 22.16,
+          "hsCode": "6404",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Footwear with outer soles of rubber, plastics, leather or composition leather and uppers of textile materials.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 22.16,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Sports footwear, tennis shoes, basketball shoes, gym shoes, training shoes and the like:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 22.16,
+                  "hsCode": "64041120",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Tennis shoes, basketball shoes, gym shoes, training shoes and the like",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 22.16,
+                  "hsCode": "64041110",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Sports footwear",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 7.37,
+                  "hsCode": "64041990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            },
+            {
+              "confidence": 7.37,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 7.37,
+                  "hsCode": "64041990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 19.57,
+          "hsCode": "6405",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other footwear.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 19.57,
+              "hsCode": "64059000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

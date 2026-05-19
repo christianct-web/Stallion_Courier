@@ -1,0 +1,90 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "output",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "output",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 3.5,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 3.5,
+          "hsCode": "8537",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Boards, panels, consoles, desks, cabinets and other bases, equipped with two or more apparatus of heading 85.35 or 85.36, for electric control or the distribution of electricity, including those incorporating instruments or apparatus of Chapter 90, and numerical control apparatus, other than switching apparatus of heading 85.17.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 3.5,
+              "hsCode": "85371000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- For a voltage not exceeding 1,000 V",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 2.66,
+          "hsCode": "8536",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Electrical apparatus for switching or protecting electrical circuits, or for making connections to or in electrical circuits (for example, switches, relays, fuses, surge suppressors, plugs, sockets, lamp-holders and other connectors, junction boxes), for a voltage not exceeding 1,000 volts; connectors for optical fibres, optical Fibre bundles or cables.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.66,
+              "hsCode": "85369000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other apparatus",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 2.48,
+      "hsCode": "84",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "children": [
+        {
+          "confidence": 2.48,
+          "hsCode": "8473",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Parts and accessories (other than covers, carrying cases and the like) suitable for use solely or principally with machines of headings 84.70 to 84.72.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 2.48,
+              "hsCode": "84733000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Parts and accessories of the machines of heading 84.71",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

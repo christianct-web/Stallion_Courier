@@ -1,0 +1,71 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "beauty product",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "beauty product",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 89.96,
+      "hsCode": "33",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations",
+      "children": [
+        {
+          "confidence": 89.96,
+          "hsCode": "3304",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Beauty or make-up preparations and preparations for the care of the skin (other than medicaments), including sunscreen or sun tan preparations; manicure or pedicure preparations.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 89.96,
+              "hsCode": "33049990",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - - Other",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 4.06,
+              "hsCode": "33049900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Other:",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        },
+        {
+          "confidence": 1.78,
+          "hsCode": "3307",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorizers, whether or not perfumed or having disinfectant properties.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 1.78,
+              "hsCode": "33079000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Other",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

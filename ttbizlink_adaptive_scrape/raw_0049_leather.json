@@ -1,0 +1,100 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "leather",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "leather",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 23.07,
+      "hsCode": "42",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Articles of leather; saddlery and harness; travel goods, handbags and similar containers; articles of animal gut (other than silk-worm gut)",
+      "children": [
+        {
+          "confidence": 23.07,
+          "hsCode": "4202",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Trunks, suit-cases, vanity-cases, executive-cases, brief-cases, school satchels, spectacle cases, binocular cases, camera cases, musical instrument cases, gun cases, holsters and similar containers; traveling-bags, insulated food or beverages bags, toilet bags, rucksacks, handbags, shopping-bags, wallets, purses, map-cases, cigarette-cases, tobacco-pouches, tool bags, sports bags, bottle-cases, jewellery boxes, powder-boxes, cutlery cases and similar containers, of leather or of composition leather, of sheeting of plastics, of textile materials, of vulcanised fibre or of paperboard, or wholly or mainly covered with such materials or with paper.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 23.07,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - With outer surface of leather or of composition leather:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 23.07,
+                  "hsCode": "42023110",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Purses, spectacle cases and wallets",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 23.07,
+                  "hsCode": "42023190",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                },
+                {
+                  "confidence": 16.09,
+                  "hsCode": "42022100",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - With outer surface of leather or of composition leather",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "confidence": 13.7,
+          "hsCode": "4205",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Other articles of leather or of composition leather.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 13.7,
+              "hsCode": "420500",
+              "type": "parent",
+              "indent": 2,
+              "hsDescription": "Other articles of leather or of composition leather.",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 13.7,
+                  "hsCode": "42050090",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

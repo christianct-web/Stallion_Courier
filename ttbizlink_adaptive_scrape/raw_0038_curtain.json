@@ -1,0 +1,90 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "curtain",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "curtain",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 37.96,
+      "hsCode": "63",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Other made up textile articles; sets; worn clothing and worn textile articles; rags",
+      "children": [
+        {
+          "confidence": 37.96,
+          "hsCode": "6303",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Curtains (including drapes) and interior blinds; curtain or bed valances.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 37.96,
+              "hsCode": "63039900",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- - Of other textile materials",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 21.27,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- - Of other textile materials:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 21.27,
+                  "hsCode": "63031990",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - - Other",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "confidence": 6.97,
+      "hsCode": "39",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Plastics and articles thereof",
+      "children": [
+        {
+          "confidence": 6.97,
+          "hsCode": "3925",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Buildersâ ware of plastics, not elsewhere specified or included.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 6.97,
+              "hsCode": "39253000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Shutters, blinds (including Venetian blinds) and similar articles and parts thereof",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
