@@ -194,6 +194,8 @@ def _to_contract_items(workbench_items: List[Dict[str, Any]]) -> List[Dict[str, 
             "previous_doc_summary_declaration": previous_doc,
             "tarification_extended_customs_procedure": int(it.get("extendedCustomsProcedure", 4000) or 4000),
             "tarification_national_customs_procedure": int(it.get("nationalCustomsProcedure", 0) or 0),
+            # SAD Box 24 — Nature of transaction (default sale)
+            "nature_of_transaction": str(it.get("natureOfTransaction", "A") or "A").strip().upper()[:1],
             "tarification_quota_code": str(it.get("quotaCode", "NEW")).strip(),
             "valuation_item_rate_of_adjustment": int(it.get("rateOfAdjustment", 1) or 1),
             # Reuse statistical_value as carrier for Box 41 quantity; avoids schema rejection
@@ -535,6 +537,25 @@ def _fix_national_customs_procedure(item_elem: ET.Element) -> None:
             ncp.text = str(int(float(raw))).zfill(3)
         except ValueError:
             ncp.text = "000"
+
+
+def _fix_nature_of_transaction(item_elem: ET.Element, contract_item: Dict[str, Any]) -> None:
+    """Ensure Box 24 nature-of-transaction exists on each item tarification block.
+
+    Defaults to "A" (sale) to preserve backwards-compatible output when not set.
+    """
+    tarification = item_elem.find("Tarification")
+    if tarification is None:
+        return
+
+    val = str(contract_item.get("nature_of_transaction") or "A").strip().upper()[:1]
+    if not val:
+        val = "A"
+
+    node = tarification.find("Nature_of_transaction")
+    if node is None:
+        node = ET.SubElement(tarification, "Nature_of_transaction")
+    node.text = val
 
 
 def _fix_package_count(item_elem: ET.Element) -> None:
@@ -1008,6 +1029,9 @@ def _postprocess_xml(xml: str, declaration: Dict[str, Any]) -> str:
 
         # FIX #3: National_customs_procedure zero-padded "000"
         _fix_national_customs_procedure(item_elem)
+
+        # SAD Box 24: nature of transaction
+        _fix_nature_of_transaction(item_elem, decl_items[idx] if idx < len(decl_items) else {})
 
         # FIX #3: Package count as integer string
         _fix_package_count(item_elem)
