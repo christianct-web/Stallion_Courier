@@ -3881,7 +3881,7 @@
     },
     {
       "code": "0305.54.00",
-      "description": "seerfishes (Scomberomorus spp.), jack and horse mackerel",
+      "description": "Fish and crustaceans, molluscs and other aquatic invertebrates - Fish, dried, salted or in brine; smoked fish, whether or not cooked before or during the smoking process. - Herrings (Clupea harengus, Clupea pallasii), anchovies (Engraulis spp.), sardines (Sardina pilchardus, Sardinops spp.), sardinella (Sardinella spp.), brisling or sprats (Sprattus sprattus), mackerel (Scomber scombrus, Scomber australasicus, Scomber japonicus), Indian mackerels (Rastrelliger spp.), seerfishes (Scomberomorus spp.), jack and horse mackerel (Trachurus spp.), jacks, crevalles (Caranx spp.), cobia (Rachycentron canadum), silver pomfrets (Pampus spp.), Pacific saury (Cololabis saira), scads (Decapterus spp.), capelin (Mallotus villosus), Sword fish (Xiphias gladius), Kawakawa (Euthynnus affinis), bonitos (Sarda spp.), marlins, sailfishes, spearfish (Istiophoridae)",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -3890,7 +3890,9 @@
       "thn": "03055400",
       "isExempt": false,
       "chapter": 3,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "seerfishes (Scomberomorus spp.), jack and horse mackerel",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "0305.59.10",
@@ -6065,7 +6067,7 @@
     },
     {
       "code": "0703.90.00",
-      "description": "Leeks and other alliaceous vegetables",
+      "description": "Edible vegetables and certain roots and tubers - Onions, shallots, garlic, leeks and other alliaceous vegetables, fresh or chilled. - Leeks and other alliaceous vegetables",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -6074,7 +6076,9 @@
       "thn": "07039000",
       "isExempt": false,
       "chapter": 7,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Leeks and other alliaceous vegetables",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "0704.10.00",
@@ -6195,7 +6199,7 @@
     },
     {
       "code": "0707.00.10",
-      "description": "Vegetables",
+      "description": "Edible vegetables and certain roots and tubers - Cucumbers and gherkins, fresh or chilled. - Cucumbers and gherkins, fresh or chilled. - Cucumbers",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -6204,11 +6208,13 @@
       "thn": "07070010",
       "isExempt": false,
       "chapter": 7,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Vegetables",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "0707.00.20",
-      "description": "Vegetables - Gherkins",
+      "description": "Edible vegetables and certain roots and tubers - Cucumbers and gherkins, fresh or chilled. - Cucumbers and gherkins, fresh or chilled. - Gherkins",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -6217,7 +6223,9 @@
       "thn": "07070020",
       "isExempt": false,
       "chapter": 7,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Vegetables - Gherkins",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "0708.10.00",
@@ -6494,7 +6502,7 @@
     },
     {
       "code": "0709.99.90",
-      "description": "Other vegetables, fresh or chilled. - Other",
+      "description": "Edible vegetables and certain roots and tubers - Other vegetables, fresh or chilled. - Other: - Other",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -6503,7 +6511,9 @@
       "thn": "07099990",
       "isExempt": false,
       "chapter": 7,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other vegetables, fresh or chilled. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "0710.10.00",
@@ -12006,7 +12016,7 @@
     },
     {
       "code": "1905.31.00",
-      "description": "Sweet biscuits",
+      "description": "Preparations of cereals, flour, starch or milk; pastrycooks' products - Bread, pastry, cakes, biscuits and other bakers' wares, whether or not containing cocoa; communion wafers, empty cachets of a kind suitable for pharmaceutical use, sealing wafers, rice paper and similar products. - Other: - Sweet biscuits",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -12015,7 +12025,9 @@
       "thn": "19053100",
       "isExempt": false,
       "chapter": 19,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Sweet biscuits",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "1905.32.00",
@@ -12084,7 +12096,7 @@
     },
     {
       "code": "1905.90.10",
-      "description": "Biscuits, unsweetened",
+      "description": "Preparations of cereals, flour, starch or milk; pastrycooks' products - Bread, pastry, cakes, biscuits and other bakers' wares, whether or not containing cocoa; communion wafers, empty cachets of a kind suitable for pharmaceutical use, sealing wafers, rice paper and similar products. - Other: - Biscuits, unsweetened",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -12093,11 +12105,13 @@
       "thn": "19059010",
       "isExempt": false,
       "chapter": 19,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Biscuits, unsweetened",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "1905.90.20",
-      "description": "Ice cream cones",
+      "description": "Preparations of cereals, flour, starch or milk; pastrycooks' products - Bread, pastry, cakes, biscuits and other bakers' wares, whether or not containing cocoa; communion wafers, empty cachets of a kind suitable for pharmaceutical use, sealing wafers, rice paper and similar products. - Other: - Ice cream cones",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -12106,7 +12120,9 @@
       "thn": "19059020",
       "isExempt": false,
       "chapter": 19,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Ice cream cones",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "2001.10.10",
@@ -14034,7 +14050,7 @@
     },
     {
       "code": "2102.30.00",
-      "description": "Prepared baking powders",
+      "description": "Miscellaneous edible preparations - Yeasts (active or inactive); other single-cell micro-organisms, dead (but not including vaccines of heading 30.02); prepared baking powders. - Prepared baking powders",
       "dutyPct": 15,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -14043,7 +14059,9 @@
       "thn": "21023000",
       "isExempt": false,
       "chapter": 21,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Prepared baking powders",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "2103.10.00",
@@ -23823,7 +23841,7 @@
     },
     {
       "code": "2936.27.00",
-      "description": "Vitamin C and its derivatives",
+      "description": "Organic chemicals - Provitamins and vitamins, natural or reproduced by synthesis (including natural concentrates), derivatives thereof used primarily as vitamins, and intermixtures of the foregoing, whether or not in any solvent. - Vitamin C and its derivatives",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -23832,7 +23850,9 @@
       "thn": "29362700",
       "isExempt": true,
       "chapter": 29,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Vitamin C and its derivatives",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "2936.28.00",
@@ -23849,7 +23869,7 @@
     },
     {
       "code": "2936.29.00",
-      "description": "Other vitamins and their derivatives",
+      "description": "Organic chemicals - Provitamins and vitamins, natural or reproduced by synthesis (including natural concentrates), derivatives thereof used primarily as vitamins, and intermixtures of the foregoing, whether or not in any solvent. - Other vitamins and their derivatives",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -23858,11 +23878,13 @@
       "thn": "29362900",
       "isExempt": true,
       "chapter": 29,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other vitamins and their derivatives",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "2936.90.00",
-      "description": "Other, including natural concentrates",
+      "description": "Organic chemicals - Provitamins and vitamins, natural or reproduced by synthesis (including natural concentrates), derivatives thereof used primarily as vitamins, and intermixtures of the foregoing, whether or not in any solvent. - Other, including natural concentrates",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -23871,7 +23893,9 @@
       "thn": "29369000",
       "isExempt": true,
       "chapter": 29,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other, including natural concentrates",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "2937.11.00",
@@ -25903,7 +25927,7 @@
     },
     {
       "code": "3214.90.00",
-      "description": "compounds and other mastics; painters’ fillings; non- - linseed oil putty - Other",
+      "description": "Tanning or dyeing extracts; tannins and their derivatives; dyes, pigments and other colouring matter; paints and varnishes; putty and other mastics; inks - Glaziersâ putty, grafting putty, resin cements, caulking compounds and other mastics; painters' fillings; non-refractory surfacing preparations for facades, indoor walls, floors, ceilings or the like. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -25912,7 +25936,9 @@
       "thn": "32149000",
       "isExempt": true,
       "chapter": 32,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "compounds and other mastics; painters’ fillings; non- - linseed oil putty - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3215.19.00",
@@ -26085,7 +26111,7 @@
     },
     {
       "code": "3302.90.00",
-      "description": "substances, of a kind used as raw materials in industry; other - Other",
+      "description": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations - Mixtures of odoriferous substances and mixtures (including alcoholic solutions) with a basis of one or more of these substances, of a kind used as raw materials in industry; other preparations based on odoriferous substances, of a kind used for the manufacture of beverages. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26094,7 +26120,9 @@
       "thn": "33029000",
       "isExempt": true,
       "chapter": 33,
-      "unit": null
+      "unit": null,
+      "description_ocr": "substances, of a kind used as raw materials in industry; other - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3303.00.10",
@@ -26166,7 +26194,7 @@
     },
     {
       "code": "3304.91.00",
-      "description": "Powders, whether or not compressed",
+      "description": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations - Beauty or make-up preparations and preparations for the care of the skin (other than medicaments), including sunscreen or sun tan preparations; manicure or pedicure preparations. - Other: - Powders, whether or not compressed",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26175,7 +26203,9 @@
       "thn": "33049100",
       "isExempt": false,
       "chapter": 33,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Powders, whether or not compressed",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3304.99.00",
@@ -26246,7 +26276,7 @@
     },
     {
       "code": "3305.90.00",
-      "description": "Preparations for use on the hair — Other",
+      "description": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations - Preparations for use on the hair. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26255,7 +26285,9 @@
       "thn": "33059000",
       "isExempt": false,
       "chapter": 33,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Preparations for use on the hair — Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3306.10.10",
@@ -26324,7 +26356,7 @@
     },
     {
       "code": "3307.20.00",
-      "description": "Personal deodorants and antiperspirants",
+      "description": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations - Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorizers, whether or not perfumed or having disinfectant properties. - Personal deodorants and antiperspirants",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26333,7 +26365,9 @@
       "thn": "33072000",
       "isExempt": false,
       "chapter": 33,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Personal deodorants and antiperspirants",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3307.30.00",
@@ -26363,7 +26397,7 @@
     },
     {
       "code": "3307.49.00",
-      "description": "perfumery, cosmetic or toilet preparations, not elsewhere - “Agarbatti” and other odoriferous preparations which operate - Other",
+      "description": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations - Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorizers, whether or not perfumed or having disinfectant properties. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26372,7 +26406,9 @@
       "thn": "33074900",
       "isExempt": false,
       "chapter": 33,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "perfumery, cosmetic or toilet preparations, not elsewhere - “Agarbatti” and other odoriferous preparations which operate - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3307.90.00",
@@ -26403,7 +26439,7 @@
     },
     {
       "code": "3401.11.20",
-      "description": "Other, in the form of bars, cakes, moulded pieces or shapes",
+      "description": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster - Soap; organic surface-active products and preparations for use as soap, in the form of bars, cakes, moulded pieces or shapes, whether or not containing soap; organic surface-active products and preparations for washing the skin, in the form ot liquid or cream and put up for retail sale, whether or not containing soap; paper, wadding, felt and non-wovens, impregnated, coated or covered with soap or detergent. - Soap in other forms: - Other, in the form of bars, cakes, moulded pieces or shapes",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26412,11 +26448,13 @@
       "thn": "34011120",
       "isExempt": false,
       "chapter": 34,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other, in the form of bars, cakes, moulded pieces or shapes",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3401.11.90",
-      "description": "whether or not containing soap; organic surface-active - Other, in the form of bars, cakes, moulded pieces or shapes - Other",
+      "description": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster - Soap; organic surface-active products and preparations for use as soap, in the form of bars, cakes, moulded pieces or shapes, whether or not containing soap; organic surface-active products and preparations for washing the skin, in the form ot liquid or cream and put up for retail sale, whether or not containing soap; paper, wadding, felt and non-wovens, impregnated, coated or covered with soap or detergent. - Soap in other forms: - Other",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26425,7 +26463,9 @@
       "thn": "34011190",
       "isExempt": false,
       "chapter": 34,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "whether or not containing soap; organic surface-active - Other, in the form of bars, cakes, moulded pieces or shapes - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3401.19.90",
@@ -26455,7 +26495,7 @@
     },
     {
       "code": "3401.20.90",
-      "description": "whether or not containing soap; organic surface-active - Industrial soaps. - Other",
+      "description": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster - Soap; organic surface-active products and preparations for use as soap, in the form of bars, cakes, moulded pieces or shapes, whether or not containing soap; organic surface-active products and preparations for washing the skin, in the form ot liquid or cream and put up for retail sale, whether or not containing soap; paper, wadding, felt and non-wovens, impregnated, coated or covered with soap or detergent. - Soap in other forms: - Other",
       "dutyPct": 40,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -26464,7 +26504,9 @@
       "thn": "34012090",
       "isExempt": false,
       "chapter": 34,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "whether or not containing soap; organic surface-active - Industrial soaps. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3401.30.00",
@@ -28082,7 +28124,7 @@
     },
     {
       "code": "3811.29.00",
-      "description": "and other prepared additives, for mineral oils (including - Other",
+      "description": "Miscellaneous chemical products - Anti-knock preparations, oxidation inhibitors, gum inhibitors, viscosity improvers, anti-corrosive preparations and other prepared additives, for mineral oils (including gasoline) or for other liquids used for the same purposes as mineral oils. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -28091,7 +28133,9 @@
       "thn": "38112900",
       "isExempt": true,
       "chapter": 38,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "and other prepared additives, for mineral oils (including - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3811.90.00",
@@ -30241,7 +30285,7 @@
     },
     {
       "code": "3923.90.90",
-      "description": "cellular and not reinforced, laminated, supported or - Other",
+      "description": "Plastics and articles thereof - Articles for the conveyance or packing of goods, of plastics; stoppers, lids, caps and other closures, of plastics. - Other: - Other",
       "dutyPct": 15,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -30250,7 +30294,9 @@
       "thn": "39239090",
       "isExempt": false,
       "chapter": 39,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "cellular and not reinforced, laminated, supported or - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3924.10.00",
@@ -30359,7 +30405,7 @@
     },
     {
       "code": "3925.30.00",
-      "description": "Shutters, blinds (including Venetian blinds) and similar",
+      "description": "Plastics and articles thereof - Buildersâ ware of plastics, not elsewhere specified or included. - Shutters, blinds (including Venetian blinds) and similar articles and parts thereof",
       "dutyPct": 15,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -30368,7 +30414,9 @@
       "thn": "39253000",
       "isExempt": false,
       "chapter": 39,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Shutters, blinds (including Venetian blinds) and similar",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3925.90.00",
@@ -30411,7 +30459,7 @@
     },
     {
       "code": "3926.10.00",
-      "description": "Office or school supplies",
+      "description": "Plastics and articles thereof - Other articles of plastics and articles of other materials of headings 39.01 to 39.14 - Office or school supplies",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -30420,7 +30468,9 @@
       "thn": "39261000",
       "isExempt": false,
       "chapter": 39,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Office or school supplies",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "3926.20.00",
@@ -31090,7 +31140,7 @@
     },
     {
       "code": "4010.31.00",
-      "description": "belts), V-ribbed, of an outside circumference exceeding 60",
+      "description": "Rubber and articles thereof - Conveyor or transmission belts or belting, of vulcanised rubber. - Transmission belts or belting: - Endless transmission belts of trapezoidal cross-section (V-belts), V-ribbed, of an outside circumference exceeding 60 cm but not exceeding 180 cm",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -31099,7 +31149,9 @@
       "thn": "40103100",
       "isExempt": true,
       "chapter": 40,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "belts), V-ribbed, of an outside circumference exceeding 60",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "4010.32.00",
@@ -32161,7 +32213,7 @@
     },
     {
       "code": "4203.30.00",
-      "description": "Belts and bandoliers",
+      "description": "Articles of leather; saddlery and harness; travel goods, handbags and similar containers; articles of animal gut (other than silk-worm gut) - Articles of apparel and clothing accessories, of leather or of composition leather. - Belts and bandoliers",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -32170,7 +32222,9 @@
       "thn": "42033000",
       "isExempt": false,
       "chapter": 42,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Belts and bandoliers",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "4203.40.00",
@@ -32200,7 +32254,7 @@
     },
     {
       "code": "4205.00.90",
-      "description": "Articles of apparel and clothing accessories, of leather or of - in machinery or mechanical appliances or for other - Other",
+      "description": "Articles of leather; saddlery and harness; travel goods, handbags and similar containers; articles of animal gut (other than silk-worm gut) - Other articles of leather or of composition leather. - Other articles of leather or of composition leather. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -32209,7 +32263,9 @@
       "thn": "42050090",
       "isExempt": false,
       "chapter": 42,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Articles of apparel and clothing accessories, of leather or of - in machinery or mechanical appliances or for other - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "4301.10.00",
@@ -35660,7 +35716,7 @@
     },
     {
       "code": "4818.20.00",
-      "description": "Handkerchief’, cleansing or facial tissues and towels",
+      "description": "Paper and paperboard; articles of paper pulp, of paper or of paperboard - Toilet paper and similar paper, cellulose wadding or webs of cellulose fibres, of a kind used for household or sanitary purposes, in rolls of a width not exceeding 36 cm, or cut to size or shape, handkerchiefs, cleansing tissues, towels, tablecloths, serviettes, bed sheets and similar household, sanitary or hospital articles, articles of apparel and clothing accessories, of paper pulp, paper, cellulose wadding or webs of cellulose fibres. - Handkerchiefs, cleansing or facial tissues and towels",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -35669,7 +35725,9 @@
       "thn": "48182000",
       "isExempt": false,
       "chapter": 48,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Handkerchief’, cleansing or facial tissues and towels",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "4818.30.00",
@@ -36050,7 +36108,7 @@
     },
     {
       "code": "4901.10.90",
-      "description": "Printed books, brochures, leaflets and similar printed matter, - pamphlets and leaflets - Other",
+      "description": "Printed books, newspapers, pictures and other products of the printing industry; manuscripts, typescripts and plans - Printed books, brochures, leaflets and similar printed matter, whether or not in single sheets. - In single sheets, whether or not folded: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -36059,7 +36117,9 @@
       "thn": "49011090",
       "isExempt": true,
       "chapter": 49,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Printed books, brochures, leaflets and similar printed matter, - pamphlets and leaflets - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "4901.91.00",
@@ -36272,7 +36332,7 @@
     },
     {
       "code": "4911.99.90",
-      "description": "Transfers (decalcomanias). - Other",
+      "description": "Printed books, newspapers, pictures and other products of the printing industry; manuscripts, typescripts and plans - Other printed matter, including printed pictures and photographs. - Other: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -36281,7 +36341,9 @@
       "thn": "49119990",
       "isExempt": false,
       "chapter": 49,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Transfers (decalcomanias). - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5001.00.00",
@@ -39640,7 +39702,7 @@
     },
     {
       "code": "5503.20.00",
-      "description": "Man-made staple fibres - Of polyesters",
+      "description": "Man-made staple fibres - Synthetic staple fibres, not carded, combed or otherwise processed for spinning. - Of polyesters",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -39649,7 +39711,9 @@
       "thn": "55032000",
       "isExempt": true,
       "chapter": 55,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Man-made staple fibres - Of polyesters",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5503.30.00",
@@ -40173,7 +40237,7 @@
     },
     {
       "code": "5512.19.00",
-      "description": "by weight of synthetic staple fibres. -",
+      "description": "Man-made staple fibres - Woven fabrics of synthetic staple fibres, containing 85% or more by weight of synthetic staple fibres. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -40182,7 +40246,9 @@
       "thn": "55121900",
       "isExempt": true,
       "chapter": 55,
-      "unit": null
+      "unit": null,
+      "description_ocr": "by weight of synthetic staple fibres. -",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5512.21.00",
@@ -40823,7 +40889,7 @@
     },
     {
       "code": "5601.21.30",
-      "description": "Articles of wadding",
+      "description": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof - Wadding of textile materials and articles thereof; textile fibres, not exceeding 5 mm in length (flock), textile dust and mill neps. - Of cotton: - Articles of wadding",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -40832,11 +40898,13 @@
       "thn": "56012130",
       "isExempt": false,
       "chapter": 56,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Articles of wadding",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5601.21.90",
-      "description": "fibres, not exceeding 5 mm in length (flock), textile dust and - Other",
+      "description": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof - Wadding of textile materials and articles thereof; textile fibres, not exceeding 5 mm in length (flock), textile dust and mill neps. - Of cotton: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -40845,7 +40913,9 @@
       "thn": "56012190",
       "isExempt": true,
       "chapter": 56,
-      "unit": null
+      "unit": null,
+      "description_ocr": "fibres, not exceeding 5 mm in length (flock), textile dust and - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5601.22.00",
@@ -40953,7 +41023,7 @@
     },
     {
       "code": "5603.91.00",
-      "description": "Weighing not more than 25",
+      "description": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof - Nonwovens, whether or not impregnated, coated, covered or laminated. - Other: - Weighing not more than 25 g/m2",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -40962,7 +41032,9 @@
       "thn": "56039100",
       "isExempt": true,
       "chapter": 56,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Weighing not more than 25",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5603.92.00",
@@ -40979,7 +41051,7 @@
     },
     {
       "code": "5603.93.00",
-      "description": "Weighing more than 70 g/m* but not more than 150 g/m?",
+      "description": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof - Nonwovens, whether or not impregnated, coated, covered or laminated. - Weighing more than 70 g/m2 but not more than 150 g/m2",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -40988,7 +41060,9 @@
       "thn": "56039300",
       "isExempt": true,
       "chapter": 56,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Weighing more than 70 g/m* but not more than 150 g/m?",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "5603.94.00",
@@ -42019,7 +42093,7 @@
     },
     {
       "code": "5911.90.00",
-      "description": "Rubberised textile fabrics, other than those of heading 59.02. - Other",
+      "description": "Impregnated, coated, covered or laminated textile fabrics; textile articles of a kind suitable for industrial use - Textile products and articles, for technical uses, specified in Note 8 to this Chapter. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -42028,7 +42102,9 @@
       "thn": "59119000",
       "isExempt": true,
       "chapter": 59,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Rubberised textile fabrics, other than those of heading 59.02. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6001.10.00",
@@ -43465,7 +43541,7 @@
     },
     {
       "code": "6108.21.00",
-      "description": "nightdresses, pyjamas, negligees, bathrobes, dressing gowns - Of other textile materials - Of cotton",
+      "description": "Articles of apparel and clothing accessories, knitted or crocheted - Womenâs or girlsâ slips, petticoats, briefs, panties, nightdresses, pyjamas, negligees, bathrobes, dressing gowns and similar articles, knitted or crocheted. - Briefs and panties: - Of cotton",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -43474,7 +43550,9 @@
       "thn": "61082100",
       "isExempt": false,
       "chapter": 61,
-      "unit": null
+      "unit": null,
+      "description_ocr": "nightdresses, pyjamas, negligees, bathrobes, dressing gowns - Of other textile materials - Of cotton",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6108.22.00",
@@ -43491,7 +43569,7 @@
     },
     {
       "code": "6108.29.00",
-      "description": "nightdresses, pyjamas, negligees, bathrobes, dressing gowns - Of other textile materials",
+      "description": "Articles of apparel and clothing accessories, knitted or crocheted - Womenâs or girlsâ slips, petticoats, briefs, panties, nightdresses, pyjamas, negligees, bathrobes, dressing gowns and similar articles, knitted or crocheted. - Of other textile materials",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -43500,7 +43578,9 @@
       "thn": "61082900",
       "isExempt": false,
       "chapter": 61,
-      "unit": null
+      "unit": null,
+      "description_ocr": "nightdresses, pyjamas, negligees, bathrobes, dressing gowns - Of other textile materials",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6108.31.00",
@@ -43740,7 +43820,7 @@
     },
     {
       "code": "6111.20.90",
-      "description": "knitted crocheted, - Of other textile materials - Other",
+      "description": "Articles of apparel and clothing accessories, knitted or crocheted - Babiesâ garments and clothing accessories, knitted or crocheted. - Of cotton: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -43749,7 +43829,9 @@
       "thn": "61112090",
       "isExempt": false,
       "chapter": 61,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "knitted crocheted, - Of other textile materials - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6111.30.10",
@@ -43909,7 +43991,7 @@
     },
     {
       "code": "6114.30.00",
-      "description": "Other garments, knitted or crocheted. - Of man-made fibres",
+      "description": "Articles of apparel and clothing accessories, knitted or crocheted - Other garments, knitted or crocheted. - Of man-made fibres",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -43918,7 +44000,9 @@
       "thn": "61143000",
       "isExempt": false,
       "chapter": 61,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other garments, knitted or crocheted. - Of man-made fibres",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6114.90.00",
@@ -44105,7 +44189,7 @@
     },
     {
       "code": "6116.92.00",
-      "description": "Knitted apparel - Ofcotton",
+      "description": "Articles of apparel and clothing accessories, knitted or crocheted - Gloves, mittens and mitts, knitted or crocheted. - Of cotton",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -44114,7 +44198,9 @@
       "thn": "61169200",
       "isExempt": false,
       "chapter": 61,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Knitted apparel - Ofcotton",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6116.93.00",
@@ -45147,7 +45233,7 @@
     },
     {
       "code": "6207.19.00",
-      "description": "nightshirts, pyjamas, bathrobes, dressing gowns and similar - Of other textile materials",
+      "description": "Articles of apparel and clothing accessories, not knitted or crocheted - Menâs or boysâ singlets and other vests, underpants, briefs, nightshirts, pyjamas, bathrobes, dressing gowns and similar articles. - Of other textile materials",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -45156,7 +45242,9 @@
       "thn": "62071900",
       "isExempt": false,
       "chapter": 62,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "nightshirts, pyjamas, bathrobes, dressing gowns and similar - Of other textile materials",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6207.21.00",
@@ -45602,7 +45690,7 @@
     },
     {
       "code": "6212.10.00",
-      "description": "Woven apparel - Brassieres",
+      "description": "Articles of apparel and clothing accessories, not knitted or crocheted - Brassieres, girdles, corsets, braces, suspenders, garters and similar articles and parts thereof, whether or not knitted or crocheted. - Brassieres",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -45611,7 +45699,9 @@
       "thn": "62121000",
       "isExempt": false,
       "chapter": 62,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Woven apparel - Brassieres",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6212.20.00",
@@ -46083,7 +46173,7 @@
     },
     {
       "code": "6303.19.90",
-      "description": "Curtains (including drapes) and interior blinds; curtain or - Curtains (including drapes) - Other",
+      "description": "Other made up textile articles; sets; worn clothing and worn textile articles; rags - Curtains (including drapes) and interior blinds; curtain or bed valances. - Of other textile materials: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -46092,7 +46182,9 @@
       "thn": "63031990",
       "isExempt": false,
       "chapter": 63,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Curtains (including drapes) and interior blinds; curtain or - Curtains (including drapes) - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6303.91.00",
@@ -46122,7 +46214,7 @@
     },
     {
       "code": "6303.99.00",
-      "description": "Curtains (including drapes) and interior blinds; curtain or - Of synthetic fibres - Of other textile materials",
+      "description": "Other made up textile articles; sets; worn clothing and worn textile articles; rags - Curtains (including drapes) and interior blinds; curtain or bed valances. - Of other textile materials",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -46131,7 +46223,9 @@
       "thn": "63039900",
       "isExempt": false,
       "chapter": 63,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Curtains (including drapes) and interior blinds; curtain or - Of synthetic fibres - Of other textile materials",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6304.11.00",
@@ -46577,7 +46671,7 @@
     },
     {
       "code": "6308.00.00",
-      "description": "with accessories, for making up into rugs, tapestries,",
+      "description": "Other made up textile articles; sets; worn clothing and worn textile articles; rags - Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale. - Sets consisting of woven fabric and yarn, whether or not with accessories, for making up into rugs, tapestries, embroidered table cloths or serviettes, or similar textile articles, put up in packages for retail sale.",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -46586,7 +46680,9 @@
       "thn": "63080000",
       "isExempt": true,
       "chapter": 63,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "with accessories, for making up into rugs, tapestries,",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6309.00.00",
@@ -46917,7 +47013,7 @@
     },
     {
       "code": "6405.90.00",
-      "description": "Other footwear. - With uppers of textile materials - Other",
+      "description": "Footwear, gaiters and the like; parts of such articles - Other footwear. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -46926,7 +47022,9 @@
       "thn": "64059000",
       "isExempt": false,
       "chapter": 64,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other footwear. - With uppers of textile materials - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6406.10.00",
@@ -48035,7 +48133,7 @@
     },
     {
       "code": "6902.90.00",
-      "description": "constructional goods, other than those of siliceous fossil meals - Other",
+      "description": "Ceramic products - Refractory bricks, blocks, tiles and similar refractory ceramic constructional goods, other than those of siliceous fossil meals or similar siliceous earths. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -48044,7 +48142,9 @@
       "thn": "69029000",
       "isExempt": true,
       "chapter": 69,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "constructional goods, other than those of siliceous fossil meals - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6903.10.00",
@@ -48334,7 +48434,7 @@
     },
     {
       "code": "6910.90.00",
-      "description": "bidets, water closet pans, flushing cisterns, urinals and similar - Other",
+      "description": "Ceramic products - Ceramic sinks, wash basins, wash basin pedestals, baths, bidets, water closet pans, flushing cisterns, urinals and similar sanitary fixtures. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -48343,7 +48443,9 @@
       "thn": "69109000",
       "isExempt": true,
       "chapter": 69,
-      "unit": null
+      "unit": null,
+      "description_ocr": "bidets, water closet pans, flushing cisterns, urinals and similar - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6911.10.10",
@@ -48373,7 +48475,7 @@
     },
     {
       "code": "6911.90.00",
-      "description": "bidets, water closet pans, flushing cisterns, urinals and similar - Other",
+      "description": "Ceramic products - Tableware, kitchenware, other household articles and toilet articles, of porcelain or china. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -48382,7 +48484,9 @@
       "thn": "69119000",
       "isExempt": false,
       "chapter": 69,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "bidets, water closet pans, flushing cisterns, urinals and similar - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "6912.00.10",
@@ -52976,7 +53080,7 @@
     },
     {
       "code": "7308.40.00",
-      "description": "roofing frame-works, doors and windows and their frames -",
+      "description": "Articles of iron or steel - Structures (excluding prefabricated buildings of heading 94.06) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frame-works, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel. - Equipment for scaffolding, shuttering, propping or pit-propping",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -52985,11 +53089,13 @@
       "thn": "73084000",
       "isExempt": true,
       "chapter": 73,
-      "unit": null
+      "unit": null,
+      "description_ocr": "roofing frame-works, doors and windows and their frames -",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7308.90.00",
-      "description": "roofing frame-works, doors and windows and their frames - Other",
+      "description": "Articles of iron or steel - Structures (excluding prefabricated buildings of heading 94.06) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frame-works, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -52998,7 +53104,9 @@
       "thn": "73089000",
       "isExempt": true,
       "chapter": 73,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "roofing frame-works, doors and windows and their frames - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7309.00.10",
@@ -54055,7 +54163,7 @@
     },
     {
       "code": "7323.93.10",
-      "description": "Baking pans",
+      "description": "Articles of iron or steel - Table, kitchen or other household articles and parts thereof, of iron or steel; iron or steel wool; pot scourers and scouring or polishing pads, gloves and the like, of iron or steel. - Of stainless steel: - Baking pans",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -54064,7 +54172,9 @@
       "thn": "73239310",
       "isExempt": false,
       "chapter": 73,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Baking pans",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7323.93.20",
@@ -54146,7 +54256,7 @@
     },
     {
       "code": "7323.93.90",
-      "description": "Iron/steel articles - Parts",
+      "description": "Articles of iron or steel - Table, kitchen or other household articles and parts thereof, of iron or steel; iron or steel wool; pot scourers and scouring or polishing pads, gloves and the like, of iron or steel. - Of stainless steel: - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -54155,7 +54265,9 @@
       "thn": "73239390",
       "isExempt": true,
       "chapter": 73,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Iron/steel articles - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7323.94.00",
@@ -54328,7 +54440,7 @@
     },
     {
       "code": "7326.90.90",
-      "description": "Other articles of iron or steel. -",
+      "description": "Articles of iron or steel - Other articles of iron or steel. - Other: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -54337,7 +54449,9 @@
       "thn": "73269090",
       "isExempt": true,
       "chapter": 73,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other articles of iron or steel. -",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7401.00.00",
@@ -54588,7 +54702,7 @@
     },
     {
       "code": "7409.19.00",
-      "description": "Copper plates, sheets and strip, of a thickness exceeding 0.15 - Other",
+      "description": "Copper and articles thereof - Copper plates, sheets and strip, of a thickness exceeding 0.15 mm. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -54597,7 +54711,9 @@
       "thn": "74091900",
       "isExempt": true,
       "chapter": 74,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Copper plates, sheets and strip, of a thickness exceeding 0.15 - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7409.21.00",
@@ -54614,7 +54730,7 @@
     },
     {
       "code": "7409.29.00",
-      "description": "Copper plates, sheets and strip, of a thickness exceeding 0.15 - Other",
+      "description": "Copper and articles thereof - Copper plates, sheets and strip, of a thickness exceeding 0.15 mm. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -54623,7 +54739,9 @@
       "thn": "74092900",
       "isExempt": true,
       "chapter": 74,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Copper plates, sheets and strip, of a thickness exceeding 0.15 - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "7409.31.00",
@@ -56684,7 +56802,7 @@
     },
     {
       "code": "8207.19.00",
-      "description": "Other, including parts",
+      "description": "Tools, implements, cutlery, spoons and forks, of base metal; parts thereof of base metal - Interchangeable tools for hand tools, whether or not power-operated, or for machine-tools (for example, for pressing, stamping, punching, tapping, threading, drilling, boring, broaching, milling, turning or screw driving), including dies for drawing or extruding metal, and rock drilling or earth boring tools. - Other, including parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -56693,7 +56811,9 @@
       "thn": "82071900",
       "isExempt": true,
       "chapter": 82,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other, including parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8207.20.00",
@@ -56736,7 +56856,7 @@
     },
     {
       "code": "8207.50.00",
-      "description": "Tools for drilling, other than for rock drilling",
+      "description": "Tools, implements, cutlery, spoons and forks, of base metal; parts thereof of base metal - Interchangeable tools for hand tools, whether or not power-operated, or for machine-tools (for example, for pressing, stamping, punching, tapping, threading, drilling, boring, broaching, milling, turning or screw driving), including dies for drawing or extruding metal, and rock drilling or earth boring tools. - Tools for drilling, other than for rock drilling",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -56745,7 +56865,9 @@
       "thn": "82075000",
       "isExempt": true,
       "chapter": 82,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Tools for drilling, other than for rock drilling",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8207.60.00",
@@ -57308,7 +57430,7 @@
     },
     {
       "code": "8306.21.00",
-      "description": "Plated with precious metal",
+      "description": "Miscellaneous articles of base metal - Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal. - Statuettes and other ornaments: - Plated with precious metal",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -57317,11 +57439,13 @@
       "thn": "83062100",
       "isExempt": false,
       "chapter": 83,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Plated with precious metal",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8306.29.00",
-      "description": "Bells, gongs and the like — Statuettes and other ornaments — Other (not plated with precious metal)",
+      "description": "Miscellaneous articles of base metal - Bells, gongs and the like, non-electric, of base metal; statuettes and other ornaments, of base metal; photograph, picture or similar frames, of base metal; mirrors of base metal. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -57330,7 +57454,9 @@
       "thn": "83062900",
       "isExempt": false,
       "chapter": 83,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Bells, gongs and the like — Statuettes and other ornaments — Other (not plated with precious metal)",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8306.30.00",
@@ -57412,7 +57538,7 @@
     },
     {
       "code": "8309.90.10",
-      "description": "Bottle caps",
+      "description": "Miscellaneous articles of base metal - Stoppers, caps and lids (including crown corks, screw caps and pouring stoppers), capsules for bottles, threaded bungs, bung covers, seals and other packing accessories, of base metal. - Other: - Bottle caps",
       "dutyPct": 15,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -57421,7 +57547,9 @@
       "thn": "83099010",
       "isExempt": false,
       "chapter": 83,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Bottle caps",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8310.00.00",
@@ -58361,7 +58489,7 @@
     },
     {
       "code": "8414.59.00",
-      "description": "fitted with filters; gas-tight biological safety cabinets, - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Air or vacuum pumps, air or other gas compressors and fans; ventilating or recycling hoods incorporating a fan, whether or not fitted with filters; gas-tight biological safety cabinets, whether or not fitted with filters. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -58370,7 +58498,9 @@
       "thn": "84145900",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "fitted with filters; gas-tight biological safety cabinets, - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8414.70.00",
@@ -58387,7 +58517,7 @@
     },
     {
       "code": "8414.80.00",
-      "description": "fitted with filters; gas-tight biological safety cabinets, - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Air or vacuum pumps, air or other gas compressors and fans; ventilating or recycling hoods incorporating a fan, whether or not fitted with filters; gas-tight biological safety cabinets, whether or not fitted with filters. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -58396,11 +58526,13 @@
       "thn": "84148000",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "fitted with filters; gas-tight biological safety cabinets, - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8414.90.00",
-      "description": "fitted with filters; gas-tight biological safety cabinets, -",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Air or vacuum pumps, air or other gas compressors and fans; ventilating or recycling hoods incorporating a fan, whether or not fitted with filters; gas-tight biological safety cabinets, whether or not fitted with filters. - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -58409,7 +58541,9 @@
       "thn": "84149000",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "fitted with filters; gas-tight biological safety cabinets, -",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8415.10.00",
@@ -59219,7 +59353,7 @@
     },
     {
       "code": "8423.89.00",
-      "description": "cg or better), including weight operated counting or checking - Having a maximum weighing capacity not exceeding 30 kg - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Weighing machinery (excluding balances of a sensitivity of 5 eg or better), including weight operated counting or checking machines; weighing machine weights of all kinds. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -59228,7 +59362,9 @@
       "thn": "84238900",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "cg or better), including weight operated counting or checking - Having a maximum weighing capacity not exceeding 30 kg - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8423.90.00",
@@ -61534,7 +61670,7 @@
     },
     {
       "code": "8454.10.00",
-      "description": "Machinery - Converters",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Converters, ladles, ingot moulds and casting machines, of a kind used in metallurgy or in metal foundries. - Converters",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -61543,7 +61679,9 @@
       "thn": "84541000",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Machinery - Converters",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8454.20.00",
@@ -61677,7 +61815,7 @@
     },
     {
       "code": "8456.30.00",
-      "description": "Operated by electro-discharge",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Machine-tools for working any material by removal of material, by laser or other light or photon beam, ultrasonic, electro-discharge, electro-chemical, electron beam, ionic-beam or plasma arc processes; water-jet cutting machines. - Operated by electro-discharge processes",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -61686,7 +61824,9 @@
       "thn": "84563000",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Operated by electro-discharge",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8456.40.00",
@@ -61846,7 +61986,7 @@
     },
     {
       "code": "8459.29.00",
-      "description": "Metal-rolling mills and rolls therefor. - controlled - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Machine-tools (including way-type unit head machines) for drilling, boring, milling, threading or tapping by removing metal, other than lathes (including turning centres) of heading 84.58. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -61855,7 +61995,9 @@
       "thn": "84592900",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Metal-rolling mills and rolls therefor. - controlled - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8459.31.00",
@@ -62535,7 +62677,7 @@
     },
     {
       "code": "8466.94.00",
-      "description": "For machines of heading 84.62 or 84.63",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Parts and accessories suitable for use solely or principally with the machines of headings 84.56 to 84.65, including work or tool holders, self-opening dieheads, dividing heads and other special attachments for the machines; tool holders for any type of tool for working in the hand. - For machines of heading 84.62 or 84.63",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -62544,7 +62686,9 @@
       "thn": "84669400",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "For machines of heading 84.62 or 84.63",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8467.19.00",
@@ -63163,7 +63307,7 @@
     },
     {
       "code": "8476.89.00",
-      "description": "stamp, cigarette, food or beverage machines), including - Incorporating heating or refrigerating devices - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Automatic goods-vending machines (for example, postage stamp, cigarette, food or beverage machines), including money-changing machines. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63172,7 +63316,9 @@
       "thn": "84768900",
       "isExempt": false,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "stamp, cigarette, food or beverage machines), including - Incorporating heating or refrigerating devices - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8476.90.00",
@@ -63410,7 +63556,7 @@
     },
     {
       "code": "8479.89.00",
-      "description": "Machines and mechanical appliances having individual - Cold isostatic - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Machines and mechanical appliances having individual functions, not specified or included elsewhere in this Chapter. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63419,7 +63565,9 @@
       "thn": "84798900",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Machines and mechanical appliances having individual - Cold isostatic - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8479.90.00",
@@ -63475,7 +63623,7 @@
     },
     {
       "code": "8480.49.00",
-      "description": "patterns; moulds for metal (other than ingot moulds), metal - Injection types - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Moulding boxes for metal foundry; mould bases; moulding patterns; moulds for metal (other than ingot moulds), metal carbides, glass, mineral materials, rubber or plastics. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63484,7 +63632,9 @@
       "thn": "84804900",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "patterns; moulds for metal (other than ingot moulds), metal - Injection types - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8480.50.00",
@@ -63527,7 +63677,7 @@
     },
     {
       "code": "8480.79.00",
-      "description": "patterns; moulds for metal (other than ingot moulds), metal - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Moulding boxes for metal foundry; mould bases; moulding patterns; moulds for metal (other than ingot moulds), metal carbides, glass, mineral materials, rubber or plastics. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63536,11 +63686,13 @@
       "thn": "84807900",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "patterns; moulds for metal (other than ingot moulds), metal - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8481.10.00",
-      "description": "Pressure-reducing valves",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Taps, cocks, valves and similar appliances for pipes, boiler shells, tanks, vats, or the like, including pressure-reducing valves and thermostatically controlled valves. - Pressure-reducing valves",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63549,7 +63701,9 @@
       "thn": "84811000",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Pressure-reducing valves",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8481.20.00",
@@ -63592,7 +63746,7 @@
     },
     {
       "code": "8481.90.00",
-      "description": "Machinery - Parts",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Taps, cocks, valves and similar appliances for pipes, boiler shells, tanks, vats, or the like, including pressure-reducing valves and thermostatically controlled valves. - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63601,7 +63755,9 @@
       "thn": "84819000",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Machinery - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8482.10.00",
@@ -63878,7 +64034,7 @@
     },
     {
       "code": "8483.40.90",
-      "description": "Ball or roller bearings. - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Transmission shafts (including cam shafts and crank shafts) and cranks; bearing housings and plain shaft bearings; gears and gearing; ball or roller screws; gear boxes and other speed changers, including torque converters; flywheels and pulleys, including pulley blocks; clutches and shaft couplings (including universal joints). - Gears and gearing, other than toothed wheels, chain sprockets and other transmission elements presented separately; ball or roller screws, gear boxes and other speed changers, including torque converters: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63887,7 +64043,9 @@
       "thn": "84834090",
       "isExempt": true,
       "chapter": 84,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Ball or roller bearings. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8483.50.10",
@@ -63982,7 +64140,7 @@
     },
     {
       "code": "8483.90.19",
-      "description": "Ball or roller bearings. - Other",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Transmission shafts (including cam shafts and crank shafts) and cranks; bearing housings and plain shaft bearings; gears and gearing; ball or roller screws; gear boxes and other speed changers, including torque converters; flywheels and pulleys, including pulley blocks; clutches and shaft couplings (including universal joints). - Other: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -63991,7 +64149,9 @@
       "thn": "84839019",
       "isExempt": false,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Ball or roller bearings. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8483.90.21",
@@ -64060,7 +64220,7 @@
     },
     {
       "code": "8484.20.00",
-      "description": "Mechanical seals",
+      "description": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof - Gaskets and similar joints of metal sheeting combined with other material or of two or more layers of metal; sets or assortments of gaskets and similar joints, dissimilar in composition, put up in pouches, envelopes or similar packing; mechanical seals. - Mechanical seals",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64069,7 +64229,9 @@
       "thn": "84842000",
       "isExempt": true,
       "chapter": 84,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Mechanical seals",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8484.90.00",
@@ -64570,7 +64732,7 @@
     },
     {
       "code": "8504.90.00",
-      "description": "Electrical & electronics - Parts",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electrical transformers, static converters (for example, rectifiers) and inductors. - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64579,7 +64741,9 @@
       "thn": "85049000",
       "isExempt": true,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electrical & electronics - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8505.11.00",
@@ -64674,7 +64838,7 @@
     },
     {
       "code": "8506.50.00",
-      "description": "Electrical & electronics - Lithium",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Primary cells and primary batteries. - Lithium",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64683,7 +64847,9 @@
       "thn": "85065000",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electrical & electronics - Lithium",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8506.60.00",
@@ -64713,7 +64879,7 @@
     },
     {
       "code": "8506.90.00",
-      "description": "Electrical & electronics - Parts",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Primary cells and primary batteries. - Parts",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64722,7 +64888,9 @@
       "thn": "85069000",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electrical & electronics - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8507.10.00",
@@ -64739,7 +64907,7 @@
     },
     {
       "code": "8507.20.00",
-      "description": "Other lead-acid accumulators",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric accumulators, including separators therefor, whether or not rectangular (including square). - Other lead-acid accumulators",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64748,7 +64916,9 @@
       "thn": "85072000",
       "isExempt": false,
       "chapter": 85,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other lead-acid accumulators",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8507.30.00",
@@ -64817,7 +64987,7 @@
     },
     {
       "code": "8507.90.90",
-      "description": "Other parts",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric accumulators, including separators therefor, whether or not rectangular (including square). - Parts: - Other parts",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -64826,7 +64996,9 @@
       "thn": "85079090",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8508.19.00",
@@ -65168,7 +65340,7 @@
     },
     {
       "code": "8513.10.00",
-      "description": "source of energy (for example, dry batteries, accumulators, -",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Portable electric lamps designed to function by their own source of energy (for example, dry batteries, accumulators, magnetos), other than lighting equipment of heading 85.12. - Lamps",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -65177,7 +65349,9 @@
       "thn": "85131000",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "source of energy (for example, dry batteries, accumulators, -",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8513.90.00",
@@ -65558,7 +65732,7 @@
     },
     {
       "code": "8516.90.00",
-      "description": "Electrical & electronics - Parts",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric instantaneous or storage water heaters and immersion heaters; electric space heating apparatus and soil heating apparatus; electro-thermic hair-dressing apparatus (for example, hair dryers, hair curlers, curling tong heaters) and hand dryers; electric smoothing irons; other electrothermic appliances of a kind used for domestic purposes; electric heating resistors, other than those of heading 85.45 - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -65567,7 +65741,9 @@
       "thn": "85169000",
       "isExempt": true,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electrical & electronics - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8517.11.00",
@@ -66326,7 +66502,7 @@
     },
     {
       "code": "8529.90.00",
-      "description": "Parts suitable for use solely or principally with the apparatus - Other",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Parts suitable for use solely or principally with the apparatus of headings 85.24 to 85.28 - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -66335,7 +66511,9 @@
       "thn": "85299000",
       "isExempt": true,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Parts suitable for use solely or principally with the apparatus - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8530.10.00",
@@ -66391,7 +66569,7 @@
     },
     {
       "code": "8531.20.00",
-      "description": "Indicator panels incorporating liquid crystal devices (LCD) or",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric sound or visual signalling apparatus (for example, bells, sirens, indicator panels, burglar or fire alarms), other than those of heading 85.12 or 85.30. - Indicator panels incorporating liquid crystal devices (LCD) or light-emitting diodes (LED)",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -66400,11 +66578,13 @@
       "thn": "85312000",
       "isExempt": true,
       "chapter": 85,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Indicator panels incorporating liquid crystal devices (LCD) or",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8531.80.10",
-      "description": "Electric sound or visual signaling apparatus",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric sound or visual signalling apparatus (for example, bells, sirens, indicator panels, burglar or fire alarms), other than those of heading 85.12 or 85.30. - Other apparatus: - Electric sound or visual signaling apparatus",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -66413,11 +66593,13 @@
       "thn": "85318010",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electric sound or visual signaling apparatus",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8531.80.90",
-      "description": "Parts suitable for use solely or principally with the apparatus - Burglar or fire alarms and similar apparatus - Other",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electric sound or visual signalling apparatus (for example, bells, sirens, indicator panels, burglar or fire alarms), other than those of heading 85.12 or 85.30. - Other apparatus: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -66426,7 +66608,9 @@
       "thn": "85318090",
       "isExempt": true,
       "chapter": 85,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Parts suitable for use solely or principally with the apparatus - Burglar or fire alarms and similar apparatus - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8531.90.00",
@@ -66847,7 +67031,7 @@
     },
     {
       "code": "8537.10.00",
-      "description": "Fora voltage not exceeding 1,000 V",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Boards, panels, consoles, desks, cabinets and other bases, equipped with two or more apparatus of heading 85.35 or 85.36, for electric control or the distribution of electricity, including those incorporating instruments or apparatus of Chapter 90, and numerical control apparatus, other than switching apparatus of heading 85.17. - For a voltage not exceeding 1,000 V",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -66856,7 +67040,9 @@
       "thn": "85371000",
       "isExempt": false,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Fora voltage not exceeding 1,000 V",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8537.20.00",
@@ -67276,7 +67462,7 @@
     },
     {
       "code": "8542.39.00",
-      "description": "Electronic integrated circuits. - Other",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electronic integrated circuits. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -67285,7 +67471,9 @@
       "thn": "85423900",
       "isExempt": true,
       "chapter": 85,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Electronic integrated circuits. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8542.90.00",
@@ -67354,7 +67542,7 @@
     },
     {
       "code": "8543.70.90",
-      "description": "Electrical machines and apparatus, having individual - electrophoresis - Other",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electrical machines and apparatus, having individual functions, not specified or included elsewhere in this Chapter. - Other machines and apparatus: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -67363,11 +67551,13 @@
       "thn": "85437090",
       "isExempt": true,
       "chapter": 85,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Electrical machines and apparatus, having individual - electrophoresis - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8543.90.00",
-      "description": "Electrical & electronics - Parts",
+      "description": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles - Electrical machines and apparatus, having individual functions, not specified or included elsewhere in this Chapter. - Parts",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -67376,7 +67566,9 @@
       "thn": "85439000",
       "isExempt": true,
       "chapter": 85,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Electrical & electronics - Parts",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8544.11.10",
@@ -69645,7 +69837,7 @@
     },
     {
       "code": "8711.60.90",
-      "description": "Motorcycles (including mopeds) and cycles fitted with an - transport of goods - Other",
+      "description": "Vehicles other than railway or tramway rolling-stock, and parts and accessories thereof - Motorcycles (including mopeds) and cycles fitted with an auxiliary motor, with or without side-cars; side-cars. - With electric motor for propulsion: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -69654,7 +69846,9 @@
       "thn": "87116090",
       "isExempt": false,
       "chapter": 87,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Motorcycles (including mopeds) and cycles fitted with an - transport of goods - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8711.90.10",
@@ -69697,7 +69891,7 @@
     },
     {
       "code": "8712.00.90",
-      "description": "Motorcycles (including mopeds) and cycles fitted with an - transport of goods - Other",
+      "description": "Vehicles other than railway or tramway rolling-stock, and parts and accessories thereof - Bicycles and other cycles (including delivery tricycles), not motorised - Bicycles and other cycles (including delivery tricycles), not motorised - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -69706,7 +69900,9 @@
       "thn": "87120090",
       "isExempt": false,
       "chapter": 87,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Motorcycles (including mopeds) and cycles fitted with an - transport of goods - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8713.10.00",
@@ -69736,7 +69932,7 @@
     },
     {
       "code": "8714.10.00",
-      "description": "Of motorcycles (including mopeds):",
+      "description": "Vehicles other than railway or tramway rolling-stock, and parts and accessories thereof - Parts and accessories of vehicles of headings 87.11 to 87.13. - Of motorcycles (including mopeds):",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -69745,7 +69941,9 @@
       "thn": "87141000",
       "isExempt": true,
       "chapter": 87,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Of motorcycles (including mopeds):",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "8714.20.00",
@@ -70607,7 +70805,7 @@
     },
     {
       "code": "9001.90.90",
-      "description": "polarising material; lenses (including contact lenses), prisms, - Other",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Optical fibres and optical fibre bundles; optical fibre cables other than those of heading 85.44; sheets and plates of polarising material; lenses (including contact lenses), prisms, mirrors and other optical elements, of any material, unmounted, other than such elements of glass not optically worked. - Other: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -70616,7 +70814,9 @@
       "thn": "90019090",
       "isExempt": true,
       "chapter": 90,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "polarising material; lenses (including contact lenses), prisms, - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9002.11.00",
@@ -71154,7 +71354,7 @@
     },
     {
       "code": "9013.80.00",
-      "description": "devices, appliances and instruments",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Lasers, other than laser diodes; other optical appliances and instruments, not specified or included elsewhere in this Chapter. - Other devices, appliances and instruments",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -71163,7 +71363,9 @@
       "thn": "90138000",
       "isExempt": true,
       "chapter": 90,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "devices, appliances and instruments",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9013.90.00",
@@ -71193,7 +71395,7 @@
     },
     {
       "code": "9014.80.00",
-      "description": "Other instruments and appliances",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Direction finding compasses; other navigational instruments and appliances. - Other instruments and appliances",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -71202,7 +71404,9 @@
       "thn": "90148000",
       "isExempt": true,
       "chapter": 90,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other instruments and appliances",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9014.90.00",
@@ -71324,7 +71528,7 @@
     },
     {
       "code": "9017.80.00",
-      "description": "Other instruments",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Drawing, marking-out or mathematical calculating instruments (for example drafting machines, pantographs, protractors, drawing sets, slide rules, disc calculators); instruments for measuring length, for use in the hand (for example, measuring rods and tapes, micrometers, calipers), not specified or included elsewhere in this Chapter. - Other instruments",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -71333,7 +71537,9 @@
       "thn": "90178000",
       "isExempt": true,
       "chapter": 90,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other instruments",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9017.90.00",
@@ -71493,7 +71699,7 @@
     },
     {
       "code": "9018.90.00",
-      "description": "Other instruments and appliances",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Instruments and appliances used in medical, surgical, dental or veterinary sciences, including scintigraphic apparatus, other electro-medical apparatus and sight-testing instruments. - Other instruments and appliances",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -71502,7 +71708,9 @@
       "thn": "90189000",
       "isExempt": false,
       "chapter": 90,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other instruments and appliances",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9019.10.00",
@@ -71844,7 +72052,7 @@
     },
     {
       "code": "9026.20.00",
-      "description": "For measuring or checking pressure",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Instruments and apparatus for measuring or checking the flow, level, pressure or other variables of liquids or gases (for example, flow meters, level gauges, manometers, heat meters), excluding instruments and apparatus of heading 90.14,90.15, 90.28 or 90.32. - For measuring or checking pressure",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -71853,7 +72061,9 @@
       "thn": "90262000",
       "isExempt": true,
       "chapter": 90,
-      "unit": null
+      "unit": null,
+      "description_ocr": "For measuring or checking pressure",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9026.90.00",
@@ -72182,7 +72392,7 @@
     },
     {
       "code": "9031.49.00",
-      "description": "machines, not specified or included elsewhere in this Chapter; - uscd in manufacturing devices (including - Other",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Measuring or checking instruments, appliances and machines, not specified or included elsewhere in this Chapter; profile projectors. - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -72191,11 +72401,13 @@
       "thn": "90314900",
       "isExempt": true,
       "chapter": 90,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "machines, not specified or included elsewhere in this Chapter; - uscd in manufacturing devices (including - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9031.80.00",
-      "description": "Other instruments, appliances and machines",
+      "description": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof - Measuring or checking instruments, appliances and machines, not specified or included elsewhere in this Chapter; profile projectors. - Other instruments, appliances and machines",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -72204,7 +72416,9 @@
       "thn": "90318000",
       "isExempt": true,
       "chapter": 90,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other instruments, appliances and machines",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9031.90.00",
@@ -73602,7 +73816,7 @@
     },
     {
       "code": "9402.90.00",
-      "description": "Dentists’, barbers’ or similar chairs and parts thereof - Other",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Medical, surgical, dental or veterinary furniture (for example, operating tables, examination tables, hospital beds with mechanical fittings, dentistsâ chairs); barbersâ chairs and similar chairs, having rotating as well as both reclining and elevating movements; parts of the foregoing articles. - Other",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -73611,11 +73825,13 @@
       "thn": "94029000",
       "isExempt": false,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Dentists’, barbers’ or similar chairs and parts thereof - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9403.10.00",
-      "description": "Metal furniture of a kind used in offices",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Other furniture and parts thereof. - Metal furniture of a kind used in offices",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -73624,7 +73840,9 @@
       "thn": "94031000",
       "isExempt": false,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Metal furniture of a kind used in offices",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9403.20.10",
@@ -73719,7 +73937,7 @@
     },
     {
       "code": "9403.60.90",
-      "description": "Other furniture and parts thereof. - Other",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Other furniture and parts thereof. - Other wooden furniture: - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -73728,7 +73946,9 @@
       "thn": "94036090",
       "isExempt": false,
       "chapter": 94,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other furniture and parts thereof. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9403.70.10",
@@ -73901,7 +74121,7 @@
     },
     {
       "code": "9403.99.00",
-      "description": "Other furniture and parts thereof. - Other",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Other furniture and parts thereof. - Other",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -73910,7 +74130,9 @@
       "thn": "94039900",
       "isExempt": false,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Other furniture and parts thereof. - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9404.10.00",
@@ -73940,7 +74162,7 @@
     },
     {
       "code": "9404.29.00",
-      "description": "Of other materials",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Mattress supports; articles of bedding and similar furnishing (for example, mattresses, quilts, eiderdowns, cushions, pouffes and pillows) fitted with springs or stuffed or internally fitted with any material or of cellular rubber or plastics, whether or not covered. - Of other materials",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -73949,7 +74171,9 @@
       "thn": "94042900",
       "isExempt": false,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Of other materials",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9404.30.00",
@@ -74161,7 +74385,7 @@
     },
     {
       "code": "9406.90.10",
-      "description": "Mainly of aluminium",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Prefabricated buildings. - Other: - Mainly of aluminium",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74170,7 +74394,9 @@
       "thn": "94069010",
       "isExempt": true,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Mainly of aluminium",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9406.90.20",
@@ -74187,7 +74413,7 @@
     },
     {
       "code": "9406.90.90",
-      "description": "spotlights and parts thereof, not elsewhere specified or - Other",
+      "description": "Furniture; bedding, mattresses, mattress supports, cushions and similar stuffed furnishings; luminaires and lighting fittings, not elsewhere specified or included; illuminated signs, illuminated name-plates and the like; prefabricated buildings - Prefabricated buildings. - Other: - Other",
       "dutyPct": 0,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74196,7 +74422,9 @@
       "thn": "94069090",
       "isExempt": true,
       "chapter": 94,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "spotlights and parts thereof, not elsewhere specified or - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9503.00.10",
@@ -74214,7 +74442,7 @@
     },
     {
       "code": "9503.00.20",
-      "description": "Toys & games - carriages",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Tricycles, scooters, pedal cars and similar wheeled toys; dollsâ carriages; dolls; other toys; reduced-size (âscaleâ) models and similar recreational models, working or not; puzzles of all kinds. - Dolls' carriages",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74223,7 +74451,9 @@
       "thn": "95030020",
       "isExempt": false,
       "chapter": 95,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Toys & games - carriages",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9503.00.30",
@@ -74267,7 +74497,7 @@
     },
     {
       "code": "9503.00.90",
-      "description": "Other toys",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Tricycles, scooters, pedal cars and similar wheeled toys; dollsâ carriages; dolls; other toys; reduced-size (âscaleâ) models and similar recreational models, working or not; puzzles of all kinds. - Other toys",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74276,7 +74506,9 @@
       "thn": "95030090",
       "isExempt": false,
       "chapter": 95,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Other toys",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9504.20.00",
@@ -74475,7 +74707,7 @@
     },
     {
       "code": "9506.40.00",
-      "description": "Articles and cquipment for table-tennis",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools. - Articles and equipment for table-tennis",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74484,11 +74716,13 @@
       "thn": "95064000",
       "isExempt": false,
       "chapter": 95,
-      "unit": null
+      "unit": null,
+      "description_ocr": "Articles and cquipment for table-tennis",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9506.51.00",
-      "description": "Lawn-tennis rackets, whether or not strung",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools. - Tennis, badminton or similar rackets, whether or not strung: - Lawn-tennis rackets, whether or not strung",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74497,11 +74731,13 @@
       "thn": "95065100",
       "isExempt": false,
       "chapter": 95,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "Lawn-tennis rackets, whether or not strung",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9506.59.00",
-      "description": "gymnastics, athletics, other sports (including table-tennis) or - complete - Articles and cquipment for table-tennis - Other",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools. - Other",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74510,7 +74746,9 @@
       "thn": "95065900",
       "isExempt": false,
       "chapter": 95,
-      "unit": null
+      "unit": null,
+      "description_ocr": "gymnastics, athletics, other sports (including table-tennis) or - complete - Articles and cquipment for table-tennis - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9506.61.00",
@@ -74592,7 +74830,7 @@
     },
     {
       "code": "9506.91.90",
-      "description": "gymnastics, athletics, other sports (including table-tennis) or - Other",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools. - Other: - Other",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74601,7 +74839,9 @@
       "thn": "95069190",
       "isExempt": false,
       "chapter": 95,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "gymnastics, athletics, other sports (including table-tennis) or - Other",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9506.99.10",
@@ -74657,7 +74897,7 @@
     },
     {
       "code": "9506.99.90",
-      "description": "For other sports or outdoor",
+      "description": "Toys, games and sports requisites; parts and accessories thereof - Articles and equipment for general physical exercise, gymnastics, athletics, other sports (including table-tennis) or outdoor games, not specified or included elsewhere in this Chapter; swimming pools and paddling pools. - Other: - For other sports or outdoor games",
       "dutyPct": 10,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -74666,7 +74906,9 @@
       "thn": "95069990",
       "isExempt": false,
       "chapter": 95,
-      "unit": "kg"
+      "unit": "kg",
+      "description_ocr": "For other sports or outdoor",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9507.10.00",
@@ -75008,7 +75250,7 @@
     },
     {
       "code": "9608.10.00",
-      "description": "00 - Ball point pens",
+      "description": "Miscellaneous manufactured articles - Ball point pens; felt tipped and other porous-tipped pens and markers; fountain pens, stylograph pens and other pens; duplicating stylos; propelling or sliding pencils; pen-holders, pencil-holders and similar holders; parts (including caps and clips) of the foregoing articles, other than those of heading 96.09. - Ball point pens",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -75017,11 +75259,13 @@
       "thn": "96081000",
       "isExempt": false,
       "chapter": 96,
-      "unit": null
+      "unit": null,
+      "description_ocr": "00 - Ball point pens",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9608.20.00",
-      "description": "00 tipped and other porous-tipped and markers",
+      "description": "Miscellaneous manufactured articles - Ball point pens; felt tipped and other porous-tipped pens and markers; fountain pens, stylograph pens and other pens; duplicating stylos; propelling or sliding pencils; pen-holders, pencil-holders and similar holders; parts (including caps and clips) of the foregoing articles, other than those of heading 96.09. - Felt tipped and other porous-tipped pens and markers",
       "dutyPct": 20,
       "vatPct": 12.5,
       "surchargePct": 0,
@@ -75030,7 +75274,9 @@
       "thn": "96082000",
       "isExempt": false,
       "chapter": 96,
-      "unit": null
+      "unit": null,
+      "description_ocr": "00 tipped and other porous-tipped and markers",
+      "desc_source": "ttbizlink"
     },
     {
       "code": "9608.30.00",
