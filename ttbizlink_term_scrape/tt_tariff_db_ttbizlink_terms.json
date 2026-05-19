@@ -1,0 +1,1171 @@
+{
+  "meta": {
+    "source": "https://app.ttbizlink.gov.tt/gsd/api/getSmartHcdata",
+    "terms_total": 31,
+    "terms_ok": 31,
+    "terms_failed": 0,
+    "codes_extracted": 145
+  },
+  "codes": [
+    {
+      "hsCode": "95",
+      "hsDescription": "Toys, games and sports requisites; parts and accessories thereof",
+      "type": "parent",
+      "confidence": 36.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "9503",
+      "hsDescription": "Tricycles, scooters, pedal cars and similar wheeled toys; dollsâ carriages; dolls; other toys; reduced-size (âscaleâ) models and similar recreational models, working or not; puzzles of all kinds.",
+      "type": "parent",
+      "confidence": 36.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "95030050",
+      "hsDescription": "- - - Puzzles of all kinds",
+      "type": "dutiable",
+      "confidence": 36.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "44",
+      "hsDescription": "Wood and articles of wood; wood charcoal",
+      "type": "parent",
+      "confidence": 5.45,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "4420",
+      "hsDescription": "Wood marquetry and inlaid wood; caskets and cases for jewellery or cutlery, and similar articles, of wood; statuettes and other ornaments, of wood; wooden articles of furniture not falling in Chapter 94.",
+      "type": "parent",
+      "confidence": 5.45,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "44201190",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 5.45,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "44201110",
+      "hsDescription": "- - - Wall plaques",
+      "type": "dutiable",
+      "confidence": 5.45,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39",
+      "hsDescription": "Plastics and articles thereof",
+      "type": "parent",
+      "confidence": 16.42,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3926",
+      "hsDescription": "Other articles of plastics and articles of other materials of headings 39.01 to 39.14",
+      "type": "parent",
+      "confidence": 16.42,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39264000",
+      "hsDescription": "- Statuettes and other ornamental articles",
+      "type": "dutiable",
+      "confidence": 3.52,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61",
+      "hsDescription": "Articles of apparel and clothing accessories, knitted or crocheted",
+      "type": "parent",
+      "confidence": 92.22,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6117",
+      "hsDescription": "Other made up clothing accessories, knitted or crocheted; knitted or crocheted parts of garments or of clothing accessories.",
+      "type": "parent",
+      "confidence": 21.06,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61179000",
+      "hsDescription": "- Parts",
+      "type": "dutiable",
+      "confidence": 21.06,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6114",
+      "hsDescription": "Other garments, knitted or crocheted.",
+      "type": "parent",
+      "confidence": 15.74,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61149000",
+      "hsDescription": "- Of other textile materials",
+      "type": "dutiable",
+      "confidence": 15.74,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "63",
+      "hsDescription": "Other made up textile articles; sets; worn clothing and worn textile articles; rags",
+      "type": "parent",
+      "confidence": 10.32,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6309",
+      "hsDescription": "Worn clothing and other worn articles",
+      "type": "parent",
+      "confidence": 10.32,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "63090000",
+      "hsDescription": "Worn clothing and other worn articles",
+      "type": "dutiable",
+      "confidence": 10.32,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6109",
+      "hsDescription": "T-shirts, singlets and other vests, knitted or crocheted.",
+      "type": "parent",
+      "confidence": 44.04,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61091010",
+      "hsDescription": "- - - T-shirts",
+      "type": "dutiable",
+      "confidence": 44.04,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61099010",
+      "hsDescription": "- - - T-shirts",
+      "type": "dutiable",
+      "confidence": 12.16,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6105",
+      "hsDescription": "Menâs or boysâ shirts, knitted or crocheted.",
+      "type": "parent",
+      "confidence": 10.62,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61051000",
+      "hsDescription": "- Of cotton",
+      "type": "dutiable",
+      "confidence": 10.62,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "34",
+      "hsDescription": "Soap, organic surface-active agents, washing preparations, lubricating preparations, artificial waxes, prepared waxes, polishing or scouring preparations, candles and similar articles, modelling pastes, \"dental waxes\" and dental preparations with a basis of plaster",
+      "type": "parent",
+      "confidence": 1.31,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3402",
+      "hsDescription": "Organic surface-active agents (other than soap); surface-active preparations, washing preparations (including auxiliary washing preparations) and cleaning preparations, whether or not containing soap, other than those of heading 34.01.",
+      "type": "parent",
+      "confidence": 1.31,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "34024290",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 1.31,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85",
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "type": "parent",
+      "confidence": 9.88,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8536",
+      "hsDescription": "Electrical apparatus for switching or protecting electrical circuits, or for making connections to or in electrical circuits (for example, switches, relays, fuses, surge suppressors, plugs, sockets, lamp-holders and other connectors, junction boxes), for a voltage not exceeding 1,000 volts; connectors for optical fibres, optical Fibre bundles or cables.",
+      "type": "parent",
+      "confidence": 0.96,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85369000",
+      "hsDescription": "- Other apparatus",
+      "type": "dutiable",
+      "confidence": 0.96,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "38",
+      "hsDescription": "Miscellaneous chemical products",
+      "type": "parent",
+      "confidence": 0.77,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3809",
+      "hsDescription": "Finishing agents, dye carriers to accelerate the dyeing or fixing of dyestuffs and other products and preparations (for example, dressings and mordants), of a kind used in the textile, paper, leather or like industries, not elsewhere specified or included.",
+      "type": "parent",
+      "confidence": 0.77,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "38099300",
+      "hsDescription": "- - Of a kind used in the leather or like industries",
+      "type": "dutiable",
+      "confidence": 0.77,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6104",
+      "hsDescription": "Womenâs or girlsâ suits, ensembles, jackets, blazers, dresses, skirts, divided skirts, trousers, bib and brace overalls, breeches and shorts (other than swimwear), knitted or crocheted.",
+      "type": "parent",
+      "confidence": 92.22,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61044900",
+      "hsDescription": "- - Of other textile materials",
+      "type": "dutiable",
+      "confidence": 92.22,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "61044200",
+      "hsDescription": "- - Of cotton",
+      "type": "dutiable",
+      "confidence": 1.94,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "62",
+      "hsDescription": "Articles of apparel and clothing accessories, not knitted or crocheted",
+      "type": "parent",
+      "confidence": 2.37,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6204",
+      "hsDescription": "Womenâs or girlsâ suits, ensembles, jackets, blazers, dresses, skirts, divided skirts, trousers, bib and brace overalls, breeches and shorts (other than swimwear).",
+      "type": "parent",
+      "confidence": 2.37,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "62044300",
+      "hsDescription": "- - Of synthetic fibres",
+      "type": "dutiable",
+      "confidence": 2.37,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "71",
+      "hsDescription": "Natural or cultured pearls, precious or semi-precious stones, precious metals, metals clad with precious metal, and articles thereof; imitation jewellery; coin",
+      "type": "parent",
+      "confidence": 4.14,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "7117",
+      "hsDescription": "Imitation jewellery.",
+      "type": "parent",
+      "confidence": 4.14,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "71171900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 4.14,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "71179000",
+      "hsDescription": "- Other",
+      "type": "dutiable",
+      "confidence": 8.91,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8522",
+      "hsDescription": "Parts and accessories suitable for use solely or principally with the apparatus of headings 85.19 or 85.21.",
+      "type": "parent",
+      "confidence": 7.19,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85229000",
+      "hsDescription": "- Other",
+      "type": "dutiable",
+      "confidence": 7.19,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84",
+      "hsDescription": "Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof",
+      "type": "parent",
+      "confidence": 1.29,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8473",
+      "hsDescription": "Parts and accessories (other than covers, carrying cases and the like) suitable for use solely or principally with machines of headings 84.70 to 84.72.",
+      "type": "parent",
+      "confidence": 74.99,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84733000",
+      "hsDescription": "- Parts and accessories of the machines of heading 84.71",
+      "type": "dutiable",
+      "confidence": 74.99,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42",
+      "hsDescription": "Articles of leather; saddlery and harness; travel goods, handbags and similar containers; articles of animal gut (other than silk-worm gut)",
+      "type": "parent",
+      "confidence": 66.91,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "4202",
+      "hsDescription": "Trunks, suit-cases, vanity-cases, executive-cases, brief-cases, school satchels, spectacle cases, binocular cases, camera cases, musical instrument cases, gun cases, holsters and similar containers; traveling-bags, insulated food or beverages bags, toilet bags, rucksacks, handbags, shopping-bags, wallets, purses, map-cases, cigarette-cases, tobacco-pouches, tool bags, sports bags, bottle-cases, jewellery boxes, powder-boxes, cutlery cases and similar containers, of leather or of composition leather, of sheeting of plastics, of textile materials, of vulcanised fibre or of paperboard, or wholly or mainly covered with such materials or with paper.",
+      "type": "parent",
+      "confidence": 66.91,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42029900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 29.31,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42029290",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 17.84,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3912",
+      "hsDescription": "Cellulose and its chemical derivatives, not elsewhere specified or included, in primary forms.",
+      "type": "parent",
+      "confidence": 18.39,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39121100",
+      "hsDescription": "- - Non-plasticised",
+      "type": "dutiable",
+      "confidence": 18.39,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39269090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 12.83,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39269050",
+      "hsDescription": "- - - Comers for suitcases, fasteners handbasgs; handles",
+      "type": "dutiable",
+      "confidence": 16.42,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "40",
+      "hsDescription": "Rubber and articles thereof",
+      "type": "parent",
+      "confidence": 3.79,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "4016",
+      "hsDescription": "Other articles of vulcanised rubber other than hard rubber.",
+      "type": "parent",
+      "confidence": 3.79,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "40169990",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 3.79,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8471",
+      "hsDescription": "Automatic data processing machines and units thereof; magnetic or optical readers, machines for transcribing data onto data media in coded form and machines for processing such data, not elsewhere specified or included.",
+      "type": "parent",
+      "confidence": 5.53,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84713000",
+      "hsDescription": "- Portable automatic data processing machines, weighing not more than 10 kg, consisting of at least a central processing unit, a keyboard and a display",
+      "type": "dutiable",
+      "confidence": 93.66,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84714100",
+      "hsDescription": "- - Comprising in the same housing at least a central processing unit and an input and output unit, whether or not combined",
+      "type": "dutiable",
+      "confidence": 0.32,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84716000",
+      "hsDescription": "- Input or output units, whether or not containing storage units in the same housing",
+      "type": "dutiable",
+      "confidence": 5.53,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "90",
+      "hsDescription": "Optical, photographic, cinematographic, measuring, checking, precision, medical or surgical instruments and apparatus; parts and accessories thereof",
+      "type": "parent",
+      "confidence": 1.11,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "9014",
+      "hsDescription": "Direction finding compasses; other navigational instruments and appliances.",
+      "type": "parent",
+      "confidence": 4.12,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "90149000",
+      "hsDescription": "- Parts and accessories",
+      "type": "dutiable",
+      "confidence": 4.12,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8504",
+      "hsDescription": "Electrical transformers, static converters (for example, rectifiers) and inductors.",
+      "type": "parent",
+      "confidence": 9.88,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85044000",
+      "hsDescription": "- Static converters",
+      "type": "dutiable",
+      "confidence": 51.94,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8544",
+      "hsDescription": "Insulated (including enamelled or anodized) wire, cable (including co-axial cable) and other insulated electric conductors, whether or not fitted with connectors; optical fibre cables, made up of individually sheathed fibres, whether or not assembled with electric conductors or fitted with connectors.",
+      "type": "parent",
+      "confidence": 11.19,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85444200",
+      "hsDescription": "- - Fitted with connectors",
+      "type": "dutiable",
+      "confidence": 11.19,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85442000",
+      "hsDescription": "- Co-axial cable and other co-axial electric conductors",
+      "type": "dutiable",
+      "confidence": 9.87,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85447000",
+      "hsDescription": "- Optical fibre cables",
+      "type": "dutiable",
+      "confidence": 7.12,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8518",
+      "hsDescription": "Microphones and stands therefor; loud-speakers, whether or not mounted in their enclosures; headphones and earphones, whether or not combined with a microphone, and sets consisting of a microphone and one or more loudspeakers; audio-frequency electric amplifiers; electric sound amplifier sets.",
+      "type": "parent",
+      "confidence": 72.39,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85183000",
+      "hsDescription": "- Headphones and earphones, whether or not combined with a microphone, and sets consisting of a microphone and one or more loudspeakers.",
+      "type": "dutiable",
+      "confidence": 72.39,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42021210",
+      "hsDescription": "- - - Suit-cases",
+      "type": "dutiable",
+      "confidence": 20.52,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42022900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 66.91,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42022100",
+      "hsDescription": "- - With outer surface of leather or of composition leather",
+      "type": "dutiable",
+      "confidence": 27.02,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "42022200",
+      "hsDescription": "- - With outer surface of sheeting of plastics or of textile materials",
+      "type": "dutiable",
+      "confidence": 2.65,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "64",
+      "hsDescription": "Footwear, gaiters and the like; parts of such articles",
+      "type": "parent",
+      "confidence": 14.57,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6404",
+      "hsDescription": "Footwear with outer soles of rubber, plastics, leather or composition leather and uppers of textile materials.",
+      "type": "parent",
+      "confidence": 14.38,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "64041110",
+      "hsDescription": "- - - Sports footwear",
+      "type": "dutiable",
+      "confidence": 13.15,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "64041990",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 14.38,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "64041120",
+      "hsDescription": "- - - Tennis shoes, basketball shoes, gym shoes, training shoes and the like",
+      "type": "dutiable",
+      "confidence": 13.15,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "6402",
+      "hsDescription": "Other footwear with outer soles and uppers of rubber or plastics.",
+      "type": "parent",
+      "confidence": 14.57,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "64021900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 14.57,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "91",
+      "hsDescription": "Clocks and watches and parts thereof",
+      "type": "parent",
+      "confidence": 43.53,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "9102",
+      "hsDescription": "Wrist-watches, pocket-watches and other watches, including stop-watches, other than those of heading 91.01.",
+      "type": "parent",
+      "confidence": 43.53,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "91022900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 43.53,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "91022100",
+      "hsDescription": "- - With automatic winding",
+      "type": "dutiable",
+      "confidence": 16.5,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "91021100",
+      "hsDescription": "- - With mechanical display only",
+      "type": "dutiable",
+      "confidence": 9.32,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "54",
+      "hsDescription": "Man-made filaments; strip and the like of man-made textile materials",
+      "type": "parent",
+      "confidence": 3.48,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "5401",
+      "hsDescription": "Sewing thread of man-made filaments, whether or not put up for retail sale.",
+      "type": "parent",
+      "confidence": 3.48,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "54011010",
+      "hsDescription": "- - - Not put up for retail sale",
+      "type": "dutiable",
+      "confidence": 3.48,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "54011020",
+      "hsDescription": "- - - Put up for retail sale",
+      "type": "dutiable",
+      "confidence": 3.48,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "52",
+      "hsDescription": "Cotton",
+      "type": "parent",
+      "confidence": 3.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "5204",
+      "hsDescription": "Cotton sewing thread, whether or not put up for retail sale.",
+      "type": "parent",
+      "confidence": 0.28,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "52041900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 0.28,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "56",
+      "hsDescription": "Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables and articles thereof",
+      "type": "parent",
+      "confidence": 4.1,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "5606",
+      "hsDescription": "Gimped yarn, and strip and the like of heading 54.04 or 54.05, gimped (other than those of heading 56.05 and gimped horsehair yarn); chenille yarn (including flock chenille yarn); loop wale-yarn.",
+      "type": "parent",
+      "confidence": 4.1,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "56060000",
+      "hsDescription": "Gimped yarn, and strip and the like of heading 54.04 or 54.05, gimped (other than those of heading 56.05 and gimped horsehair yarn); chenille yarn (including flock chenille yarn); loop wale-yarn.",
+      "type": "dutiable",
+      "confidence": 4.1,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "5605",
+      "hsDescription": "Metallised yarn, whether or not gimped, being textile yarn, or strip or the like of heading 54.04 or 54.05, combined with metal in the form of thread, strip or powder or covered with metal.",
+      "type": "parent",
+      "confidence": 3.67,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "56050000",
+      "hsDescription": "Metallised yarn, whether or not gimped, being textile yarn, or strip or the like of heading 54.04 or 54.05, combined with metal in the form of thread, strip or powder or covered with metal.",
+      "type": "dutiable",
+      "confidence": 3.67,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "5205",
+      "hsDescription": "Cotton yarn (other than sewing thread), containing 85% or more by weight of cotton, not put up for retail sale.",
+      "type": "parent",
+      "confidence": 3.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "52051100",
+      "hsDescription": "- - Measuring 714.29 decitex or more (not exceeding 14 metric number)",
+      "type": "dutiable",
+      "confidence": 3.44,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33",
+      "hsDescription": "Essential oils and resinoids; perfumery, cosmetic or toilet preparations",
+      "type": "parent",
+      "confidence": 4.94,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3304",
+      "hsDescription": "Beauty or make-up preparations and preparations for the care of the skin (other than medicaments), including sunscreen or sun tan preparations; manicure or pedicure preparations.",
+      "type": "parent",
+      "confidence": 4.94,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33049990",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 4.94,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33042000",
+      "hsDescription": "- Eye inake-up preparations",
+      "type": "dutiable",
+      "confidence": 0.57,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "96",
+      "hsDescription": "Miscellaneous manufactured articles",
+      "type": "parent",
+      "confidence": 1.33,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "9616",
+      "hsDescription": "Scent sprays and similar toilet sprays, and mounts and heads therefor; powder-puffs and pads for the application of cosmetics or toilet preparations.",
+      "type": "parent",
+      "confidence": 1.33,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "96162000",
+      "hsDescription": "- Powder-puffs and pads for the application of cosmetics or toilet preparations",
+      "type": "dutiable",
+      "confidence": 1.33,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33049900",
+      "hsDescription": "- - Other:",
+      "type": "dutiable",
+      "confidence": 4.06,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "30",
+      "hsDescription": "Pharmaceutical products",
+      "type": "parent",
+      "confidence": 4.41,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3004",
+      "hsDescription": "Medicaments (excluding goods of heading 30.02, 30.05 or 30.06) consisting of mixed or unmixed products for therapeutic or prophylactic uses, put up in measured doses (including those in the form of transdermal administration systems) or in forms or packings for retail sale.",
+      "type": "parent",
+      "confidence": 4.41,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "30049090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 4.41,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3307",
+      "hsDescription": "Pre-shave, shaving or after-shave preparations, personal deodorants, bath preparations, depilatories and other perfumery, cosmetic or toilet preparations, not elsewhere specified or included; prepared room deodorizers, whether or not perfumed or having disinfectant properties.",
+      "type": "parent",
+      "confidence": 1.78,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33079000",
+      "hsDescription": "- Other",
+      "type": "dutiable",
+      "confidence": 1.78,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "49",
+      "hsDescription": "Printed books, newspapers, pictures and other products of the printing industry; manuscripts, typescripts and plans",
+      "type": "parent",
+      "confidence": 72.04,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "4901",
+      "hsDescription": "Printed books, brochures, leaflets and similar printed matter, whether or not in single sheets.",
+      "type": "parent",
+      "confidence": 72.04,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "49019910",
+      "hsDescription": "- - - Brochures and pamphlets",
+      "type": "dutiable",
+      "confidence": 72.04,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "49011010",
+      "hsDescription": "- - - Brochures, pamphlets and leaflets",
+      "type": "dutiable",
+      "confidence": 10.25,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "49019990",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 6.29,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "95030010",
+      "hsDescription": "- - - Tricycles, scooters, pedal cars and similar wheeled toys",
+      "type": "dutiable",
+      "confidence": 17.13,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "85043100",
+      "hsDescription": "- - Having a power handling capacity not exceeding 1 kVA",
+      "type": "dutiable",
+      "confidence": 9.88,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "82",
+      "hsDescription": "Tools, implements, cutlery, spoons and forks, of base metal; parts thereof of base metal",
+      "type": "parent",
+      "confidence": 34.83,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8205",
+      "hsDescription": "Hand tools (including glaziersâ diamonds), not elsewhere specified or included; blow lamps; vices, clamps and the like, other than accessories for and parts of, machine-tools or water-jet cutting machines; anvils; portable forges; hand or pedal-operated grinding wheels with frameworks.",
+      "type": "parent",
+      "confidence": 34.83,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "82055900",
+      "hsDescription": "- - Other",
+      "type": "dutiable",
+      "confidence": 34.83,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "82051000",
+      "hsDescription": "- Drilling, threading or tapping tools",
+      "type": "dutiable",
+      "confidence": 4.73,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8206",
+      "hsDescription": "Tools of two or more of the headings 82.02 to 82.05, put up in sets for retail sale.",
+      "type": "parent",
+      "confidence": 22.51,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "820600",
+      "hsDescription": "Tools of two or more of the headings 82.02 to 82.05, put up in sets for retail sale.",
+      "type": "parent",
+      "confidence": 22.51,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "82060010",
+      "hsDescription": "- - - Household tools",
+      "type": "dutiable",
+      "confidence": 22.51,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "82060090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 22.51,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8487",
+      "hsDescription": "Machinery parts, not containing electrical connectors, insulators, coils, contacts or other electrical features, not specified or included elsewhere in this Chapter.",
+      "type": "parent",
+      "confidence": 1.29,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84879000",
+      "hsDescription": "- Other",
+      "type": "dutiable",
+      "confidence": 1.29,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "8437",
+      "hsDescription": "Machines for cleaning, sorting or grading seeds, grain or dried leguminous vegetables; machinery used in the milling industry or for the working of cereals or dried leguminous vegetables, other than farm-type machinery.",
+      "type": "parent",
+      "confidence": 1.2,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "84379010",
+      "hsDescription": "- - - Of the machines of subheading 8437.10",
+      "type": "dutiable",
+      "confidence": 1.2,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "9005",
+      "hsDescription": "Binoculars, monoculars, other optical telescopes, and mountings therefor; other astronomical instruments and mountings therefor, but not including instruments for radio-astronomy.",
+      "type": "parent",
+      "confidence": 1.11,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "90059090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 1.11,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3303",
+      "hsDescription": "Perfumes and toilet waters.",
+      "type": "parent",
+      "confidence": 2.56,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "330300",
+      "hsDescription": "Perfumes and toilet waters.",
+      "type": "parent",
+      "confidence": 2.56,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33030010",
+      "hsDescription": "- - - Bay rum",
+      "type": "dutiable",
+      "confidence": 2.56,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "33030090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 2.56,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3924",
+      "hsDescription": "Tableware, kitchenware, other household articles and hygienic or toilet articles, of plastics.",
+      "type": "parent",
+      "confidence": 3.97,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39249090",
+      "hsDescription": "- - - Other",
+      "type": "dutiable",
+      "confidence": 3.97,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "3923",
+      "hsDescription": "Articles for the conveyance or packing of goods, of plastics; stoppers, lids, caps and other closures, of plastics.",
+      "type": "parent",
+      "confidence": 8.13,
+      "uom": [],
+      "caProductInfo": []
+    },
+    {
+      "hsCode": "39232900",
+      "hsDescription": "- - O f other plastics",
+      "type": "dutiable",
+      "confidence": 8.13,
+      "uom": [],
+      "caProductInfo": []
+    }
+  ]
+}

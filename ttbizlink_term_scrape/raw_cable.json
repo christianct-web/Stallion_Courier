@@ -1,0 +1,71 @@
+{
+  "request": {
+    "searchType": "auto",
+    "searchText": "cable",
+    "targetCountry": "TT",
+    "classificationType": "Import",
+    "inputLanguage": "en",
+    "imageURL": null
+  },
+  "translatedDescription": "cable",
+  "imageURL": "",
+  "relevantSearchTerms": [],
+  "results": [
+    {
+      "confidence": 11.19,
+      "hsCode": "85",
+      "type": "parent",
+      "indent": 0,
+      "hsDescription": "Electrical machinery and equipment and parts thereof; sound recorders and reproducers, television image and sound recorders and reproducers, and parts and accessories of such articles",
+      "children": [
+        {
+          "confidence": 11.19,
+          "hsCode": "8544",
+          "type": "parent",
+          "indent": 1,
+          "hsDescription": "Insulated (including enamelled or anodized) wire, cable (including co-axial cable) and other insulated electric conductors, whether or not fitted with connectors; optical fibre cables, made up of individually sheathed fibres, whether or not assembled with electric conductors or fitted with connectors.",
+          "uom": [],
+          "children": [
+            {
+              "confidence": 11.19,
+              "hsCode": "",
+              "type": "filler",
+              "indent": 2,
+              "hsDescription": "- Other electric conductors, for a voltage not exceeding 1000 V:",
+              "uom": [],
+              "children": [
+                {
+                  "confidence": 11.19,
+                  "hsCode": "85444200",
+                  "type": "dutiable",
+                  "indent": 3,
+                  "hsDescription": "- - Fitted with connectors",
+                  "uom": [],
+                  "caProductInfo": []
+                }
+              ]
+            },
+            {
+              "confidence": 9.87,
+              "hsCode": "85442000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Co-axial cable and other co-axial electric conductors",
+              "uom": [],
+              "caProductInfo": []
+            },
+            {
+              "confidence": 7.12,
+              "hsCode": "85447000",
+              "type": "dutiable",
+              "indent": 2,
+              "hsDescription": "- Optical fibre cables",
+              "uom": [],
+              "caProductInfo": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
