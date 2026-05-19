@@ -21,7 +21,13 @@ from typing import Any, Dict, List
 
 logger = logging.getLogger("stallion.tariff")
 
-_DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "tt_tariff_db.json"
+# B0: repointed to the current CET-2024 tariff (5,810 codes), the same DB the
+# courier module uses. The legacy tt_tariff_db.json (4,611 codes) was stale and
+# disagreed with the live tariff on 431 rates / was missing 2,570 codes.
+# Override with env STALLION_TARIFF_DB if a different file is ever needed.
+import os as _os
+_DEFAULT_DB = Path(__file__).resolve().parent.parent.parent / "data" / "tt_tariff_db_2024.json"
+_DB_PATH = Path(_os.environ.get("STALLION_TARIFF_DB", str(_DEFAULT_DB)))
 _tariff_entries: List[Dict[str, Any]] = []
 
 
