@@ -548,7 +548,11 @@ def _fix_nature_of_transaction(item_elem: ET.Element, contract_item: Dict[str, A
     if tarification is None:
         return
 
-    val = str(contract_item.get("nature_of_transaction") or "A").strip().upper()[:1]
+    val = str(
+        contract_item.get("nature_of_transaction")
+        or contract_item.get("natureOfTransaction")
+        or "A"
+    ).strip().upper()[:1]
     if not val:
         val = "A"
 
