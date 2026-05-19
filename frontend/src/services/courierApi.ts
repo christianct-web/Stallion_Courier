@@ -427,19 +427,60 @@ export async function addTariffEntry(input: {
   });
 }
 
+export interface TariffEntry {
+  thn: string;
+  code: string;
+  description: string;
+  dutyPct: number;
+  vatPct: number;
+  optPct?: number;
+  surchargePct?: number;
+  restriction?: string;
+  dutyRate?: string;
+  notes?: string;
+  isExempt: boolean;
+  chapter: number;
+  unit?: string | null;
+  is_override?: boolean;
+}
+
 export async function browseTariff(params: {
   chapter?: number;
   q?: string;
   limit?: number;
   offset?: number;
-} = {}): Promise<{ items: any[]; total: number; limit: number; offset: number }> {
+  duty_band?: "free" | "low" | "mid" | "high";
+  overrides_only?: boolean;
+  sort?: "relevance" | "thn";
+} = {}): Promise<{
+  items: TariffEntry[]; total: number; limit: number; offset: number;
+}> {
   const search = new URLSearchParams();
   if (params.chapter !== undefined) search.set("chapter", String(params.chapter));
   if (params.q) search.set("q", params.q);
   if (params.limit !== undefined) search.set("limit", String(params.limit));
   if (params.offset !== undefined) search.set("offset", String(params.offset));
+  if (params.duty_band) search.set("duty_band", params.duty_band);
+  if (params.overrides_only) search.set("overrides_only", "true");
+  if (params.sort) search.set("sort", params.sort);
   const qs = search.toString();
   return courierApi(`/courier/tariff${qs ? `?${qs}` : ""}`);
+}
+
+export interface TariffChapter {
+  chapter: number;
+  title: string;
+  count: number;
+  overrides: number;
+}
+export interface TariffSection {
+  section: string;
+  title: string;
+  chapters: TariffChapter[];
+  count: number;
+}
+export async function tariffChapters(): Promise<{ sections: TariffSection[] }> {
+  return courierApi(`/courier/tariff/chapters`);
 }
 
 export async function getAuditLog(

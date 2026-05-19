@@ -1923,5 +1923,107 @@ class TestDescriptionChangeInSection3(_RulesStoreTestBase):
         self.assertIn("TAGS", e8)  # original preserved in parentheses
 
 
+class TestTariffPageFeatures(_RulesStoreTestBase):
+    """
+    Tests for the rebuilt Tariff page backend: ranked search, chapter
+    summary, duty-band filter, overrides-only.
+    """
+
+    def test_ranked_search_surfaces_relevant_first(self):
+        """Searching 'handbag' must put actual handbag codes at the top,
+        not alphabetical noise."""
+        from app.services import courier_rules
+        r = courier_rules.list_tariff_entries(query="handbag", limit=5)
+        self.assertGreater(r["total"], 0)
+        # Top result's description should actually mention handbag
+        top = r["items"][0]
+        self.assertIn("handbag", (top.get("description") or "").lower())
+
+    def test_search_by_exact_thn(self):
+        from app.services import courier_rules
+        # Pick any known code from the DB
+        all_e = courier_rules.list_tariff_entries(limit=1)
+        thn = all_e["items"][0]["thn"]
+        r = courier_rules.list_tariff_entries(query=thn, limit=5)
+        self.assertEqual(r["items"][0]["thn"], thn)
+
+    def test_chapter_summary_returns_21_sections(self):
+        from app.services import courier_rules
+        cs = courier_rules.tariff_chapter_summary()
+        self.assertIn("sections", cs)
+        # Only non-empty sections are returned; should be many
+        self.assertGreaterEqual(len(cs["sections"]), 10)
+        first = cs["sections"][0]
+        self.assertIn("title", first)
+        self.assertIn("chapters", first)
+        self.assertIn("count", first)
+
+    def test_duty_band_free_filter(self):
+        from app.services import courier_rules
+        r = courier_rules.list_tariff_entries(duty_band="free", limit=20)
+        self.assertGreater(r["total"], 0)
+        for e in r["items"]:
+            self.assertTrue(
+                e.get("isExempt") or (e.get("dutyPct") or 0) == 0,
+                f"{e['thn']} in free band but dutyPct={e.get('dutyPct')}",
+            )
+
+    def test_duty_band_high_filter(self):
+        from app.services import courier_rules
+        r = courier_rules.list_tariff_entries(duty_band="high", limit=20)
+        for e in r["items"]:
+            self.assertGreater(e.get("dutyPct") or 0, 25)
+
+    def test_chapter_filter(self):
+        from app.services import courier_rules
+        r = courier_rules.list_tariff_entries(chapter=61, limit=10)
+        self.assertGreater(r["total"], 0)
+        for e in r["items"]:
+            self.assertEqual(e["chapter"], 61)
+
+    def test_overrides_only_empty_by_default(self):
+        from app.services import courier_rules
+        r = courier_rules.list_tariff_entries(overrides_only=True, limit=10)
+        # No overrides applied in a fresh store
+        self.assertEqual(r["total"], 0)
+
+    def test_overrides_only_shows_override_after_maintain(self):
+        from app.services import courier_rules
+        # Apply a tariff override
+        sample = courier_rules.list_tariff_entries(limit=1)["items"][0]
+        courier_rules.add_tariff_entry(
+            thn=sample["thn"], description=sample["description"],
+            duty_pct=99, by="tester",
+        )
+        r = courier_rules.list_tariff_entries(overrides_only=True, limit=10)
+        self.assertGreaterEqual(r["total"], 1)
+        self.assertTrue(any(e["thn"] == sample["thn"] for e in r["items"]))
+
+    def test_chapter_summary_endpoint_http(self):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from app.routes.courier_rules import router
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
+        resp = client.get("/courier/tariff/chapters")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertIn("sections", body)
+
+    def test_tariff_browse_endpoint_ranked_http(self):
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from app.routes.courier_rules import router
+        app = FastAPI()
+        app.include_router(router)
+        client = TestClient(app)
+        resp = client.get("/courier/tariff?q=handbag&limit=3")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertIn("items", body)
+        self.assertLessEqual(len(body["items"]), 3)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

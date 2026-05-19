@@ -215,17 +215,32 @@ def corrections_remove(
 @router.get("/tariff")
 def tariff_browse(
     chapter: Optional[int] = Query(None, ge=1, le=99),
-    q: Optional[str] = Query(None, description="Substring match on description or THN"),
+    q: Optional[str] = Query(None, description="Ranked search on THN/code/description"),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
+    duty_band: Optional[str] = Query(
+        None, description="free | low | mid | high"),
+    overrides_only: bool = Query(False),
+    sort: str = Query("relevance", description="relevance | thn"),
 ):
     """
-    Paginated tariff browse. Each entry includes `is_override: true|false`
-    so the UI can show which entries are user-customised.
+    Paginated tariff browse with ranked search. Each entry includes
+    `is_override: true|false` so the UI can show which entries are
+    user-customised.
     """
     return courier_rules.list_tariff_entries(
         chapter=chapter, query=q, limit=limit, offset=offset,
+        duty_band=duty_band, overrides_only=overrides_only, sort=sort,
     )
+
+
+@router.get("/tariff/chapters")
+def tariff_chapters():
+    """
+    HS section/chapter summary with per-chapter entry + override counts.
+    Drives the browse-by-category UI.
+    """
+    return courier_rules.tariff_chapter_summary()
 
 
 @router.post("/tariff")

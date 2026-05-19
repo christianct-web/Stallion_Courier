@@ -86,6 +86,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -318,29 +319,213 @@ def lookup_thn(thn: str) -> Optional[Dict[str, Any]]:
     return _load_tariff_index().get(raw)
 
 
+# ── HS section / chapter reference (for the browse-by-category UI) ────────────
+# The 21 sections of the Harmonized System and the chapters each contains.
+# Used to render a category browser instead of a flat code list.
+
+_HS_SECTIONS = [
+    {"roman": "I", "title": "Live animals; animal products", "chapters": list(range(1, 6))},
+    {"roman": "II", "title": "Vegetable products", "chapters": list(range(6, 15))},
+    {"roman": "III", "title": "Animal/vegetable fats & oils", "chapters": [15]},
+    {"roman": "IV", "title": "Prepared foodstuffs; beverages; tobacco", "chapters": list(range(16, 25))},
+    {"roman": "V", "title": "Mineral products", "chapters": list(range(25, 28))},
+    {"roman": "VI", "title": "Chemical & allied industries", "chapters": list(range(28, 39))},
+    {"roman": "VII", "title": "Plastics & rubber", "chapters": [39, 40]},
+    {"roman": "VIII", "title": "Hides, skins, leather, furs", "chapters": list(range(41, 44))},
+    {"roman": "IX", "title": "Wood, cork, basketware", "chapters": list(range(44, 47))},
+    {"roman": "X", "title": "Pulp, paper, paperboard", "chapters": list(range(47, 50))},
+    {"roman": "XI", "title": "Textiles & textile articles", "chapters": list(range(50, 64))},
+    {"roman": "XII", "title": "Footwear, headgear, umbrellas", "chapters": list(range(64, 68))},
+    {"roman": "XIII", "title": "Stone, ceramic, glass", "chapters": list(range(68, 71))},
+    {"roman": "XIV", "title": "Pearls, precious metals, jewellery", "chapters": [71]},
+    {"roman": "XV", "title": "Base metals & articles thereof", "chapters": list(range(72, 84))},
+    {"roman": "XVI", "title": "Machinery & electrical equipment", "chapters": [84, 85]},
+    {"roman": "XVII", "title": "Vehicles, aircraft, vessels", "chapters": list(range(86, 90))},
+    {"roman": "XVIII", "title": "Optical, medical, precision instruments", "chapters": list(range(90, 93))},
+    {"roman": "XIX", "title": "Arms & ammunition", "chapters": [93]},
+    {"roman": "XX", "title": "Miscellaneous manufactured articles", "chapters": list(range(94, 97))},
+    {"roman": "XXI", "title": "Works of art, antiques", "chapters": [97]},
+]
+
+_CHAPTER_TITLES = {
+    1: "Live animals", 2: "Meat & edible offal", 3: "Fish & seafood",
+    4: "Dairy, eggs, honey", 5: "Other animal products",
+    6: "Live trees & plants", 7: "Edible vegetables", 8: "Edible fruit & nuts",
+    9: "Coffee, tea, spices", 10: "Cereals", 11: "Milling products",
+    12: "Oil seeds & grains", 13: "Lac, gums, resins", 14: "Vegetable plaiting materials",
+    15: "Fats & oils", 16: "Meat/fish preparations", 17: "Sugars & confectionery",
+    18: "Cocoa & chocolate", 19: "Cereal/flour preparations", 20: "Vegetable/fruit preparations",
+    21: "Miscellaneous edible preparations", 22: "Beverages & spirits",
+    23: "Food industry residues", 24: "Tobacco", 25: "Salt, earth, stone",
+    26: "Ores, slag, ash", 27: "Mineral fuels & oils", 28: "Inorganic chemicals",
+    29: "Organic chemicals", 30: "Pharmaceuticals", 31: "Fertilizers",
+    32: "Tanning/dyeing extracts", 33: "Cosmetics & perfumery", 34: "Soap, waxes",
+    35: "Albuminoids, glues", 36: "Explosives, matches", 37: "Photographic goods",
+    38: "Miscellaneous chemicals", 39: "Plastics & articles", 40: "Rubber & articles",
+    41: "Raw hides & leather", 42: "Leather articles, handbags", 43: "Furskins",
+    44: "Wood & wood articles", 45: "Cork", 46: "Basketware",
+    47: "Wood pulp", 48: "Paper & paperboard", 49: "Books & printed matter",
+    50: "Silk", 51: "Wool & animal hair", 52: "Cotton",
+    53: "Other vegetable fibres", 54: "Man-made filaments", 55: "Man-made staple fibres",
+    56: "Wadding, felt, nonwovens", 57: "Carpets & floor coverings", 58: "Special woven fabrics",
+    59: "Coated textile fabrics", 60: "Knitted/crocheted fabrics",
+    61: "Knitted apparel", 62: "Woven apparel", 63: "Other textile articles",
+    64: "Footwear", 65: "Headgear", 66: "Umbrellas & walking sticks",
+    67: "Feathers, artificial flowers", 68: "Stone, plaster, cement articles",
+    69: "Ceramic products", 70: "Glass & glassware", 71: "Pearls, precious metals, jewellery",
+    72: "Iron & steel", 73: "Iron/steel articles", 74: "Copper",
+    75: "Nickel", 76: "Aluminium", 78: "Lead", 79: "Zinc", 80: "Tin",
+    81: "Other base metals", 82: "Tools & cutlery", 83: "Miscellaneous metal articles",
+    84: "Machinery & mechanical appliances", 85: "Electrical machinery & electronics",
+    86: "Railway equipment", 87: "Vehicles", 88: "Aircraft",
+    89: "Ships & boats", 90: "Optical/medical instruments", 91: "Clocks & watches",
+    92: "Musical instruments", 93: "Arms & ammunition", 94: "Furniture, bedding, lighting",
+    95: "Toys, games, sports equipment", 96: "Miscellaneous manufactured articles",
+    97: "Works of art & antiques",
+}
+
+
+def _rank_score(entry: Dict[str, Any], q: str, q_tokens: List[str]) -> float:
+    """
+    Relevance score for a tariff entry against a query. Higher = better.
+
+    Tiers (so the broker sees the obvious match first, not alphabetical
+    noise):
+      - exact THN / code match            → huge
+      - THN / code starts-with            → very high
+      - whole-word description match      → high (scaled by token coverage)
+      - substring description match       → medium
+      - shorter descriptions slightly win (more specific)
+    """
+    thn = entry.get("thn", "")
+    code = (entry.get("code") or "").replace(".", "")
+    desc = (entry.get("description") or "").lower()
+
+    if q == thn or q == code:
+        return 1000.0
+    score = 0.0
+    if thn.startswith(q) or code.startswith(q):
+        score += 400.0
+    elif q.isdigit() and (q in thn or q in code):
+        score += 120.0
+
+    if q_tokens and desc:
+        matched = 0
+        for tok in q_tokens:
+            if re.search(r"\b" + re.escape(tok) + r"\b", desc):
+                score += 60.0
+                matched += 1
+            elif tok in desc:
+                score += 20.0
+        if matched == len(q_tokens) and matched > 0:
+            score += 80.0  # all query words present
+
+    if score > 0 and desc:
+        # prefer specific (shorter, non-"other") descriptions
+        if desc not in ("other", "- other", "+ other"):
+            score += max(0.0, 40.0 - len(desc) / 4.0)
+    return score
+
+
 def list_tariff_entries(
     chapter: Optional[int] = None,
     query: Optional[str] = None,
     limit: int = 100,
     offset: int = 0,
+    duty_band: Optional[str] = None,
+    overrides_only: bool = False,
+    sort: str = "relevance",
 ) -> Dict[str, Any]:
     """
-    Paginated tariff browse — for the admin UI.
+    Paginated tariff browse with ranked search.
 
-    chapter: filter by chapter (1-99)
-    query  : substring match on description
+    chapter        : filter by HS chapter (1-97)
+    query          : THN/code/description search (ranked, not just substring)
+    duty_band      : "free" (0%) | "low" (1-15%) | "mid" (16-25%) | "high" (>25%)
+    overrides_only : only entries the broker has customised
+    sort           : "relevance" (default when query set) | "thn"
     """
     index = _load_tariff_index()
     items = list(index.values())
+
     if chapter is not None:
         items = [e for e in items if e.get("chapter") == chapter]
+
+    if overrides_only:
+        items = [e for e in items if e.get("is_override")]
+
+    if duty_band:
+        def _band(e: Dict[str, Any]) -> str:
+            if e.get("isExempt") or (e.get("dutyPct") or 0) == 0:
+                return "free"
+            d = e.get("dutyPct") or 0
+            if d <= 15:
+                return "low"
+            if d <= 25:
+                return "mid"
+            return "high"
+        items = [e for e in items if _band(e) == duty_band]
+
     if query:
         q = query.lower().strip()
-        items = [e for e in items if q in (e.get("description") or "").lower() or q in e.get("thn", "")]
-    items.sort(key=lambda e: e.get("thn", ""))
+        q_digits = re.sub(r"\D", "", q)
+        q_tokens = [t for t in re.split(r"[^a-z0-9]+", q) if len(t) > 1]
+        # search by the digit form if the query is numeric
+        search_q = q_digits if q_digits and not q_tokens else q
+        scored = []
+        for e in items:
+            s = _rank_score(e, search_q, q_tokens)
+            if s > 0:
+                scored.append((s, e))
+        scored.sort(key=lambda x: (-x[0], x[1].get("thn", "")))
+        items = [e for _, e in scored]
+    else:
+        items.sort(key=lambda e: e.get("thn", ""))
+
+    if not query and sort == "thn":
+        items.sort(key=lambda e: e.get("thn", ""))
+
     total = len(items)
     page = items[offset : offset + limit]
     return {"items": page, "total": total, "limit": limit, "offset": offset}
+
+
+def tariff_chapter_summary() -> Dict[str, Any]:
+    """
+    Per-chapter counts for the browse-by-category UI. Returns the 21 HS
+    sections with their chapters, entry counts, and override counts so the
+    page can show a category browser instead of a flat 5,800-row scroll.
+    """
+    index = _load_tariff_index()
+    by_chapter: Dict[int, Dict[str, int]] = {}
+    for e in index.values():
+        ch = e.get("chapter") or 0
+        slot = by_chapter.setdefault(ch, {"count": 0, "overrides": 0})
+        slot["count"] += 1
+        if e.get("is_override"):
+            slot["overrides"] += 1
+
+    sections = []
+    for sec in _HS_SECTIONS:
+        chs = []
+        for ch in sec["chapters"]:
+            stats = by_chapter.get(ch, {"count": 0, "overrides": 0})
+            chs.append({
+                "chapter": ch,
+                "title": _CHAPTER_TITLES.get(ch, f"Chapter {ch}"),
+                "count": stats["count"],
+                "overrides": stats["overrides"],
+            })
+        total = sum(c["count"] for c in chs)
+        if total == 0:
+            continue
+        sections.append({
+            "section": sec["roman"],
+            "title": sec["title"],
+            "chapters": chs,
+            "count": total,
+        })
+    return {"sections": sections}
 
 
 # ── Mutating operations (user file only) ─────────────────────────────────────
