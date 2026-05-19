@@ -1035,6 +1035,29 @@ function ReviewPanel({
                   </div>
                   {row("ITEM VALUE", inp("itemValue", "number", "0.00"))}
                   {row("CPC", inp("cpc", "text", "4000"))}
+                  {row("NATURE OF TRANSACTION",
+                    <select
+                      value={item.natureOfTransaction ?? "A"}
+                      onChange={e => setItemField(i, "natureOfTransaction", e.target.value)}
+                      style={{
+                        width: 220,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 12,
+                        color: C.ink,
+                        background: "transparent",
+                        border: `1px solid ${C.paperBorder}`,
+                        borderRadius: 3,
+                        padding: "4px 8px",
+                      }}
+                    >
+                      <option value="A">A — Sale</option>
+                      <option value="B">B — Lease / Hire</option>
+                      <option value="C">C — Gift / Award</option>
+                      <option value="D">D — Transfer</option>
+                      <option value="E">E — Inter-warehouse</option>
+                      <option value="F">F — Exchange</option>
+                    </select>
+                  )}
                   {row("DUTY CODE", inp("dutyTaxCode", "text", ""))}
                 </div>
               );
