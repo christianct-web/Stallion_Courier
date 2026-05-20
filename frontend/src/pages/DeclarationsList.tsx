@@ -179,29 +179,42 @@ function WorkflowCard({
 export default function DeclarationsList() {
   const navigate = useNavigate();
 
-  const downloadPackDocs = async (decl: any) => {
+  const generatePackAndGetUrls = async (decl: any) => {
+    const res = await generatePack({
+      declaration_id: decl.id,
+      header: decl.header || {},
+      worksheet: decl.worksheet || {},
+      items: decl.items || [],
+      containers: decl.containers || [],
+    });
+    if (res.status !== "generated" || !res.documents?.length) {
+      throw new Error("Pack generation blocked or no documents returned.");
+    }
+    const ws = res.documents.find(d => /worksheet|lb01/i.test(d.name || ""));
+    const xml = res.documents.find(d => /xml|c82/i.test(d.name || ""));
+    return {
+      worksheetUrl: ws?.url ? (ws.url.startsWith("http") ? ws.url : `${STALLION_BASE_URL}${ws.url}`) : null,
+      xmlUrl: xml?.url ? (xml.url.startsWith("http") ? xml.url : `${STALLION_BASE_URL}${xml.url}`) : null,
+    };
+  };
+
+  const downloadWorksheet = async (decl: any) => {
     try {
-      const res = await generatePack({
-        declaration_id: decl.id,
-        header: decl.header || {},
-        worksheet: decl.worksheet || {},
-        items: decl.items || [],
-        containers: decl.containers || [],
-      });
-      if (res.status !== "generated" || !res.documents?.length) {
-        alert("Pack generation blocked or no documents returned.");
-        return;
-      }
-      const ws = res.documents.find(d => /worksheet|lb01/i.test(d.name || ""));
-      const xml = res.documents.find(d => /xml|c82/i.test(d.name || ""));
-      [ws, xml].filter(Boolean).forEach((d: any) => {
-        if (d?.url) {
-          const href = d.url.startsWith("http") ? d.url : `${STALLION_BASE_URL}${d.url}`;
-          window.open(href, "_blank", "noopener,noreferrer");
-        }
-      });
+      const { worksheetUrl } = await generatePackAndGetUrls(decl);
+      if (!worksheetUrl) return alert("Worksheet file not returned.");
+      window.open(worksheetUrl, "_blank", "noopener,noreferrer");
     } catch (e: any) {
-      alert(e?.message || "Failed to generate/download pack");
+      alert(e?.message || "Failed to generate/download worksheet");
+    }
+  };
+
+  const downloadXml = async (decl: any) => {
+    try {
+      const { xmlUrl } = await generatePackAndGetUrls(decl);
+      if (!xmlUrl) return alert("XML file not returned.");
+      window.open(xmlUrl, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      alert(e?.message || "Failed to generate/download XML");
     }
   };
 
@@ -589,7 +602,7 @@ export default function DeclarationsList() {
                           {(["approved", "receipted"].includes(String(decl.status).toLowerCase())) && (
                             <>
                               <button
-                                onClick={e => { e.stopPropagation(); downloadPackDocs(decl); }}
+                                onClick={e => { e.stopPropagation(); downloadWorksheet(decl); }}
                                 style={{
                                   padding: "4px 8px",
                                   fontFamily: "'JetBrains Mono', monospace",
@@ -600,9 +613,25 @@ export default function DeclarationsList() {
                                   color: C.inkMid,
                                   cursor: "pointer",
                                 }}
-                                title="Download Worksheet + XML"
+                                title="Download Worksheet"
                               >
-                                ↓ PACK
+                                ↓ WS
+                              </button>
+                              <button
+                                onClick={e => { e.stopPropagation(); downloadXml(decl); }}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontFamily: "'JetBrains Mono', monospace",
+                                  fontSize: 10,
+                                  background: "transparent",
+                                  border: `1px solid ${C.paperBorder}`,
+                                  borderRadius: 3,
+                                  color: C.inkMid,
+                                  cursor: "pointer",
+                                }}
+                                title="Download XML"
+                              >
+                                ↓ XML
                               </button>
                             </>
                           )}
