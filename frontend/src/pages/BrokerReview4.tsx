@@ -5,6 +5,7 @@ import {
   reviewDeclaration,
   generateBrokerageInvoice,
   generateCostingFromDeclaration,
+  generatePack,
   listClients,
   calculateWorksheet,
   STALLION_BASE_URL,
@@ -681,6 +682,32 @@ function ReviewPanel({
   const isReceipted = decl.status === "receipted";
   const isDone      = isReceipted;
 
+  const downloadPackDocs = async () => {
+    try {
+      const res = await generatePack({
+        declaration_id: decl.id,
+        header: decl.header || {},
+        worksheet: decl.worksheet || {},
+        items: localItems || [],
+        containers: (decl as any).containers || [],
+      });
+      if (res.status !== "generated" || !res.documents?.length) {
+        alert("Pack generation blocked or no documents returned.");
+        return;
+      }
+      const ws = res.documents.find(d => /worksheet|lb01/i.test(d.name || ""));
+      const xml = res.documents.find(d => /xml|c82/i.test(d.name || ""));
+      [ws, xml].filter(Boolean).forEach((d: any) => {
+        if (d?.url) {
+          const href = d.url.startsWith("http") ? d.url : `${STALLION_BASE_URL}${d.url}`;
+          window.open(href, "_blank", "noopener,noreferrer");
+        }
+      });
+    } catch (e: any) {
+      alert(e?.message || "Failed to generate/download pack");
+    }
+  };
+
   // Action button helper
   const action = async (status: string) => {
     setSubmitting(status);
@@ -1337,6 +1364,31 @@ function ReviewPanel({
           <InvoiceTab decl={decl} />
         )}
       </div>
+
+      {/* Download shortcuts for approved/receipted */}
+      {(isApproved || isReceipted) && (
+        <div style={{
+          padding: "10px 22px", borderTop: `1px solid ${C.paperBorder}`,
+          background: C.paperAlt, display: "flex", justifyContent: "flex-end", gap: 8,
+        }}>
+          <button
+            onClick={downloadPackDocs}
+            style={{
+              padding: "8px 14px",
+              background: "transparent",
+              border: `1px solid ${C.voidBorder}`,
+              borderRadius: 3,
+              color: C.inkMid,
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 11,
+              letterSpacing: "0.06em",
+              cursor: "pointer",
+            }}
+          >
+            ↓ Download Worksheet + XML
+          </button>
+        </div>
+      )}
 
       {/* Action bar */}
       {!isDone && (

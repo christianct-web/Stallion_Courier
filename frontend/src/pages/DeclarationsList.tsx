@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { listDeclarations, downloadRegisterCsv, deleteDeclaration } from "@/services/stallionApi";
+import { listDeclarations, downloadRegisterCsv, deleteDeclaration, generatePack, STALLION_BASE_URL } from "@/services/stallionApi";
 import { TopNav } from "@/components/TopNav";
 import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 import {
@@ -178,6 +178,32 @@ function WorkflowCard({
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function DeclarationsList() {
   const navigate = useNavigate();
+
+  const downloadPackDocs = async (decl: any) => {
+    try {
+      const res = await generatePack({
+        declaration_id: decl.id,
+        header: decl.header || {},
+        worksheet: decl.worksheet || {},
+        items: decl.items || [],
+        containers: decl.containers || [],
+      });
+      if (res.status !== "generated" || !res.documents?.length) {
+        alert("Pack generation blocked or no documents returned.");
+        return;
+      }
+      const ws = res.documents.find(d => /worksheet|lb01/i.test(d.name || ""));
+      const xml = res.documents.find(d => /xml|c82/i.test(d.name || ""));
+      [ws, xml].filter(Boolean).forEach((d: any) => {
+        if (d?.url) {
+          const href = d.url.startsWith("http") ? d.url : `${STALLION_BASE_URL}${d.url}`;
+          window.open(href, "_blank", "noopener,noreferrer");
+        }
+      });
+    } catch (e: any) {
+      alert(e?.message || "Failed to generate/download pack");
+    }
+  };
 
   const [backendDeclarations, setBackendDeclarations] = useState<any[]>([]);
   const [loadingBackend, setLoadingBackend] = useState(true);
@@ -559,7 +585,27 @@ export default function DeclarationsList() {
                         <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: C.inkLight }}>
                           {updatedAt ? formatDistanceToNow(new Date(updatedAt), { addSuffix: true }) : "—"}
                         </div>
-                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 6 }}>
+                          {(["approved", "receipted"].includes(String(decl.status).toLowerCase())) && (
+                            <>
+                              <button
+                                onClick={e => { e.stopPropagation(); downloadPackDocs(decl); }}
+                                style={{
+                                  padding: "4px 8px",
+                                  fontFamily: "'JetBrains Mono', monospace",
+                                  fontSize: 10,
+                                  background: "transparent",
+                                  border: `1px solid ${C.paperBorder}`,
+                                  borderRadius: 3,
+                                  color: C.inkMid,
+                                  cursor: "pointer",
+                                }}
+                                title="Download Worksheet + XML"
+                              >
+                                ↓ PACK
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={e => { e.stopPropagation(); setDeleteId(decl.id); }}
                             style={{
