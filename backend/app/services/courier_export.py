@@ -133,7 +133,7 @@ LAYOUT_V3_S3: List[Dict[str, Any]] = [
     {"col": "V", "label": "ADD.\nVAT",         "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
     {"col": "W", "label": "ADD.\nTOTAL",       "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
     {"col": "X", "label": "DETAINED/\nSEIZED", "width": None, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
-    {"col": "Y", "label": "DEP. IN\nT/SHED",   "width": 10.0, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "Y", "label": "NEW\nDESCRIPTION",  "width": 22.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT_WRAP},
 ]
 
 # Row layout
@@ -481,8 +481,7 @@ def _write_data_row(
         _set_with_formula(ws[f"W{row}"], f"=T{row}+U{row}+V{row}", add_total, FMT_TTD)
         if correction.get("detained_seized"):
             ws[f"X{row}"] = "Yes"
-        if correction.get("dep_in_tshed"):
-            ws[f"Y{row}"] = "Yes"
+        ws[f"Y{row}"] = str(correction.get("new_description") or "")
 
     # Apply per-cell formatting matching the golden:
     #   - Section 2 (A:P): alternating row fill (white on even data rows,
