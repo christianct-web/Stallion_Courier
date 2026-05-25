@@ -107,20 +107,40 @@ function CorrectionCard({
       const dutyRate = res.duty_rate || 0;
 
       if (isZeroUpliftReclass) {
-        // Backend is source-of-truth for THN-only reclass (zero uplift).
-        // Keep UI permissive so officer can save; server recalculates deltas
-        // from original line CIF and THN during record_examination.
+        if (!line) { toast.error("Reclass preview needs an existing line"); return; }
+        const baseCif = Number(line.cif_ttd || 0);
+        const oldDuty = Number(line.duty || 0);
+        const oldOpt = Number(line.opt || 0);
+        const oldVat = Number(line.vat || 0);
+
+        let newDuty = 0;
+        let newOpt = 0;
+        let newVat = 0;
+
+        if (cls === "full_exempt") {
+          newDuty = 0; newOpt = 0; newVat = 0;
+        } else if (cls === "duty_free_only") {
+          newDuty = 0;
+          newOpt = +(baseCif * 0.07).toFixed(2);
+          newVat = +((baseCif + newDuty + newOpt) * 0.125).toFixed(2);
+        } else {
+          newDuty = +(baseCif * dutyRate).toFixed(2);
+          newOpt = +(baseCif * 0.07).toFixed(2);
+          newVat = +((baseCif + newDuty + newOpt) * 0.125).toFixed(2);
+        }
+
         onChange({
           ...draft,
           adjusted_cif_ttd: "0",
-          add_duty: "0",
-          add_opt: "0",
-          add_vat: "0",
+          add_duty: String((newDuty - oldDuty).toFixed(2)),
+          add_opt: String((newOpt - oldOpt).toFixed(2)),
+          add_vat: String((newVat - oldVat).toFixed(2)),
         });
+
         const label = cls === "full_exempt" ? "EXEMPT"
           : cls === "duty_free_only" ? "FREE (OPT+VAT only)"
           : `${Math.round(dutyRate * 100)}%`;
-        toast.success(`Reclass queued at ${label} (server will recompute on save)`);
+        toast.success(`Reclass preview at ${label}`);
         return;
       }
 
