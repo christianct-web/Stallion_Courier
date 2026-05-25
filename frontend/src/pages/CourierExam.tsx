@@ -99,11 +99,31 @@ function CorrectionCard({
   const recomputeFromCost = useCallback(async () => {
     if (!draft.officer_thn) { toast.error("Set officer THN first"); return; }
     const cost = parseFloat(draft.add_cost_usd);
-    if (!(cost > 0)) { toast.error("Set add cost USD first"); return; }
+    const isZeroUpliftReclass = draft.kind === "reclass" && !(cost > 0);
+    if (!(cost > 0) && !isZeroUpliftReclass) { toast.error("Set add cost USD first"); return; }
     try {
       const res = await lookupThn(draft.officer_thn);
       const cls = res.exemption_class;
       const dutyRate = res.duty_rate || 0;
+
+      if (isZeroUpliftReclass) {
+        // Backend is source-of-truth for THN-only reclass (zero uplift).
+        // Keep UI permissive so officer can save; server recalculates deltas
+        // from original line CIF and THN during record_examination.
+        onChange({
+          ...draft,
+          adjusted_cif_ttd: "0",
+          add_duty: "0",
+          add_opt: "0",
+          add_vat: "0",
+        });
+        const label = cls === "full_exempt" ? "EXEMPT"
+          : cls === "duty_free_only" ? "FREE (OPT+VAT only)"
+          : `${Math.round(dutyRate * 100)}%`;
+        toast.success(`Reclass queued at ${label} (server will recompute on save)`);
+        return;
+      }
+
       const r = computeUpliftFromCost(cost, exchRate, dutyRate);
 
       // Apply the exemption class CORRECTLY:
