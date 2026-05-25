@@ -416,7 +416,7 @@ def add_line_with_auto_thn(manifest_id: str, payload: Dict[str, Any]) -> Optiona
 # ── Officer examination ──────────────────────────────────────────────────────
 
 
-def _recalc_correction(corr: Dict[str, Any], rate: float) -> Dict[str, Any]:
+def _recalc_correction(corr: Dict[str, Any], rate: float, manifest: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Recompute a correction's tax fields server-side from officer_thn +
     add_cost_usd, applying the THN's exemption class correctly.
@@ -438,11 +438,47 @@ def _recalc_correction(corr: Dict[str, Any], rate: float) -> Dict[str, Any]:
     if any(float(corr.get(k) or 0) < 0 for k in ("add_duty", "add_opt", "add_vat")):
         return corr
 
-    # Not enough info to recompute — keep whatever the frontend sent.
-    if not officer_thn or add_cost <= 0:
+    if not officer_thn:
         return corr
 
     cls = courier_duty.classify(officer_thn)
+
+    # RECLASS with zero uplift: recompute against the original line CIF and
+    # return deltas (new taxes - original taxes), so officers can change THN
+    # without inventing a fake uplift amount.
+    kind = str(corr.get("kind") or "").strip().lower()
+    if add_cost <= 0 and kind == "reclass" and manifest is not None:
+        line_no = corr.get("line_no")
+        line = next((ln for ln in (manifest.get("lines") or []) if ln.get("line_no") == line_no), None)
+        if line:
+            base_cif = float(line.get("cif_ttd") or 0)
+            old_duty = float(line.get("duty") or 0)
+            old_opt = float(line.get("opt") or 0)
+            old_vat = float(line.get("vat") or 0)
+
+            if cls.exemption_class == "full_exempt":
+                new_duty = new_opt = new_vat = 0.0
+            elif cls.exemption_class == "duty_free_only":
+                new_duty = 0.0
+                new_opt = round(base_cif * 0.07, 2)
+                new_vat = round((base_cif + new_duty + new_opt) * 0.125, 2)
+            else:
+                new_duty = round(base_cif * cls.duty_rate, 2)
+                new_opt = round(base_cif * 0.07, 2)
+                new_vat = round((base_cif + new_duty + new_opt) * 0.125, 2)
+
+            out = dict(corr)
+            out["adjusted_cif_ttd"] = 0.0
+            out["add_duty"] = round(new_duty - old_duty, 2)
+            out["add_opt"] = round(new_opt - old_opt, 2)
+            out["add_vat"] = round(new_vat - old_vat, 2)
+            out["add_total"] = round(out["add_duty"] + out["add_opt"] + out["add_vat"], 2)
+            return out
+
+    # Uplift recompute path requires positive add cost.
+    if add_cost <= 0:
+        return corr
+
     cif = round(add_cost * rate, 2)
 
     if cls.exemption_class == "full_exempt":
@@ -500,7 +536,7 @@ def record_examination(manifest_id: str, exam: Dict[str, Any]) -> Optional[Dict[
     raw_corrections = exam.get("corrections") or []
     # Recompute every correction server-side so officer THN changes always
     # produce correct duty/OPT/VAT, regardless of what the frontend sent.
-    corrections = [_recalc_correction(c, rate) for c in raw_corrections]
+    corrections = [_recalc_correction(c, rate, manifest) for c in raw_corrections]
 
     manifest["officer_examination"] = {
         "examined_at": (exam.get("examined_at") or "").strip(),

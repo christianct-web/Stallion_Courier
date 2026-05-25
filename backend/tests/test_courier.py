@@ -1866,6 +1866,29 @@ class TestCorrectionServerRecalc(_RulesStoreTestBase):
         self.assertEqual(corr["add_opt"], 0.0)
         self.assertEqual(corr["add_vat"], 0.0)
 
+    def test_server_reclass_zero_uplift_recomputes_from_original_cif(self):
+        """Reclass without uplift should recompute deltas from original CIF."""
+        from app.services import courier_service
+        m = self._manifest()
+
+        # Original line from _manifest(): THN 61046900 @ 20% on CIF 339.00
+        # old duty=67.80, old opt=23.73, old vat=53.82
+        # Reclass to 84212310 (30%) with zero uplift should increase duty/vat.
+        courier_service.record_examination(m["id"], {
+            "examined_at": "2026-05-06", "examining_officer": "Officer",
+            "corrections": [{
+                "line_no": 1, "kind": "reclass", "officer_thn": "84212310",
+                "add_cost_usd": 0, "adjusted_cif_ttd": 0,
+                "add_duty": 0, "add_opt": 0, "add_vat": 0,
+            }],
+        })
+        mm = courier_service.get_manifest(m["id"])
+        corr = mm["officer_examination"]["corrections"][0]
+        self.assertEqual(corr["adjusted_cif_ttd"], 0.0)
+        self.assertAlmostEqual(corr["add_duty"], 33.90, places=2)
+        self.assertAlmostEqual(corr["add_opt"], 0.0, places=2)
+        self.assertAlmostEqual(corr["add_vat"], 4.23, places=2)
+
     def test_server_preserves_negative_tax_removal(self):
         """Tax-removal corrections (negatives) are intentional — keep them."""
         from app.services import courier_service
