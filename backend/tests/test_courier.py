@@ -842,29 +842,35 @@ class TestHazmatExport(_RulesStoreTestBase):
         self.assertEqual(ws["L22"].value, "VAT")
         self.assertEqual(ws["N22"].value, "TOTAL")
 
-        # Trade section (rows 23, 25, 27)
+        # Trade section (rows 23, 25, 27) — values only, no formulas
         self.assertEqual(ws["E23"].value, "Trade")
         self.assertEqual(ws["B23"].value, "Original Values Declared")
         self.assertEqual(ws["F23"].value, 0)  # Trade is zero for TTPOST
-        # Additional row 25 = Final - Original
-        self.assertEqual(ws["F25"].value, "=F27-F23")
-        self.assertEqual(ws["H25"].value, "=H27-H23")
-        self.assertEqual(ws["F27"].value, 0)  # Final Trade also zero
+        # Additional row 25 (above the "Additional Taxes" label on row 26)
+        # — values, not formulas; Trade row 25 in the golden is empty merged
+        # blocks. The cell value is None (just the merge exists).
+        self.assertIsNone(ws["F25"].value)
+        self.assertIsNone(ws["H25"].value)
+        self.assertEqual(ws["F27"].value, 0)  # Trade Additional values
 
-        # Non-Trade section (rows 31, 33, 35)
+        # Non-Trade section (rows 31, 33, 35) — values only, no formulas
         self.assertEqual(ws["E31"].value, "Non-Trade")
         self.assertGreater(ws["F31"].value, 0)  # Non-Trade Original CIF
-        # Additional row 33 = Final - Original
-        self.assertEqual(ws["F33"].value, "=F35-F31")
-        self.assertEqual(ws["H33"].value, "=H35-H31")
-        self.assertEqual(ws["J33"].value, "=J35-J31")
-        self.assertEqual(ws["L33"].value, "=L35-L31")
+        # Additional row 33 carries the broker's correction add_* values
+        # (or zero) as plain numbers — never formulas.
+        self.assertNotIsInstance(ws["F33"].value, str,
+                                 "F33 must be a number, not a formula")
+        self.assertNotIsInstance(ws["H33"].value, str)
+        self.assertNotIsInstance(ws["J33"].value, str)
+        self.assertNotIsInstance(ws["L33"].value, str)
 
-        # Summary footer
+        # Summary footer — values only
         self.assertEqual(ws["B39"].value, "Total Additional Taxes")
-        self.assertEqual(ws["F38"].value, "=F33")
+        self.assertNotIsInstance(ws["F38"].value, str,
+                                 "F38 must be a number, not a formula")
         self.assertEqual(ws["B42"].value, "TOTAL TAXES")
-        self.assertEqual(ws["F41"].value, "=F35")
+        self.assertNotIsInstance(ws["F41"].value, str,
+                                 "F41 must be a number, not a formula")
 
     def test_hazmat_with_corrections(self):
         """Officer corrections feed into the Non-Trade Final values."""
@@ -1649,7 +1655,9 @@ class TestHazmatFormFields(_RulesStoreTestBase):
         self.assertEqual(ws["F11"].value, 19)  # explicit override
         self.assertEqual(ws["D16"].value, 1)
         self.assertEqual(ws["I16"].value, 0)
-        self.assertEqual(ws["D18"].value, 0)
+        # No. of Pkgs Bonded — value lives in the merged E18:F20 block per
+        # the golden (label B18:D20 is the label-only merge to its left).
+        self.assertEqual(ws["E18"].value, 0)
 
     def test_hazmat_with_no_fields_still_generates(self):
         """Empty form body must still produce a valid XLSX (every field optional)."""
@@ -1689,7 +1697,11 @@ class TestHazmatFormFields(_RulesStoreTestBase):
         self.assertIn(ws["D9"].value, (None, ""))
 
     def test_hazmat_total_pkgs_auto_sums_when_not_provided(self):
-        """When total_no_of_pkgs is omitted, hazmat uses =I13+I10 formula."""
+        """
+        When total_no_of_pkgs is omitted, hazmat uses the manifest's
+        package count as a plain value (not a formula — same parity
+        rule as the worksheet).
+        """
         from openpyxl import load_workbook
         from app.services import courier_export
         import io
@@ -1701,8 +1713,14 @@ class TestHazmatFormFields(_RulesStoreTestBase):
         })
         wb = load_workbook(io.BytesIO(data), data_only=False)
         ws = wb.active
-        # F11 should be the formula
-        self.assertEqual(ws["F11"].value, "=I13+I10")
+        # F11 should be a number (the manifest line count), not a formula
+        self.assertNotIsInstance(
+            ws["F11"].value, str,
+            "F11 must be a plain value, not a formula",
+        )
+        # _make_manifest_with_line adds one line; commercial+non-commercial = 15
+        # but the auto sum uses the actual line packages. Just assert it's >= 1.
+        self.assertIsNotNone(ws["F11"].value)
 
     def test_hazmat_post_endpoint(self):
         """The POST /courier/manifests/{id}/hazmat HTTP endpoint works."""

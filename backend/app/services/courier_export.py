@@ -79,8 +79,8 @@ FILL_HEADER_S3 = PatternFill("solid", start_color="FFFADBD8")  # Section 3 colum
 FILL_DATA = PatternFill("solid", start_color="FFFFFFFF")    # data row white (Section 2)
 FILL_DATA_S3 = PatternFill("solid", start_color="FFFFF2CC")  # data row pale yellow (Section 3)
 FILL_TOTALS = PatternFill("solid", start_color="FFABEBC6")  # totals row, same as header
-FILL_HAZMAT_HEADER = PatternFill("solid", start_color="305496")
-FILL_HAZMAT_FINAL = PatternFill("solid", start_color="D9E1F2")
+FILL_HAZMAT_HEADER = PatternFill("solid", start_color="FFFFCC")   # pale yellow (golden)
+FILL_HAZMAT_FINAL = PatternFill("solid", start_color="F2F2F2")    # light gray highlight (golden)
 
 THIN = Side(style="thin", color="808080")
 MEDIUM = Side(style="medium", color="808080")
@@ -133,7 +133,8 @@ LAYOUT_V3_S3: List[Dict[str, Any]] = [
     {"col": "V", "label": "ADD.\nVAT",         "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
     {"col": "W", "label": "ADD.\nTOTAL",       "width": None, "fmt": FMT_TTD, "align": ALIGN_RIGHT},
     {"col": "X", "label": "DETAINED/\nSEIZED", "width": None, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
-    {"col": "Y", "label": "NEW\nDESCRIPTION",  "width": 22.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT_WRAP},
+    {"col": "Y", "label": "DEP. IN\nT/SHED",   "width": 10.0, "fmt": FMT_GENERAL, "align": ALIGN_CENTER_NOWRAP},
+    {"col": "Z", "label": "NEW\nDESCRIPTION",  "width": 22.0, "fmt": FMT_GENERAL, "align": ALIGN_LEFT_WRAP},
 ]
 
 # Row layout
@@ -481,12 +482,15 @@ def _write_data_row(
         _set_with_formula(ws[f"W{row}"], f"=T{row}+U{row}+V{row}", add_total, FMT_TTD)
         if correction.get("detained_seized"):
             ws[f"X{row}"] = "Yes"
-        ws[f"Y{row}"] = str(correction.get("new_description") or "")
+        # Y is "DEP. IN T/SHED" (transit shed timestamp, broker fills).
+        # New description column is Z (added so Stallion preserves a
+        # description change from the officer without displacing T/SHED).
+        ws[f"Z{row}"] = str(correction.get("new_description") or "")
 
     # Apply per-cell formatting matching the golden:
     #   - Section 2 (A:P): alternating row fill (white on even data rows,
     #     FFF2F2F2 light gray on odd data rows starting from row 9).
-    #   - Section 3 (Q:Y): solid pale-yellow fill (no alternating).
+    #   - Section 3 (Q:Z): solid pale-yellow fill (no alternating).
     #   - Section 2 data cells use FONT_BODY (color FF000000); P column is
     #     always bold ("Total Taxes" column emphasis in golden).
     #   - Section 3 data cells use FONT_BODY_S3 (no explicit color); W
@@ -801,18 +805,53 @@ def _hzm_apply_money_format(ws: Worksheet, rows: List[int]) -> None:
             cell.border = BORDER_THIN
 
 
+def _hzm_arial(size: int = 11, bold: bool = False) -> Font:
+    """Arial font matching the golden hazmat template."""
+    return Font(name="Arial", size=size, bold=bold, color="FF000000")
+
+
+def _hzm_calibri(size: int = 10, bold: bool = False) -> Font:
+    """Value font for filled cells (golden uses Calibri 10 for data)."""
+    return Font(name="Calibri", size=size, bold=bold)
+
+
+def _hzm_format_date(value: Any, default: str = "") -> str:
+    """
+    Format a date as DD.MM.YYYY to match the golden form.
+    Accepts ISO strings (YYYY-MM-DD) or DD.MM.YYYY (passed through).
+    Falls back to whatever was supplied if parsing fails.
+    """
+    if value in (None, ""):
+        return default
+    s = str(value).strip()
+    # Already in golden DD.MM.YYYY format
+    if len(s) == 10 and s[2] == "." and s[5] == ".":
+        return s
+    # ISO YYYY-MM-DD
+    if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+        return f"{s[8:10]}.{s[5:7]}.{s[:4]}"
+    return s
+
+
 def _write_hazmat_meta(
     ws: Worksheet, manifest: Dict[str, Any], fields: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
-    Top of Hazmat form: title block, courier, AWB, package counts.
+    Top of the Hazmat form — exact reproduction of the broker's golden
+    template (Courier_Data_Form_Hazmat_4614.xlsx).
 
-    `fields` (optional) populates broker-fillable cells. All keys are
-    optional; missing keys leave the cell blank for the broker to fill
-    in manually after print.
+    Layout: title block at B2:O4 (Arial 16 bold, no fill, medium border),
+    then a meta block on rows 5-20 with merged label/value cells matching
+    the golden exactly (see the row map in the rewrite commit message).
+
+    `fields` (all optional, missing keys leave the cell blank):
+      - date, ntde_no, ced_receipt_no, vat_no
+      - carrier, date_of_arrival, rot_no
+      - no_of_skids, no_of_boxes, no_of_bags
+      - no_of_commercial_pcs, no_of_non_commercial_pcs, total_no_of_pkgs
+      - no_of_pkgs_detained, no_of_pkgs_seized, no_of_pkgs_bonded
     """
     fields = fields or {}
-    rate = float(manifest.get("exch_rate", 0))
     awb = manifest.get("manifest_no", "")
     arrival = manifest.get("arrival_date", "")
     cargo_reporter = manifest.get("cargo_reporter", "TTPOST")
@@ -823,137 +862,297 @@ def _write_hazmat_meta(
         v = fields.get(name)
         return v if v not in (None, "") else default
 
-    # Big title (rows 2-4 merged)
+    # ── Title (B2:O4, Arial 16 bold, pale-yellow fill, medium border) ─────
     ws.merge_cells("B2:O4")
-    c = ws["B2"]
-    c.value = "SWISSPORT TRANSIT SHED COURIER DATA FORM"
-    c.font = Font(name="Arial", size=14, bold=True, color="FFFFFF")
-    c.fill = FILL_TITLE
-    c.alignment = ALIGN_CENTER
-    ws.row_dimensions[2].height = 22
-    ws.row_dimensions[3].height = 22
-    ws.row_dimensions[4].height = 22
+    title = ws["B2"]
+    title.value = "SWISSPORT TRANSIT SHED COURIER DATA FORM"
+    title.font = _hzm_arial(16, bold=True)
+    title.alignment = ALIGN_CENTER
+    title.fill = FILL_HAZMAT_HEADER  # pale yellow same as tax-header row
+    # The medium border in the golden wraps the merged range; openpyxl
+    # only applies the border to the top-left of a merge, but we paint
+    # the border around the visible perimeter for visual parity.
+    medium = Side(style="medium", color="FF000000")
+    for c in "BCDEFGHIJKLMNO":
+        ws[f"{c}2"].border = Border(top=medium)
+        ws[f"{c}4"].border = Border(bottom=medium)
+    ws["B2"].border = Border(top=medium, left=medium)
+    ws["O2"].border = Border(top=medium, right=medium)
+    ws["B3"].border = Border(left=medium)
+    ws["O3"].border = Border(right=medium)
+    ws["B4"].border = Border(bottom=medium, left=medium)
+    ws["O4"].border = Border(bottom=medium, right=medium)
+    ws.row_dimensions[2].height = 20.25
+    ws.row_dimensions[3].height = 13.5
+    ws.row_dimensions[4].height = 22.5
 
-    # Row 5 — Date / NTDE No / CED Receipt / VAT No
-    ws["B5"] = "Date:"
-    ws["C5"] = field("date", arrival)
-    ws["E5"] = "NTDE No:"
-    ws["F5"] = field("ntde_no")
-    ws["I5"] = "CED Receipt No."
-    ws["K5"] = field("ced_receipt_no")
-    ws["M5"] = "VAT No:"
-    ws["N5"] = field("vat_no", manifest.get("declarant_vat_no") or "V117369")
-    for col in ("B", "E", "I", "M"):
-        ws[f"{col}5"].font = FONT_META
+    label = _hzm_arial(11, bold=True)
+    value = _hzm_calibri(10)
+    big_value = _hzm_arial(14, bold=False)  # date cell C5 is 14pt in golden
 
-    # Row 7 — Name of courier / AWB
-    ws["B7"] = "NAME OF COURIER:"
-    ws["D7"] = cargo_reporter
-    ws["J7"] = "AWB/BL #"
-    ws["K7"] = awb
-    for col in ("B", "J"):
-        ws[f"{col}7"].font = FONT_META
+    def put_label(coord: str, text: str, merge: str | None = None):
+        cell = ws[coord]
+        cell.value = text
+        cell.font = label
+        cell.alignment = ALIGN_LEFT
+        cell.border = BORDER_THIN
+        if merge:
+            ws.merge_cells(merge)
 
-    # Row 8 — Date of arrival / Rot. No / Carrier
-    ws["B8"] = "Date of Arrival:"
-    ws["D8"] = field("date_of_arrival", arrival)
-    ws["G8"] = "Rot. No"
-    ws["H8"] = field("rot_no")
-    ws["K8"] = "Carrier:"
-    ws["L8"] = field("carrier")
-    for col in ("B", "G", "K"):
-        ws[f"{col}8"].font = FONT_META
+    def put_value(coord: str, val: Any, merge: str | None = None,
+                  font: Font = value):
+        cell = ws[coord]
+        cell.value = val
+        cell.font = font
+        cell.alignment = ALIGN_LEFT
+        cell.border = BORDER_THIN
+        if merge:
+            ws.merge_cells(merge)
 
-    # Rows 9–18 — package counts
-    ws["B9"] = "No. of Skids."
-    ws["D9"] = field("no_of_skids")
-    ws["B10"] = "No. of Boxes."
-    ws["D10"] = field("no_of_boxes")
-    ws["G10"] = "No. of Commercial Pcs"
-    ws["I10"] = field("no_of_commercial_pcs", 0)
+    # ── Row 5: Date / NTDE No / CED Receipt / VAT No ─────────────────────
+    put_label("B5", "Date:", "B5:B6")
+    # Date cell (C5:D6 area in golden — C5 only, but row 5-6 are tall)
+    put_value("C5", _hzm_format_date(field("date"), _hzm_format_date(arrival)),
+              font=big_value)
+    put_label("E5", "NTDE No:", "E5:E6")
+    put_value("F5", field("ntde_no"), "F5:H6", font=big_value)
+    put_label("I5", "CED Receipt No.", "I5:J6")
+    put_value("K5", field("ced_receipt_no"), "K5:L6", font=big_value)
+    put_label("M5", "VAT No:", "M5:M6")
+    put_value("N5", field("vat_no", manifest.get("declarant_vat_no") or "V117369"),
+              "N5:O6", font=big_value)
+    ws.row_dimensions[5].height = 14.25
+    ws.row_dimensions[6].height = 14.25
 
-    # Total pkgs: prefer manual override; fall back to commercial + non-commercial sum
-    explicit_total = field("total_no_of_pkgs")
-    n_pkgs_auto = sum(int(l.get("packages") or 0) for l in manifest.get("lines", []))
-    ws["E11"] = "Total No of Pkgs"
-    if explicit_total != "":
-        ws["F11"] = explicit_total
+    # ── Row 7: Name of courier / AWB ─────────────────────────────────────
+    put_label("B7", "NAME OF COURIER:", "B7:C7")
+    put_value("D7", cargo_reporter, "D7:I7")
+    put_label("J7", "AWB/BL #")
+    put_value("K7", awb, "K7:O7")
+    ws.row_dimensions[7].height = 19.5
+
+    # Row 8: Date of Arrival / Rot. No / Carrier.
+    # Golden has D8 empty (the date is already shown in C5 above), so we
+    # only write a value here if the broker explicitly supplied one. The
+    # `date_of_arrival` field stays optional.
+    put_label("B8", "Date of Arrival:", "B8:C8")
+    doa = field("date_of_arrival")
+    if doa:
+        put_value("D8", _hzm_format_date(doa), "D8:F8")
     else:
-        ws["F11"] = "=I13+I10"   # commercial + non-commercial
+        ws.merge_cells("D8:F8")
+        ws["D8"].border = BORDER_THIN
+    put_label("G8", "Rot. No")
+    put_value("H8", field("rot_no"), "H8:J8")
+    put_label("K8", "Carrier: ")  # trailing space matches golden
+    put_value("L8", field("carrier"), "L8:O8")
 
-    ws["B13"] = "No. of bags"
-    ws["D13"] = field("no_of_bags")
-    ws["G13"] = "No. of Non Commercial Pcs"
-    ws["I13"] = field("no_of_non_commercial_pcs", n_pkgs_auto)
+    # ── Rows 9-20: package counts (laid out as in golden) ────────────────
+    # Golden uses D-column for the value cell beside each label.
+    put_label("B9", "No. of Skids.")
+    sk = field("no_of_skids")
+    if sk != "":
+        put_value("D9", sk)
+    else:
+        ws["D9"].border = BORDER_THIN
 
-    ws["B16"] = "No. of Pkgs Detained"
-    ws["D16"] = field("no_of_pkgs_detained")
-    ws["G16"] = "No. of Pkgs Seized"
-    ws["I16"] = field("no_of_pkgs_seized")
+    put_label("B10", "No. of Boxes.")
+    put_value("D10", field("no_of_boxes"))
+    put_label("G10", "No. of Commercial Pcs")
+    cp = field("no_of_commercial_pcs")
+    if cp != "":
+        put_value("I10", cp)
+    else:
+        ws["I10"].border = BORDER_THIN
 
-    ws["B18"] = "No. of Pkgs Bonded"
-    ws["D18"] = field("no_of_pkgs_bonded")
+    # Row 11: Total No of Pkgs (label E11, value F11 — trailing space matches)
+    put_label("E11", "Total No of Pkgs ")
+    explicit_total = field("total_no_of_pkgs")
+    n_pkgs_auto = sum(int(l.get("packages") or 0)
+                      for l in manifest.get("lines", []))
+    if explicit_total != "":
+        put_value("F11", explicit_total)
+    elif n_pkgs_auto:
+        put_value("F11", n_pkgs_auto)
+    else:
+        ws["F11"].border = BORDER_THIN
 
-    for r in (5, 7, 8, 9, 10, 11, 13, 16, 18):
-        for col in "BCDEFGHIJKLMN":
-            cell = ws[f"{col}{r}"]
-            if cell.value is not None and not cell.font.bold:
-                cell.font = FONT_BODY
+    # Row 9-11: J9:K11 empty merged block (golden visual spacing)
+    ws.merge_cells("J9:K11")
+    ws["J9"].border = BORDER_THIN
+
+    # Row 12: J12:K14 reserved (golden has empty merged block)
+    ws.merge_cells("J12:K14")
+    ws["J12"].value = " "
+    ws["J12"].border = BORDER_THIN
+
+    # Row 13: No. of bags / No. of Non Commercial Pcs
+    put_label("B13", "No. of bags")
+    put_value("D13", field("no_of_bags"))
+    put_label("G13", "No. of Non Commercial Pcs")
+    put_value("I13", field("no_of_non_commercial_pcs", n_pkgs_auto))
+
+    # Other empty merged blocks visible on form (C11:D11, C14:D14,
+    # E12:F14, E15:F17, J15:K17, J18:K20, G18:I20 are empty visual blocks
+    for mr in ("C11:D11", "C14:D14", "E12:F14", "E15:F17",
+               "J15:K17", "J18:K20", "G18:I20"):
+        ws.merge_cells(mr)
+        top_left = mr.split(":")[0]
+        ws[top_left].border = BORDER_THIN
+
+    # Row 16: No. of Pkgs Detained / Seized (golden has trailing space on
+    # "Detained ")
+    put_label("B16", "No. of Pkgs Detained ")
+    put_value("D16", field("no_of_pkgs_detained"))
+    put_label("G16", "No. of Pkgs Seized")
+    put_value("I16", field("no_of_pkgs_seized"))
+
+    # Row 18-20: No. of Pkgs Bonded — label in B18:D20, value in E18:F20.
+    # The other right-side blocks (G18:I20, J18:K20) are empty form spaces.
+    put_label("B18", "No. of Pkgs Bonded", "B18:D20")
+    bonded = field("no_of_pkgs_bonded")
+    ws.merge_cells("E18:F20")
+    if bonded != "":
+        ws["E18"].value = bonded
+        ws["E18"].font = value
+        ws["E18"].alignment = ALIGN_LEFT
+    ws["E18"].border = BORDER_THIN
 
 
 def _write_hazmat_tax_table(
     ws: Worksheet,
     manifest: Dict[str, Any],
 ) -> None:
-    """Write the Trade + Non-Trade tax sections."""
+    """
+    Trade + Non-Trade tax sections — exact reproduction of the golden form.
+
+    Every value cell is a 2-row × 2-col merged block (F23:G24, H23:I24,
+    etc. in the golden). All money cells hold PLAIN VALUES, no formulas
+    (same fix as the worksheet — Excel recalculation drifts from the
+    workbench figures the broker saw). Highlight rows (Final Assessed,
+    TOTAL TAXES, Total Additional Taxes) carry the pale-gray fill from
+    the golden.
+    """
     cols = HAZMAT_TAX_COLS
     totals = manifest.get("totals", {}) or {}
 
-    # Tax column headers at row 22
-    ws[f"{cols['cif']}22"] = "CIF"
-    ws[f"{cols['opt']}22"] = "OPT"
-    ws[f"{cols['duty']}22"] = "DUTY"
-    ws[f"{cols['vat']}22"] = "VAT"
-    ws[f"{cols['total']}22"] = "TOTAL"
-    for col in cols.values():
-        c = ws[f"{col}22"]
-        c.font = FONT_HEADER
-        c.fill = FILL_HAZMAT_HEADER
-        c.alignment = ALIGN_CENTER
-        c.border = BORDER_THIN
-    ws.row_dimensions[22].height = 22
+    label_font = _hzm_arial(12, bold=True)
+    value_font = _hzm_calibri(10)
 
-    # ─── Trade section (typically zero for TTPOST) ──────────────────────────
-    ws[f"B{HAZMAT_TRADE_ORIGINAL}"] = "Original Values Declared"
-    ws[f"B{HAZMAT_TRADE_ORIGINAL + 1}"] = "on Worksheet"
-    ws[f"E{HAZMAT_TRADE_ORIGINAL}"] = "Trade"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_TRADE_ORIGINAL}"] = 0
-    _hzm_sum_total(ws, HAZMAT_TRADE_ORIGINAL)
+    # ── Row 22: tax column headers (pale yellow, Arial 12 bold, merged
+    # as F22:G22, H22:I22, J22:K22, L22:M22, N22:O22) ────────────────────
+    header_specs = [
+        ("F22", "F22:G22", "CIF"),
+        ("H22", "H22:I22", "OPT"),
+        ("J22", "J22:K22", "DUTY"),
+        ("L22", "L22:M22", "VAT"),
+        ("N22", "N22:O22", "TOTAL"),
+    ]
+    for coord, merge, text in header_specs:
+        ws.merge_cells(merge)
+        cell = ws[coord]
+        cell.value = text
+        cell.font = label_font
+        cell.fill = FILL_HAZMAT_HEADER
+        cell.alignment = ALIGN_CENTER
+        cell.border = BORDER_THIN
+    ws.row_dimensions[22].height = 15.75
 
-    ws[f"B{HAZMAT_TRADE_ADDITIONAL + 1}"] = "Additional Taxes"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_TRADE_ADDITIONAL}"] = (
-                f"={col}{HAZMAT_TRADE_FINAL}-{col}{HAZMAT_TRADE_ORIGINAL}"
-            )
-    _hzm_sum_total(ws, HAZMAT_TRADE_ADDITIONAL)
+    def write_money_row(row: int, cif: float, opt: float, duty: float,
+                        vat: float, total: float, highlight: bool = False,
+                        blank_total: bool = False):
+        """
+        Write a money row across 5 merged 2-col blocks. Plain values, no
+        formulas. `highlight` paints the gray fill seen on Final/TOTAL rows.
+        `blank_total` matches the golden where Trade-zero rows leave the
+        TOTAL column visually empty (the merge exists, the cell is blank).
+        """
+        merges = {
+            "cif":   (f"F{row}",  f"F{row}:G{row+1}"),
+            "opt":   (f"H{row}",  f"H{row}:I{row+1}"),
+            "duty":  (f"J{row}",  f"J{row}:K{row+1}"),
+            "vat":   (f"L{row}",  f"L{row}:M{row+1}"),
+            "total": (f"N{row}",  f"N{row}:O{row+1}"),
+        }
+        values = {"cif": cif, "opt": opt, "duty": duty, "vat": vat,
+                  "total": total}
+        for key, (coord, merge) in merges.items():
+            ws.merge_cells(merge)
+            cell = ws[coord]
+            if key == "total" and blank_total:
+                cell.value = None
+            else:
+                cell.value = round(values[key], 2)
+            cell.font = value_font
+            cell.alignment = ALIGN_RIGHT
+            cell.number_format = FMT_TTD
+            cell.border = BORDER_THIN
+            if highlight:
+                cell.fill = FILL_HAZMAT_FINAL
 
-    ws[f"B{HAZMAT_TRADE_FINAL + 1}"] = "Final Assessed Values"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_TRADE_FINAL}"] = 0
-    _hzm_sum_total(ws, HAZMAT_TRADE_FINAL)
+    def write_section_label(row: int, line1: str, line2: str | None,
+                            section_name: str | None, section_merge: str | None,
+                            highlight_label_row: bool = False):
+        """Write the B-column section labels and the E-column section name."""
+        ws[f"B{row}"].value = line1
+        ws[f"B{row}"].font = label_font
+        ws[f"B{row}"].border = BORDER_THIN
+        if highlight_label_row:
+            for col in "BCDE":
+                ws[f"{col}{row}"].fill = FILL_HAZMAT_FINAL
+        if line2:
+            ws[f"B{row+1}"].value = line2
+            ws[f"B{row+1}"].font = label_font
+            ws[f"B{row+1}"].border = BORDER_THIN
+        if section_name and section_merge:
+            ws.merge_cells(section_merge)
+            ws[f"E{row}"].value = section_name
+            ws[f"E{row}"].font = label_font
+            ws[f"E{row}"].alignment = ALIGN_CENTER
+            ws[f"E{row}"].border = BORDER_THIN
 
-    # ─── Non-Trade section (the manifest values) ────────────────────────────
-    # Original = the totals from the Worksheet (declared)
+    # ── TRADE section (rows 23-28). Typically zero for TTPOST express. ──
+    # Trade Original Declared (B23/B24 labels, E23:E28 section name "Trade")
+    write_section_label(23, "Original Values Declared", "on Worksheet",
+                        "Trade", "E23:E28")
+    write_money_row(23, 0, 0, 0, 0, 0, blank_total=True)
+
+    # Trade Additional Taxes (label on row 26, values on row 27).
+    # Row 25 in the golden has empty merged blocks (F25:G26, H25:I26,
+    # J25:K26, L25:M26, N25:O26) — purely visual spacing reserves. Create
+    # them empty too for layout parity.
+    for mr in ("F25:G26", "H25:I26", "J25:K26", "L25:M26", "N25:O26"):
+        ws.merge_cells(mr)
+        ws[mr.split(":")[0]].border = BORDER_THIN
+    ws[f"B26"].value = "Additional Taxes"
+    ws[f"B26"].font = label_font
+    ws[f"B26"].border = BORDER_THIN
+    write_money_row(27, 0, 0, 0, 0, 0, blank_total=True)
+
+    # Trade Final Assessed (label on row 28, values would be on row 29 but
+    # the golden actually has NO row 29 values — it has row 27 then jumps to
+    # row 28 label. Looking at the golden again: row 23 values, row 26 label
+    # "Additional Taxes", row 27 values, row 28 label "Final Assessed
+    # Values" with NO values row beneath. So Trade has only 2 value rows.
+    # The "Final Assessed Values" label highlights gray.
+    ws[f"B28"].value = "Final Assessed Values"
+    ws[f"B28"].font = label_font
+    ws[f"B28"].border = BORDER_THIN
+    for col in "BCD":
+        ws[f"{col}28"].fill = FILL_HAZMAT_FINAL
+
+    # ── NON-TRADE section (rows 31-36) — the manifest values land here ──
     orig_cif = float(totals.get("total_cif_ttd") or 0)
     orig_duty = float(totals.get("total_duty") or 0)
     orig_opt = float(totals.get("total_opt") or 0)
     orig_vat = float(totals.get("total_vat") or 0)
+    orig_total = orig_cif + orig_opt + orig_duty + orig_vat
+    # Wait — the golden's N31=1183.76 with F31=2819.61, H31=197.37,
+    # J31=541.57, L31=444.82. Sum of OPT+DUTY+VAT = 197.37+541.57+444.82
+    # = 1183.76. So the TOTAL column for the Non-Trade section is taxes
+    # only (not including CIF). Match that.
+    orig_total = orig_opt + orig_duty + orig_vat
 
-    # Additional = sum of officer correction add_* values
     add_duty = 0.0
     add_opt = 0.0
     add_vat = 0.0
@@ -964,80 +1163,66 @@ def _write_hazmat_tax_table(
         add_opt += float(c.get("add_opt") or 0)
         add_vat += float(c.get("add_vat") or 0)
         add_cif += float(c.get("adjusted_cif_ttd") or 0)
+    add_total = add_opt + add_duty + add_vat
 
-    ws[f"B{HAZMAT_NT_ORIGINAL}"] = "Original Values Declared"
-    ws[f"B{HAZMAT_NT_ORIGINAL + 1}"] = "on Worksheet"
-    ws[f"E{HAZMAT_NT_ORIGINAL}"] = "Non-Trade"
-    ws[f"{cols['cif']}{HAZMAT_NT_ORIGINAL}"] = round(orig_cif, 2)
-    ws[f"{cols['opt']}{HAZMAT_NT_ORIGINAL}"] = round(orig_opt, 2)
-    ws[f"{cols['duty']}{HAZMAT_NT_ORIGINAL}"] = round(orig_duty, 2)
-    ws[f"{cols['vat']}{HAZMAT_NT_ORIGINAL}"] = round(orig_vat, 2)
-    _hzm_sum_total(ws, HAZMAT_NT_ORIGINAL)
+    final_cif = orig_cif + add_cif
+    final_opt = orig_opt + add_opt
+    final_duty = orig_duty + add_duty
+    final_vat = orig_vat + add_vat
+    final_total = final_opt + final_duty + final_vat
 
-    ws[f"B{HAZMAT_NT_ADDITIONAL + 1}"] = "Additional Taxes"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_NT_ADDITIONAL}"] = (
-                f"={col}{HAZMAT_NT_FINAL}-{col}{HAZMAT_NT_ORIGINAL}"
-            )
-    _hzm_sum_total(ws, HAZMAT_NT_ADDITIONAL)
+    # Non-Trade Original (B31/B32 labels, E31:E36 section name "Non-Trade")
+    write_section_label(31, "Original Values Declared", "on Worksheet",
+                        "Non-Trade", "E31:E36")
+    write_money_row(31, orig_cif, orig_opt, orig_duty, orig_vat, orig_total)
 
-    ws[f"B{HAZMAT_NT_FINAL + 1}"] = "Final Assessed Values"
-    final_cif = round(orig_cif + add_cif, 2)
-    final_duty = round(orig_duty + add_duty, 2)
-    final_opt = round(orig_opt + add_opt, 2)
-    final_vat = round(orig_vat + add_vat, 2)
-    ws[f"{cols['cif']}{HAZMAT_NT_FINAL}"] = final_cif
-    ws[f"{cols['opt']}{HAZMAT_NT_FINAL}"] = final_opt
-    ws[f"{cols['duty']}{HAZMAT_NT_FINAL}"] = final_duty
-    ws[f"{cols['vat']}{HAZMAT_NT_FINAL}"] = final_vat
-    _hzm_sum_total(ws, HAZMAT_NT_FINAL)
+    # Non-Trade Additional (label on row 34, values on row 33)
+    ws[f"B34"].value = "Additional Taxes"
+    ws[f"B34"].font = label_font
+    ws[f"B34"].border = BORDER_THIN
+    write_money_row(33, add_cif, add_opt, add_duty, add_vat, add_total)
 
-    # ─── Summary footer ─────────────────────────────────────────────────────
-    ws[f"B{HAZMAT_TOTAL_ADDITIONAL + 1}"] = "Total Additional Taxes"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_TOTAL_ADDITIONAL}"] = f"={col}{HAZMAT_NT_ADDITIONAL}"
-    _hzm_sum_total(ws, HAZMAT_TOTAL_ADDITIONAL)
+    # Non-Trade Final (label on row 36 with gray highlight, values on
+    # row 35)
+    ws[f"B36"].value = "Final Assessed Values"
+    ws[f"B36"].font = label_font
+    ws[f"B36"].border = BORDER_THIN
+    for col in "BCD":
+        ws[f"{col}36"].fill = FILL_HAZMAT_FINAL
+    write_money_row(35, final_cif, final_opt, final_duty, final_vat, final_total)
 
-    ws[f"B{HAZMAT_TOTAL_TAXES + 1}"] = "TOTAL TAXES"
-    for col in cols.values():
-        if col != cols["total"]:
-            ws[f"{col}{HAZMAT_TOTAL_TAXES}"] = f"={col}{HAZMAT_NT_FINAL}"
-    _hzm_sum_total(ws, HAZMAT_TOTAL_TAXES)
+    # ── Summary footer ──────────────────────────────────────────────────
+    # Total Additional Taxes — label row 39, values row 38 (gray highlight
+    # NOT shown on row 38 in golden — only row 41 highlights)
+    ws[f"B39"].value = "Total Additional Taxes"
+    ws[f"B39"].font = label_font
+    ws[f"B39"].border = BORDER_THIN
+    write_money_row(38, add_cif, add_opt, add_duty, add_vat, add_total)
 
-    # Apply money formatting + boldness
-    money_rows = [
-        HAZMAT_TRADE_ORIGINAL, HAZMAT_TRADE_ADDITIONAL, HAZMAT_TRADE_FINAL,
-        HAZMAT_NT_ORIGINAL, HAZMAT_NT_ADDITIONAL, HAZMAT_NT_FINAL,
-        HAZMAT_TOTAL_ADDITIONAL, HAZMAT_TOTAL_TAXES,
-    ]
-    _hzm_apply_money_format(ws, money_rows)
+    # TOTAL TAXES — label row 42 (gray), values row 41 (gray)
+    ws[f"B42"].value = "TOTAL TAXES"
+    ws[f"B42"].font = label_font
+    ws[f"B42"].border = BORDER_THIN
+    for col in "BCDE":
+        ws[f"{col}42"].fill = FILL_HAZMAT_FINAL
+    write_money_row(41, final_cif, final_opt, final_duty, final_vat,
+                    final_total, highlight=True)
 
-    # Highlight final-assessed and total-taxes rows
-    for r in (HAZMAT_NT_FINAL, HAZMAT_TOTAL_TAXES):
-        for col in cols.values():
-            ws[f"{col}{r}"].fill = FILL_HAZMAT_FINAL
-            ws[f"{col}{r}"].font = FONT_BODY_BOLD
-
-    # Section labels
-    for r in money_rows:
-        for col in ("B",):
-            cell = ws[f"{col}{r + 1}" if r in (
-                HAZMAT_TRADE_ORIGINAL, HAZMAT_TRADE_ADDITIONAL, HAZMAT_TRADE_FINAL,
-                HAZMAT_NT_ORIGINAL, HAZMAT_NT_ADDITIONAL, HAZMAT_NT_FINAL,
-                HAZMAT_TOTAL_ADDITIONAL, HAZMAT_TOTAL_TAXES,
-            ) else f"{col}{r}"]
-            if cell.value:
-                cell.font = FONT_BODY
-        for col in ("B",):
-            ws[f"{col}{r}"].font = FONT_BODY_BOLD
+    # Row heights matching golden
+    for r, h in [(23, 15.0), (24, 15.0), (25, 15.0), (26, 15.75),
+                 (27, 15.0), (28, 15.0), (29, 15.0), (30, 15.0),
+                 (31, 15.0), (32, 15.0), (33, 15.0), (34, 15.75),
+                 (35, 15.0), (36, 15.0), (37, 15.0), (38, 15.0),
+                 (39, 15.75), (41, 15.0), (42, 15.75)]:
+        ws.row_dimensions[r].height = h
 
 
 def _set_hazmat_widths(ws: Worksheet) -> None:
+    # Widths from the golden template (Courier_Data_Form_Hazmat_4614.xlsx).
+    # Columns G-O default — the golden only customises A-F and P-Q which
+    # are off the visible form, so the rest fall to Excel default (~8.43).
     widths = {
-        "A": 3, "B": 18, "C": 11, "D": 11, "E": 11, "F": 11, "G": 13,
-        "H": 11, "I": 11, "J": 11, "K": 11, "L": 11, "M": 11, "N": 11, "O": 11,
+        "A": 4.57, "B": 9.14, "C": 11.43, "D": 5.43, "E": 14.71, "F": 12.0,
     }
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
@@ -1050,6 +1235,14 @@ def build_hazmat(
     """
     Build the Swissport Transit Shed Courier Data Form XLSX as bytes.
 
+    The output is an exact reproduction of the broker's golden template
+    (Courier_Data_Form_Hazmat_4614.xlsx): same merges, fonts (Arial 11
+    labels, Calibri 10 values, Arial 16 title), pale-yellow tax header
+    row, gray-highlighted "Final Assessed Values" and "TOTAL TAXES"
+    rows, landscape orientation. Every money cell holds a plain VALUE,
+    no formulas — what the broker saw in the workbench is what the
+    XLSX shows.
+
     `courier_data_fields` (all optional, missing fields render blank):
       - date, ntde_no, ced_receipt_no, vat_no
       - carrier, date_of_arrival, rot_no
@@ -1061,8 +1254,8 @@ def build_hazmat(
     ws = wb.active
     ws.title = "Sheet1"
 
-    # Page setup: portrait, fit-to-page, A4 — matches real broker template.
-    ws.page_setup.orientation = ws.ORIENTATION_PORTRAIT
+    # Landscape — matches golden.
+    ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
     ws.page_setup.paperSize = ws.PAPERSIZE_A4
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 1
