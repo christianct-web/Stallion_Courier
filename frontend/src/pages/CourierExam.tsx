@@ -147,31 +147,67 @@ function CorrectionCard({
 
       const r = computeUpliftFromCost(cost, exchRate, dutyRate);
 
-      // Apply the exemption class CORRECTLY:
-      //   full_exempt    → duty = OPT = VAT = 0
-      //   duty_free_only → duty = 0, OPT and VAT still apply
-      //   none           → all apply at the looked-up rate
-      let addDuty = r.add_duty;
-      let addOpt = r.add_opt;
-      let addVat = r.add_vat;
-      if (cls === "full_exempt") {
-        addDuty = 0;
-        addOpt = 0;
-        addVat = 0;
-      } else if (cls === "duty_free_only") {
-        addDuty = 0;
-        // OPT/VAT recompute WITHOUT duty in the base
-        addOpt = +(r.adj_cif * 0.07).toFixed(2);
-        addVat = +((r.adj_cif + 0 + addOpt) * 0.125).toFixed(2);
-      }
+      // Existing line corrections must recalc from NEW total value + NEW THN,
+      // then write Section 3 as deltas vs original assessed taxes.
+      if (line) {
+        const baseCostUsd = Number(line.cost_usd || 0);
+        const baseCifTtd = Number(line.cif_ttd || 0);
+        const oldDuty = Number(line.duty || 0);
+        const oldOpt = Number(line.opt || 0);
+        const oldVat = Number(line.vat || 0);
 
-      onChange({
-        ...draft,
-        adjusted_cif_ttd: String(r.adj_cif),
-        add_duty: String(addDuty),
-        add_opt: String(addOpt),
-        add_vat: String(addVat),
-      });
+        const newCostUsd = baseCostUsd + cost;
+        const newCifTtd = +(newCostUsd * exchRate).toFixed(2);
+
+        let newDuty = 0;
+        let newOpt = 0;
+        let newVat = 0;
+
+        if (cls === "full_exempt") {
+          newDuty = 0;
+          newOpt = 0;
+          newVat = 0;
+        } else if (cls === "duty_free_only") {
+          newDuty = 0;
+          newOpt = +(newCifTtd * 0.07).toFixed(2);
+          newVat = +((newCifTtd + 0 + newOpt) * 0.125).toFixed(2);
+        } else {
+          newDuty = +(newCifTtd * dutyRate).toFixed(2);
+          newOpt = +(newCifTtd * 0.07).toFixed(2);
+          newVat = +((newCifTtd + newDuty + newOpt) * 0.125).toFixed(2);
+        }
+
+        onChange({
+          ...draft,
+          adjusted_cif_ttd: String((newCifTtd - baseCifTtd).toFixed(2)),
+          add_duty: String((newDuty - oldDuty).toFixed(2)),
+          add_opt: String((newOpt - oldOpt).toFixed(2)),
+          add_vat: String((newVat - oldVat).toFixed(2)),
+        });
+      } else {
+        // Officer-discovered line (no baseline): Section 3 values are absolute adds.
+        // Apply exemption class to the uplift-derived tax values.
+        let addDuty = r.add_duty;
+        let addOpt = r.add_opt;
+        let addVat = r.add_vat;
+        if (cls === "full_exempt") {
+          addDuty = 0;
+          addOpt = 0;
+          addVat = 0;
+        } else if (cls === "duty_free_only") {
+          addDuty = 0;
+          addOpt = +(r.adj_cif * 0.07).toFixed(2);
+          addVat = +((r.adj_cif + 0 + addOpt) * 0.125).toFixed(2);
+        }
+
+        onChange({
+          ...draft,
+          adjusted_cif_ttd: String(r.adj_cif),
+          add_duty: String(addDuty),
+          add_opt: String(addOpt),
+          add_vat: String(addVat),
+        });
+      }
       const label = cls === "full_exempt" ? "EXEMPT"
         : cls === "duty_free_only" ? "FREE (OPT+VAT only)"
         : `${Math.round(dutyRate * 100)}%`;
