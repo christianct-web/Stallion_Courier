@@ -99,8 +99,9 @@ function CorrectionCard({
   const recomputeFromCost = useCallback(async () => {
     if (!draft.officer_thn) { toast.error("Set officer THN first"); return; }
     const cost = parseFloat(draft.add_cost_usd);
-    const isZeroUpliftReclass = draft.kind === "reclass" && !(cost > 0);
-    if (!(cost > 0) && !isZeroUpliftReclass) { toast.error("Set add cost USD first"); return; }
+    const hasCostInput = Number.isFinite(cost) && cost !== 0;
+    const isZeroUpliftReclass = draft.kind === "reclass" && !hasCostInput;
+    if (!hasCostInput && !isZeroUpliftReclass) { toast.error("Set add cost USD first"); return; }
     try {
       const res = await lookupThn(draft.officer_thn);
       const cls = res.exemption_class;
