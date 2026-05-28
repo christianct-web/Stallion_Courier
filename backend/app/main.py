@@ -26,6 +26,7 @@ from .routes.clients import router as clients_router
 from .routes.documents import router as documents_router
 from .routes.courier import router as courier_router
 from .routes.courier_rules import router as courier_rules_router
+from .routes.sheets import router as sheets_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -80,3 +81,4 @@ app.include_router(clients_router)
 app.include_router(documents_router)
 app.include_router(courier_router)
 app.include_router(courier_rules_router)
+app.include_router(sheets_router)

@@ -9,6 +9,8 @@ const DeclarationsList = lazy(() => import("./pages/DeclarationsList"));
 const StallionWorkbench = lazy(() => import("./pages/StallionWorkbench"));
 const BrokerReview4 = lazy(() => import("./pages/BrokerReview4"));
 const DocumentUpload = lazy(() => import("./pages/DocumentUpload"));
+const StallionSheet = lazy(() => import("./pages/StallionSheet"));
+const StallionSheetList = lazy(() => import("./pages/StallionSheetList"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ActivityLog = lazy(() => import("./pages/ActivityLog"));
 const ClientsPage = lazy(() => import("./pages/Clients"));
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/stallion/workbench" element={<StallionWorkbench />} />
             <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
             <Route path="/stallion/extract" element={<DocumentUpload />} />
+            <Route path="/stallion/sheets" element={<StallionSheetList />} />
+            <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
             <Route path="/stallion/log" element={<ActivityLog />} />
             <Route path="/stallion/clients" element={<ClientsPage />} />
             <Route path="/stallion/courier" element={<CourierManifests />} />
