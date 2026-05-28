@@ -37,6 +37,10 @@ export interface SheetTotals {
 
 export interface Sheet {
   id: string; reference: string; status: string;
+  client_id?: string;
+  reviewed_at?: string; reviewed_by?: string; submitted_at?: string;
+  receipt_number?: string;
+  status_history?: { from: string; to: string; at: string; actor: string; notes: string }[];
   consignee: string; consignee_tin: string; consignor: string;
   vessel: string; bl_number: string; port: string; arrival_date: string;
   incoterm: string; exchange_rate: number; freight_usd: number;
@@ -49,7 +53,22 @@ export interface Sheet {
   broker_notes: string; created_at: string; updated_at: string;
 }
 
+export interface Client {
+  id: string; name: string; consigneeCode: string; tin: string;
+  address?: string; contactName?: string; defaultBrokerageFee?: number;
+}
+
 const j = (r: Response) => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); };
+
+export const setStatus = (id: string, status: string, extra?: { notes?: string; receipt_number?: string }): Promise<Sheet> =>
+  fetch(`${BASE}/${id}/status`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status, ...(extra || {}) }),
+  }).then(j);
+
+export const listClients = (): Promise<Client[]> =>
+  fetch(`${STALLION_BASE_URL}/clients`).then(j)
+    .then((r: any) => (Array.isArray(r) ? r : r.items || []));
 
 export const getReference = (): Promise<RefData> => fetch(`${BASE}/reference`).then(j);
 export const listSheets = (): Promise<Sheet[]> => fetch(BASE).then(j);

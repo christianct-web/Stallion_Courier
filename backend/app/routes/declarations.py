@@ -245,4 +245,12 @@ def activity_log(limit: int = 200):
             })
 
     events.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
-    return {"events": events[:limit], "total": len(events)}
+    # Fold in declaration-sheet events so the new flow shows in the Log too.
+    try:
+        from ..services import sheet_service
+        sheet_evts = sheet_service.sheet_events()
+    except Exception:
+        sheet_evts = []
+    all_events = events + sheet_evts
+    all_events.sort(key=lambda e: e.get("timestamp", ""), reverse=True)
+    return {"events": all_events[:limit], "total": len(all_events)}

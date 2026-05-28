@@ -18,11 +18,13 @@
  * (and keep a thin list page mirroring CourierManifests — see StallionSheetList.tsx)
  */
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   getSheet, updateHeader, addLine, updateLine, deleteLine,
   classify, getReference, worksheetUrl, generateXml, uploadExtract,
-  Sheet, SheetLine, RefOption, RefData,
+  setStatus, listClients,
+  Sheet, SheetLine, RefOption, RefData, Client,
 } from "@/services/sheetApi";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
@@ -259,13 +261,16 @@ function GenerateModal({ sheet, refData, onClose, onGenerate }: {
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function StallionSheet() {
   const { sheetId = "" } = useParams();
+  const nav = useNavigate();
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [refData, setRefData] = useState<RefData | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [showGen, setShowGen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { getReference().then(setRefData); }, []);
+  useEffect(() => { listClients().then(setClients).catch(() => {}); }, []);
   useEffect(() => { if (sheetId) getSheet(sheetId).then(setSheet); }, [sheetId]);
 
   const patchHeader = useCallback(async (patch: Partial<Sheet>) => {
@@ -277,13 +282,41 @@ export default function StallionSheet() {
   const addRow = useCallback(async () => { setSheet(await addLine(sheetId, {})); }, [sheetId]);
   const removeRow = useCallback(async (n: number) => { setSheet(await deleteLine(sheetId, n)); }, [sheetId]);
 
+  // Pick a client -> autofill consignee, TIN, default brokerage fee.
+  const pickClient = useCallback(async (clientId: string) => {
+    const c = clients.find(x => x.id === clientId);
+    if (!c) { await patchHeader({ client_id: "" }); return; }
+    await patchHeader({
+      client_id: c.id,
+      consignee: c.name,
+      consignee_tin: c.tin || c.consigneeCode || "",
+    });
+    toast.success(`Loaded ${c.name}`);
+  }, [clients, patchHeader]);
+
+  const advance = useCallback(async (status: string) => {
+    try {
+      let extra: any = {};
+      if (status === "receipted") {
+        const rn = window.prompt("Receipt number?") || "";
+        extra.receipt_number = rn;
+      }
+      const s = await setStatus(sheetId, status, extra); setSheet(s);
+      toast.success(`Marked ${status}`);
+    } catch (e: any) {
+      toast.error(`Could not change status (${e?.message || "error"})`);
+    }
+  }, [sheetId]);
+
   const onUpload = useCallback(async (file: File) => {
     const s = await uploadExtract(sheetId, file); setSheet(s);  // auto-populates grid
+    toast.success("Documents extracted");
   }, [sheetId]);
 
   const onGenerate = useCallback(async (patch: Partial<Sheet>) => {
     setShowGen(false);
-    await generateXml(sheetId, patch); // triggers download
+    try { await generateXml(sheetId, patch); toast.success("C82 XML generated"); }
+    catch (e: any) { toast.error(`XML failed: ${e?.message || "preflight error"}`); }
   }, [sheetId]);
 
   const toggle = (n: number) => setExpanded(p => {
@@ -303,14 +336,59 @@ export default function StallionSheet() {
     }}>{label}</th>
   );
 
+  // Lifecycle: which transitions are offered from the current status.
+  const NEXT: Record<string, { to: string; label: string }[]> = {
+    draft: [{ to: "pending", label: "Submit for review" }],
+    pending: [{ to: "approved", label: "Approve" }, { to: "correction", label: "Send back" }],
+    correction: [{ to: "pending", label: "Re-submit" }],
+    approved: [{ to: "submitted", label: "Mark submitted" }, { to: "correction", label: "Send back" }],
+    submitted: [{ to: "receipted", label: "Mark receipted" }],
+    receipted: [],
+  };
+  const statusColor: Record<string, string> = {
+    draft: C.inkLight, pending: "#B8860B", correction: "#B02020",
+    approved: "#1A5E3A", submitted: "#2A4D8F", receipted: "#5A3A8A",
+  };
+
   return (
     <div style={{ background: C.paper, minHeight: "100%", padding: 20 }}>
+      {/* ── breadcrumb + status bar ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+        <button onClick={() => nav("/stallion/sheets")} style={{
+          fontFamily: MONO, fontSize: 12, padding: "6px 12px", cursor: "pointer",
+          border: `1px solid ${C.paperMid}`, borderRadius: 4, background: "#fff", color: C.ink,
+        }}>← Sheets</button>
+        <span style={{ fontFamily: MONO, fontSize: 13, color: C.inkMid }}>
+          {sheet.reference || "(untitled sheet)"}{sheet.consignee ? ` · ${sheet.consignee}` : ""}
+        </span>
+        <span style={{
+          fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase",
+          padding: "3px 9px", borderRadius: 3, color: "#fff",
+          background: statusColor[sheet.status] || C.inkLight,
+        }}>{sheet.status}</span>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          {(NEXT[sheet.status] || []).map(t => (
+            <button key={t.to} onClick={() => advance(t.to)} style={{
+              fontFamily: MONO, fontSize: 12, padding: "6px 14px", cursor: "pointer", borderRadius: 4,
+              border: t.to === "correction" ? `1px solid ${C.paperMid}` : "none",
+              background: t.to === "correction" ? "#fff" : C.ink,
+              color: t.to === "correction" ? C.ink : "#fff",
+            }}>{t.label}</button>
+          ))}
+        </div>
+      </div>
       {/* ── header strip ── */}
       <div style={{
         background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6,
         padding: 16, marginBottom: 14,
       }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+          <Field label="Client">
+            <Select value={sheet.client_id || ""} width={220}
+              options={[{ code: "", label: "— select client —" },
+                ...clients.map(c => ({ code: c.id, label: c.name }))]}
+              onCommit={pickClient} />
+          </Field>
           <Field label="Consignee"><Cell value={sheet.consignee} mono={false} width={220}
             onCommit={v => patchHeader({ consignee: v })} /></Field>
           <Field label="Reference #"><Cell value={sheet.reference} width={130}

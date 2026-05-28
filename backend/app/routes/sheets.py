@@ -76,6 +76,25 @@ def sheets_delete(sheet_id: str):
     return {"ok": True}
 
 
+@router.post("/{sheet_id}/status")
+def sheets_set_status(sheet_id: str, req: Dict[str, Any]):
+    new_status = (req or {}).get("status", "")
+    if not new_status:
+        raise HTTPException(400, "status required")
+    try:
+        s = sheet_service.set_status(
+            sheet_id, new_status,
+            actor=req.get("actor", "broker"),
+            notes=req.get("notes", ""),
+            receipt_number=req.get("receipt_number", ""),
+        )
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+    if not s:
+        raise HTTPException(404, "Sheet not found")
+    return s
+
+
 @router.post("/{sheet_id}/recompute")
 def sheets_recompute(sheet_id: str):
     s = sheet_service.get_sheet(sheet_id)

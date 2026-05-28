@@ -197,6 +197,14 @@ def _blank_sheet() -> Dict[str, Any]:
         "id": _new_id(),
         "reference": "",
         "status": "draft",
+        # lifecycle: draft -> pending -> approved -> submitted -> receipted
+        #            (or -> correction from pending/approved)
+        "client_id": "",
+        "reviewed_at": "",
+        "reviewed_by": "",
+        "submitted_at": "",
+        "receipt_number": "",
+        "status_history": [],
         # header strip
         "consignee": "", "consignee_tin": "",
         "consignor": "",
@@ -273,9 +281,50 @@ def update_header(sheet_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, An
     if not sheet:
         return None
     for k, v in patch.items():
-        if k in sheet and k not in ("id", "lines", "totals", "created_at"):
+        if k in sheet and k not in ("id", "lines", "totals", "created_at", "status",
+                                    "status_history", "reviewed_at", "submitted_at"):
             sheet[k] = v
     recompute(sheet)
+    _save(items)
+    return sheet
+
+
+# Allowed lifecycle transitions. draft -> pending -> approved -> submitted -> receipted,
+# with correction reachable from pending/approved and re-openable to pending.
+_TRANSITIONS = {
+    "draft": {"pending"},
+    "pending": {"approved", "correction", "draft"},
+    "correction": {"pending", "draft"},
+    "approved": {"submitted", "correction"},
+    "submitted": {"receipted"},
+    "receipted": set(),
+}
+
+
+def set_status(sheet_id: str, new_status: str, *, actor: str = "broker",
+               notes: str = "", receipt_number: str = "") -> Optional[Dict[str, Any]]:
+    """Move a sheet through its lifecycle, recording history + timestamps."""
+    items = _load()
+    sheet = next((s for s in items if s["id"] == sheet_id), None)
+    if not sheet:
+        return None
+    cur = sheet.get("status", "draft")
+    if new_status not in _TRANSITIONS.get(cur, set()):
+        raise ValueError(f"Illegal transition {cur} -> {new_status}")
+
+    now = _utcnow()
+    sheet["status"] = new_status
+    sheet.setdefault("status_history", []).append({
+        "from": cur, "to": new_status, "at": now, "actor": actor, "notes": notes,
+    })
+    if new_status in ("approved", "correction", "pending"):
+        sheet["reviewed_at"] = now
+        sheet["reviewed_by"] = actor
+    if new_status == "submitted":
+        sheet["submitted_at"] = now
+    if new_status == "receipted" and receipt_number:
+        sheet["receipt_number"] = receipt_number
+    sheet["updated_at"] = now
     _save(items)
     return sheet
 
@@ -464,3 +513,33 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
                 "licenceNo": ln.get("licence_no"),
             })
     return {"header": header, "worksheet": worksheet, "items": items, "containers": []}
+
+
+def sheet_events() -> List[Dict[str, Any]]:
+    """
+    Flatten all sheets into activity-log events, shaped like the declarations
+    /log feed so the Log page can merge them. One 'created' event per sheet,
+    plus one event per status_history entry.
+    """
+    events: List[Dict[str, Any]] = []
+    for s in _load():
+        ref = s.get("reference") or s.get("id", "")[:12] or "—"
+        consignee = s.get("consignee", "")
+        sid = s.get("id", "")
+        if s.get("created_at"):
+            events.append({
+                "event": "created", "declaration_id": sid, "reference": ref,
+                "consignee": consignee, "source": "SHEET", "confidence": None,
+                "timestamp": s["created_at"], "actor": "ops", "notes": "Sheet created",
+            })
+        for h in s.get("status_history", []):
+            note = h.get("notes", "")
+            if h.get("to") == "receipted" and s.get("receipt_number"):
+                note = f"Receipt #{s['receipt_number']}"
+            events.append({
+                "event": h.get("to"), "declaration_id": sid, "reference": ref,
+                "consignee": consignee, "source": "SHEET", "confidence": None,
+                "timestamp": h.get("at", ""), "actor": h.get("actor", "broker"),
+                "notes": note,
+            })
+    return events
