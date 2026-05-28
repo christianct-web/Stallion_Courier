@@ -6,9 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 const DeclarationsList = lazy(() => import("./pages/DeclarationsList"));
-const StallionWorkbench = lazy(() => import("./pages/StallionWorkbench"));
-const BrokerReview4 = lazy(() => import("./pages/BrokerReview4"));
-const DocumentUpload = lazy(() => import("./pages/DocumentUpload"));
+const BrokerReview4 = lazy(() => import("./pages/BrokerReview4")); // legacy, off-nav
 const StallionSheet = lazy(() => import("./pages/StallionSheet"));
 const StallionSheetList = lazy(() => import("./pages/StallionSheetList"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -34,11 +32,12 @@ const App = () => (
         <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/" element={<DeclarationsList />} />
-            <Route path="/stallion/workbench" element={<StallionWorkbench />} />
-            <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
-            <Route path="/stallion/extract" element={<DocumentUpload />} />
+            {/* New simplified flow (replaces Workbench + Extract) */}
             <Route path="/stallion/sheets" element={<StallionSheetList />} />
             <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
+            {/* Legacy: kept only so the 24 existing declarations stay openable.
+                Off the nav. Remove once they have aged out / been migrated. */}
+            <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
             <Route path="/stallion/log" element={<ActivityLog />} />
             <Route path="/stallion/clients" element={<ClientsPage />} />
             <Route path="/stallion/courier" element={<CourierManifests />} />

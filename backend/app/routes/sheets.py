@@ -206,7 +206,7 @@ def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
         inputs["header"], inputs["worksheet"], inputs["items"], inputs["containers"]
     )
     report = declaration_service.validate_decl(decl)
-    if report.get("status") == "error":
+    if report.get("status") != "pass":
         raise HTTPException(422, {"message": "Preflight failed", "report": report})
 
     xml_bytes = declaration_service.export_xml(decl)

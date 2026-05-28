@@ -3,12 +3,10 @@ import { ReactNode } from "react";
 
 const NAV_LINKS = [
   { label: "Dashboard", path: "/" },
-  { label: "Workbench",  path: "/stallion/workbench" },
-  { label: "Courier",    path: "/stallion/courier" },
-  { label: "Review",     path: "/stallion/brokerreview4" },
-  { label: "Extract",    path: "/stallion/extract" },
-  { label: "Clients",    path: "/stallion/clients" },
-  { label: "Log",        path: "/stallion/log" },
+  { label: "Sheets",    path: "/stallion/sheets" },
+  { label: "Courier",   path: "/stallion/courier" },
+  { label: "Clients",   path: "/stallion/clients" },
+  { label: "Log",       path: "/stallion/log" },
 ];
 
 const void_ = "#111318";

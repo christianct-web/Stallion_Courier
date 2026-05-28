@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { listDeclarations, downloadRegisterCsv, deleteDeclaration, generatePack, STALLION_BASE_URL } from "@/services/stallionApi";
+import { createSheet } from "@/services/sheetApi";
 import { TopNav } from "@/components/TopNav";
 import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 import {
@@ -316,8 +317,13 @@ export default function DeclarationsList() {
   );
 
   // ── Actions ────────────────────────────────────────────────────────────────
-  const handleNew = () => {
-    navigate("/stallion/workbench");
+  const handleNew = async () => {
+    try {
+      const s = await createSheet({});
+      navigate(`/stallion/sheet/${s.id}`);
+    } catch {
+      navigate("/stallion/sheets");
+    }
   };
 
   const handleDelete = async () => {
@@ -426,10 +432,10 @@ export default function DeclarationsList() {
               WORKFLOWS
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <WorkflowCard title="Stallion Workbench"
-                sub="Create and edit declarations manually or from extracted documents"
-                meta="DECLARATION ENTRY · XML GENERATION · WORKSHEET"
-                onClick={() => navigate("/stallion/workbench")} />
+              <WorkflowCard title="New Declaration Sheet"
+                sub="Create a declaration the simple way — one grid: enter lines, classify, generate worksheet & XML"
+                meta="SHEET ENTRY · CIF FACTOR · WORKSHEET · C82 XML"
+                onClick={handleNew} />
               <WorkflowCard title="Broker Review"
                 sub="Review AI-extracted declarations, verify HS codes, approve for submission"
                 meta={`REVIEW QUEUE · ${counts.pending + counts.correction} PENDING`}
@@ -500,7 +506,7 @@ export default function DeclarationsList() {
                     {searchQuery ? "No declarations match" : "No declarations yet"}
                   </div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: C.inkLight, marginBottom: 20 }}>
-                    {searchQuery ? "Try a different search" : "Create your first declaration or generate a pack from the workbench"}
+                    {searchQuery ? "Try a different search" : "Create your first declaration sheet to get started"}
                   </div>
                   {!searchQuery && (
                     <button onClick={handleNew} style={{ padding: "9px 20px", background: C.ink, border: "none", borderRadius: 3, color: C.paper, fontFamily: "'Fraunces', serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
@@ -673,9 +679,9 @@ export default function DeclarationsList() {
                 </div>
                 <div style={{ padding: 10, display: "grid", gap: 8 }}>
                   {[
-                    { label: "New Declaration", sub: "Open full workbench", fn: handleNew, icon: "+", primary: true },
+                    { label: "New Declaration", sub: "Open a new declaration sheet", fn: handleNew, icon: "+", primary: true },
                     { label: "Review Queue", sub: "Pending + correction declarations", fn: () => navigate("/stallion/brokerreview4"), icon: "✓" },
-                    { label: "Extract Documents", sub: "Upload invoice/AWB for AI extraction", fn: () => navigate("/stallion/extract"), icon: "⇪" },
+                    { label: "Extract Documents", sub: "New sheet, then upload invoice/AWB", fn: handleNew, icon: "⇪" },
                     { label: "Export Register CSV", sub: "Download monthly register", fn: handleCsvExport, icon: "↓" },
                   ].map(({ label, sub, fn, icon, primary }) => (
                     <button
@@ -748,7 +754,7 @@ export default function DeclarationsList() {
                     </div>
                   ))}
                 </div>
-                <HelpTip>Start by clicking "Extract Documents" — upload your invoice and AWB, and Stallion will have a draft declaration ready for review in under 30 seconds.</HelpTip>
+                <HelpTip>Start by clicking "New Declaration" — open a sheet, then use Upload documents to drop your invoice and AWB. Stallion auto-fills the lines for you to review.</HelpTip>
               </HelpBox>
 
               {/* Recent activity */}

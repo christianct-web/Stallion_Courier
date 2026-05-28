@@ -21,6 +21,13 @@ from ..store import _safe_read, _safe_write, DATA
 
 SHEETS_FILE = DATA / "declaration_sheets.json"
 
+# Seed an empty store on fresh checkout/deploy. _safe_read() does a bare
+# read_text() with no existence guard (same as the other stores), and unlike
+# templates.json / declarations.json this file is not seeded in store.py — so
+# without this the first /sheets call 500s with FileNotFoundError.
+if not SHEETS_FILE.exists():
+    SHEETS_FILE.write_text("[]", encoding="utf-8")
+
 
 # ── small helpers ────────────────────────────────────────────────────────────
 def _utcnow() -> str:
@@ -366,16 +373,21 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
         rolled.append({
             "cpc": "4000",
             "additionalCpc": "000",
+            "extendedCustomsProcedure": 4000,
+            "nationalCustomsProcedure": 0,
             "hsCode": hs,
             "description": desc,
-            "valueForeign": round(sum(_f(r.get("exworks_usd")) for r in rows), 2),
-            "cifForeign": round(sum(_f(r.get("cif_usd")) for r in rows), 2),
-            "cifLocal": round(sum(_f(r.get("cif_ttd")) for r in rows), 2),
+            # builder reads itemValue (CIF foreign) + itemValueLocal (CIF national)
+            "itemValue": round(sum(_f(r.get("cif_usd")) for r in rows), 2),
+            "itemValueLocal": round(sum(_f(r.get("cif_ttd")) for r in rows), 2),
+            "currency": sheet.get("currency", "USD"),
+            "exchangeRate": _f(sheet.get("exchange_rate"), 1.0),
             "dutyRate": 0,
             "vatRate": 0,
             "duty": round(sum(_f(r.get("duty")) for r in rows), 2),
             "vat": round(sum(_f(r.get("vat")) for r in rows), 2),
             "countryOfOrigin": rows[0].get("country_of_origin", "TT"),
+            "natureOfTransaction": sheet.get("nature_of_transaction", "1"),
             "packageCount": sum(int(_f(r.get("package_count"), 1)) for r in rows),
             "packageType": rows[0].get("package_type", "PK"),
             "relieved": all(r.get("relieved") for r in rows),
@@ -392,21 +404,25 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
     lines; otherwise every grid line is emitted individually.
     """
     t = sheet.get("totals", {})
+    nature = sheet.get("nature_of_transaction", "1")
     header = {
-        "consignee": sheet.get("consignee"),
+        # builder reads consigneeName / consignorName / vesselName / blAwbNumber
+        "consigneeName": sheet.get("consignee"),
         "consigneeCode": sheet.get("consignee_tin"),
-        "consignor": sheet.get("consignor"),
-        "vessel": sheet.get("vessel"),
-        "blNumber": sheet.get("bl_number"),
+        "consignorName": sheet.get("consignor"),
+        "vesselName": sheet.get("vessel"),
+        "blAwbNumber": sheet.get("bl_number"),
+        "blAwbDate": sheet.get("bl_date", ""),
         "rotationNumber": sheet.get("rotation_no"),
         "invoiceNumber": sheet.get("invoice_no"),
         "invoiceDate": sheet.get("invoice_date"),
         "currency": sheet.get("currency", "USD"),
         "port": sheet.get("port"),
         "arrivalDate": sheet.get("arrival_date"),
+        "etaDate": sheet.get("arrival_date"),
         "term": sheet.get("incoterm"),
         "customsRegime": sheet.get("customs_regime", "C4"),
-        "natureOfTransaction": sheet.get("nature_of_transaction", "1"),
+        "natureOfTransaction": nature,
         "totalPackages": sheet.get("total_packages", 0),
         "grossWeight": sheet.get("gross_weight", 0),
         "reference": sheet.get("reference"),
@@ -426,15 +442,20 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         for ln in sheet.get("lines", []):
             items.append({
                 "cpc": ln.get("cpc"),
+                "extendedCustomsProcedure": int(_f(ln.get("cpc"), 4000)) or 4000,
+                "nationalCustomsProcedure": 0,
                 "hsCode": ln.get("hs_code"),
                 "description": ln.get("description"),
-                "valueForeign": ln.get("exworks_usd"),
-                "cifForeign": ln.get("cif_usd"),
-                "cifLocal": ln.get("cif_ttd"),
+                # builder reads itemValue (CIF foreign) + itemValueLocal (CIF national)
+                "itemValue": ln.get("cif_usd"),
+                "itemValueLocal": ln.get("cif_ttd"),
+                "currency": sheet.get("currency", "USD"),
+                "exchangeRate": _f(sheet.get("exchange_rate"), 1.0),
                 "dutyRate": ln.get("duty_pct"),
                 "vatRate": ln.get("vat_pct"),
                 "duty": ln.get("duty"),
                 "vat": ln.get("vat"),
+                "natureOfTransaction": nature,
                 "countryOfOrigin": ln.get("country_of_origin"),
                 "qty": ln.get("supplementary_qty"),
                 "supplementaryUnit": ln.get("supplementary_unit"),

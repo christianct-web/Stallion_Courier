@@ -6,7 +6,7 @@
  * review body was). Grid-first, modelled on CourierWorkbench:
  *
  *   ┌ Header strip (inline edit + dropdowns: port, incoterm) ──────────────┐
- *   │ Freight Factor (auto)                                                │
+ *   │ CIF Factor (auto)                                                    │
  *   ├ Line grid (inline edit; HS lookup on description; expand row ▸) ─────┤
  *   │   row drawer: CPC · country of origin · pkg type · supp. unit (all   │
  *   │   dropdowns) · licence no                                            │
