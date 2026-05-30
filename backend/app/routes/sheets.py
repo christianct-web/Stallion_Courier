@@ -224,6 +224,14 @@ def c84_document(sheet_id: str):
 
 
 # ── C82 XML generation ───────────────────────────────────────────────────────
+@router.get("/{sheet_id}/warnings")
+def xml_warnings(sheet_id: str):
+    s = sheet_service.get_sheet(sheet_id)
+    if not s:
+        raise HTTPException(404, "Sheet not found")
+    return {"warnings": sheet_service.preflight_warnings(s)}
+
+
 @router.post("/{sheet_id}/xml")
 def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
     s = sheet_service.get_sheet(sheet_id)

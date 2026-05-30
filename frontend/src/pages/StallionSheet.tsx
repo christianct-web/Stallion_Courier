@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import {
   getSheet, updateHeader, addLine, updateLine, deleteLine,
   classify, getReference, worksheetUrl, c84WorksheetUrl, generateXml, uploadExtract,
-  setStatus, listClients,
+  getWarnings, setStatus, listClients,
   Sheet, SheetLine, RefOption, RefData, Client, Concession,
 } from "@/services/sheetApi";
 
@@ -350,14 +350,18 @@ function GenerateModal({ sheet, refData, onClose, onGenerate }: {
   const [regime, setRegime] = useState(sheet.customs_regime || "C4");
   const [nature, setNature] = useState(sheet.nature_of_transaction || "1");
   const [tin, setTin] = useState(sheet.consignee_tin || "");
+  const [warnings, setWarnings] = useState<string[] | null>(null);
+  useEffect(() => {
+    getWarnings(sheet.id).then(r => setWarnings(r.warnings)).catch(() => setWarnings([]));
+  }, [sheet.id]);
   return (
     <div style={{
       position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200,
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
       <div style={{
-        background: C.paper, borderRadius: 8, padding: 24, width: 460,
-        border: `1px solid ${C.paperBorder}`,
+        background: C.paper, borderRadius: 8, padding: 24, width: 480, maxHeight: "88vh",
+        overflowY: "auto", border: `1px solid ${C.paperBorder}`,
       }}>
         <h3 style={{ fontFamily: MONO, fontSize: 15, color: C.ink, margin: "0 0 4px" }}>
           Generate C82 XML
@@ -365,6 +369,29 @@ function GenerateModal({ sheet, refData, onClose, onGenerate }: {
         <p style={{ fontFamily: "inherit", fontSize: 12, color: C.inkLight, margin: "0 0 18px" }}>
           Confirm the declaration-level fields the SAD needs before export.
         </p>
+        {warnings && warnings.length > 0 && (
+          <div style={{
+            background: C.warn, border: `1px solid ${C.warnBorder}`, borderRadius: 6,
+            padding: "12px 14px", marginBottom: 18,
+          }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.amberText,
+              textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+              ⚠ {warnings.length} issue{warnings.length === 1 ? "" : "s"} — XML will still
+              generate, but these may make the declaration wrong
+            </div>
+            <ul style={{ margin: 0, paddingLeft: 18, fontFamily: "inherit", fontSize: 12,
+              color: C.inkMid, lineHeight: 1.6 }}>
+              {warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          </div>
+        )}
+        {warnings && warnings.length === 0 && (
+          <div style={{
+            background: "#EBF5EE", border: "1px solid #1A5E3A33", borderRadius: 6,
+            padding: "10px 14px", marginBottom: 18, fontFamily: MONO, fontSize: 12,
+            color: C.approved, fontWeight: 700,
+          }}>✓ Preflight checks passed</div>
+        )}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <Field label="Customs Regime">
             <Select value={regime} options={refData.customs_regimes} onCommit={setRegime} />
@@ -402,11 +429,18 @@ export default function StallionSheet() {
   const [clients, setClients] = useState<Client[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [showGen, setShowGen] = useState(false);
+  const [loadError, setLoadError] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { getReference().then(setRefData); }, []);
   useEffect(() => { listClients().then(setClients).catch(() => {}); }, []);
-  useEffect(() => { if (sheetId) getSheet(sheetId).then(setSheet); }, [sheetId]);
+  useEffect(() => {
+    if (!sheetId) return;
+    setLoadError("");
+    getSheet(sheetId)
+      .then(setSheet)
+      .catch((e: any) => setLoadError(e?.message ? String(e.message) : "Failed to load sheet"));
+  }, [sheetId]);
 
   const patchHeader = useCallback(async (patch: Partial<Sheet>) => {
     const s = await updateHeader(sheetId, patch); setSheet(s);
@@ -429,6 +463,7 @@ export default function StallionSheet() {
       client_id: c.id,
       consignee: c.name,
       consignee_tin: c.tin || c.consigneeCode || "",
+      consignee_address: c.address || "",
     });
     toast.success(`Loaded ${c.name}`);
   }, [clients, patchHeader]);
@@ -462,6 +497,11 @@ export default function StallionSheet() {
     const next = new Set(p); next.has(n) ? next.delete(n) : next.add(n); return next;
   });
 
+  if (loadError) {
+    return <div style={{ padding: 40, fontFamily: MONO, color: C.critBorder }}>
+      Could not load sheet: {loadError}
+    </div>;
+  }
   if (!sheet || !refData) {
     return <div style={{ padding: 40, fontFamily: MONO, color: C.inkLight }}>Loading sheet…</div>;
   }
@@ -530,6 +570,10 @@ export default function StallionSheet() {
           </Field>
           <Field label="Consignee"><Cell value={sheet.consignee} mono={false} width={220}
             onCommit={v => patchHeader({ consignee: v })} /></Field>
+          <Field label="Consignee TIN / Code"><Cell value={sheet.consignee_tin} width={140}
+            onCommit={v => patchHeader({ consignee_tin: v })} /></Field>
+          <Field label="Consignee Address"><Cell value={sheet.consignee_address || ""} mono={false} width={240}
+            onCommit={v => patchHeader({ consignee_address: v })} /></Field>
           <Field label="Reference #"><Cell value={sheet.reference} width={130}
             onCommit={v => patchHeader({ reference: v })} /></Field>
           <Field label="Vessel"><Cell value={sheet.vessel} width={140}
@@ -541,13 +585,29 @@ export default function StallionSheet() {
           <Field label="Arrival Date"><Cell value={sheet.arrival_date} type="date" width={150}
             onCommit={v => patchHeader({ arrival_date: v })} /></Field>
         </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
+          <Field label="Consignor / Supplier"><Cell value={sheet.consignor} mono={false} width={220}
+            onCommit={v => patchHeader({ consignor: v })} /></Field>
+          <Field label="Consignor Address"><Cell value={sheet.consignor_address || ""} mono={false} width={240}
+            onCommit={v => patchHeader({ consignor_address: v })} /></Field>
+          <Field label="Declarant Name"><Cell value={sheet.declarant_name || ""} mono={false} width={180}
+            onCommit={v => patchHeader({ declarant_name: v })} /></Field>
+          <Field label="Declarant TIN"><Cell value={sheet.declarant_tin || ""} width={130}
+            onCommit={v => patchHeader({ declarant_tin: v })} /></Field>
+        </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
           <Field label="Incoterm"><Select value={sheet.incoterm} options={refData.incoterms} width={150}
             onCommit={v => patchHeader({ incoterm: v })} /></Field>
           <Field label="Exchange Rate"><Cell value={sheet.exchange_rate} type="number" align="right" width={120}
             onCommit={v => patchHeader({ exchange_rate: Number(v) })} /></Field>
-          <Field label="Freight (USD)"><Cell value={sheet.freight_usd} type="number" align="right" width={130}
+          <Field label="Freight (USD)"><Cell value={sheet.freight_usd} type="number" align="right" width={120}
             onCommit={v => patchHeader({ freight_usd: Number(v) })} /></Field>
+          <Field label="Insurance (USD)"><Cell value={sheet.insurance_usd} type="number" align="right" width={120}
+            onCommit={v => patchHeader({ insurance_usd: Number(v) })} /></Field>
+          <Field label="Gross Weight (kg)"><Cell value={sheet.gross_weight} type="number" align="right" width={120}
+            onCommit={v => patchHeader({ gross_weight: Number(v) })} /></Field>
+          <Field label="Total Packages"><Cell value={sheet.total_packages} type="number" align="right" width={110}
+            onCommit={v => patchHeader({ total_packages: Number(v) })} /></Field>
           <Field label="Customs User Fee"><Cell value={sheet.customs_user_fee} type="number" align="right" width={120}
             onCommit={v => patchHeader({ customs_user_fee: Number(v) })} /></Field>
           <Field label="Entry Mode">

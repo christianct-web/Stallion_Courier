@@ -6,6 +6,7 @@
 import { STALLION_BASE_URL } from "./stallionApi";
 
 const BASE = `${STALLION_BASE_URL}/sheets`;
+const FALLBACK_BASE = `${window.location.protocol}//${window.location.hostname}:8022/sheets`;
 
 export interface RefOption { code: string; label: string; }
 export interface ConcessionOption {
@@ -69,7 +70,9 @@ export interface Sheet {
   reviewed_at?: string; reviewed_by?: string; submitted_at?: string;
   receipt_number?: string;
   status_history?: { from: string; to: string; at: string; actor: string; notes: string }[];
-  consignee: string; consignee_tin: string; consignor: string;
+  consignee: string; consignee_tin: string; consignee_address?: string;
+  consignor: string; consignor_address?: string;
+  declarant_tin?: string; declarant_name?: string; declarant_address?: string;
   vessel: string; bl_number: string; port: string; arrival_date: string;
   incoterm: string; exchange_rate: number; freight_usd: number;
   insurance_usd: number; other_usd?: number; inland_usd?: number; uplift_pct?: number; customs_user_fee: number;
@@ -88,10 +91,23 @@ export interface Client {
   address?: string; contactName?: string; defaultBrokerageFee?: number;
 }
 
-const j = (r: Response) => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); };
+const j = async (r: Response) => {
+  if (!r.ok) {
+    let detail = "";
+    try { detail = await r.text(); } catch {}
+    throw new Error(`${r.status}${detail ? ` ${detail}` : ""}`);
+  }
+  return r.json();
+};
+
+async function fetchWith404Fallback(path: string, init?: RequestInit): Promise<Response> {
+  const primary = await fetch(`${BASE}${path}`, init);
+  if (primary.status !== 404) return primary;
+  return fetch(`${FALLBACK_BASE}${path}`, init);
+}
 
 export const setStatus = (id: string, status: string, extra?: { notes?: string; receipt_number?: string }): Promise<Sheet> =>
-  fetch(`${BASE}/${id}/status`, {
+  fetchWith404Fallback(`/${id}/status`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status, ...(extra || {}) }),
   }).then(j);
@@ -100,29 +116,32 @@ export const listClients = (): Promise<Client[]> =>
   fetch(`${STALLION_BASE_URL}/clients`).then(j)
     .then((r: any) => (Array.isArray(r) ? r : r.items || []));
 
-export const getReference = (): Promise<RefData> => fetch(`${BASE}/reference`).then(j);
-export const listSheets = (): Promise<Sheet[]> => fetch(BASE).then(j);
-export const getSheet = (id: string): Promise<Sheet> => fetch(`${BASE}/${id}`).then(j);
+export const getReference = (): Promise<RefData> => fetchWith404Fallback(`/reference`).then(j);
+export const listSheets = (): Promise<Sheet[]> => fetchWith404Fallback(``).then(j);
+export const getSheet = (id: string): Promise<Sheet> => fetchWith404Fallback(`/${id}`).then(j);
 export const createSheet = (seed?: Partial<Sheet>): Promise<Sheet> =>
-  fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(seed || {}) }).then(j);
+  fetchWith404Fallback(``, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(seed || {}) }).then(j);
 export const deleteSheet = (id: string): Promise<any> =>
-  fetch(`${BASE}/${id}`, { method: "DELETE" }).then(j);
+  fetchWith404Fallback(`/${id}`, { method: "DELETE" }).then(j);
 
 export const updateHeader = (id: string, patch: Partial<Sheet>): Promise<Sheet> =>
-  fetch(`${BASE}/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).then(j);
+  fetchWith404Fallback(`/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).then(j);
 
 export const addLine = (id: string, payload: Partial<SheetLine>): Promise<Sheet> =>
-  fetch(`${BASE}/${id}/lines`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j);
+  fetchWith404Fallback(`/${id}/lines`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).then(j);
 export const updateLine = (id: string, lineNo: number, patch: Partial<SheetLine>): Promise<Sheet> =>
-  fetch(`${BASE}/${id}/lines/${lineNo}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).then(j);
+  fetchWith404Fallback(`/${id}/lines/${lineNo}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).then(j);
 export const deleteLine = (id: string, lineNo: number): Promise<Sheet> =>
-  fetch(`${BASE}/${id}/lines/${lineNo}`, { method: "DELETE" }).then(j);
+  fetchWith404Fallback(`/${id}/lines/${lineNo}`, { method: "DELETE" }).then(j);
 
 export const classify = (id: string, description: string): Promise<{ suggestions: any[] }> =>
-  fetch(`${BASE}/${id}/classify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description }) }).then(j);
+  fetchWith404Fallback(`/${id}/classify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description }) }).then(j);
 
 export const worksheetUrl = (id: string) => `${BASE}/${id}/worksheet?fmt=xlsx`;
 export const c84WorksheetUrl = (id: string) => `${BASE}/${id}/c84`;
+
+export const getWarnings = (id: string): Promise<{ warnings: string[] }> =>
+  fetchWith404Fallback(`/${id}/warnings`).then(j);
 
 export const generateXml = async (id: string, patch?: Partial<Sheet>): Promise<void> => {
   const r = await fetch(`${BASE}/${id}/xml`, {
@@ -139,6 +158,6 @@ export const generateXml = async (id: string, patch?: Partial<Sheet>): Promise<v
 // Inline extraction: upload a doc, server extracts + auto-populates lines, returns the sheet.
 export const uploadExtract = async (id: string, file: File): Promise<Sheet> => {
   const fd = new FormData(); fd.append("file", file);
-  const r = await fetch(`${BASE}/${id}/extract`, { method: "POST", body: fd });
+  const r = await fetchWith404Fallback(`/${id}/extract`, { method: "POST", body: fd });
   return j(r);
 };

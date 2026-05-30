@@ -274,8 +274,9 @@ def _blank_sheet() -> Dict[str, Any]:
         "receipt_number": "",
         "status_history": [],
         # header strip
-        "consignee": "", "consignee_tin": "",
-        "consignor": "",
+        "consignee": "", "consignee_tin": "", "consignee_address": "",
+        "consignor": "", "consignor_address": "",
+        "declarant_tin": "", "declarant_name": "", "declarant_address": "",
         "vessel": "", "bl_number": "",
         "port": "TTPTS",
         "arrival_date": "",
@@ -558,6 +559,37 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
     return rolled
 
 
+def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
+    """
+    Soft checks run before XML export. These do NOT block generation (the schema
+    validator does that) but flag values that produce a technically-valid yet
+    substantively wrong SAD — the dangerous case. The route surfaces these to the
+    broker so a 0 kg / 0-rate / US-defaulted declaration isn't filed by accident.
+    """
+    w: List[str] = []
+    if _f(sheet.get("exchange_rate")) <= 0:
+        w.append("Exchange rate is 0 — every TTD value (CIF, duty, VAT) will be 0.")
+    if _f(sheet.get("gross_weight")) <= 0:
+        w.append("Gross weight is 0 kg — ASYCUDA expects a real shipment weight.")
+    if int(_f(sheet.get("total_packages"))) <= 0:
+        w.append("Total packages is 0 — set the package count for the consignment.")
+    if not (sheet.get("consignee_tin") or "").strip():
+        w.append("Consignee TIN/code is empty — required for import declarations.")
+    if not (sheet.get("consignor") or "").strip():
+        w.append("Consignor (supplier/exporter) name is empty.")
+    lines = sheet.get("lines", [])
+    if not lines:
+        w.append("No line items — at least one is required.")
+    for ln in lines:
+        coo = (ln.get("country_of_origin") or "").strip().upper()
+        if not coo or coo == "TT":
+            w.append(f"Line {ln.get('line_no')}: country of origin is "
+                     f"'{coo or 'blank'}' — confirm it isn't defaulting.")
+        if not (ln.get("hs_code") or "").strip():
+            w.append(f"Line {ln.get('line_no')}: HS code is blank.")
+    return w
+
+
 def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
     """
     Build the (header, worksheet, items, containers) tuple-shaped dict that
@@ -572,7 +604,12 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         # builder reads consigneeName / consignorName / vesselName / blAwbNumber
         "consigneeName": sheet.get("consignee"),
         "consigneeCode": sheet.get("consignee_tin"),
+        "consigneeAddress": sheet.get("consignee_address", ""),
         "consignorName": sheet.get("consignor"),
+        "consignorAddress": sheet.get("consignor_address", ""),
+        "declarantTIN": sheet.get("declarant_tin") or sheet.get("consignee_tin"),
+        "declarantName": sheet.get("declarant_name", ""),
+        "declarantAddress": sheet.get("declarant_address", ""),
         "vesselName": sheet.get("vessel"),
         "blAwbNumber": sheet.get("bl_number"),
         "blAwbDate": sheet.get("bl_date", ""),
@@ -596,6 +633,7 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         "freight_foreign": _f(sheet.get("freight_usd")),
         "insurance_foreign": _f(sheet.get("insurance_usd")),
         "exchange_rate": _f(sheet.get("exchange_rate"), 1.0),
+        "grossWeight": _f(sheet.get("gross_weight")),
     }
 
     if sheet.get("rollup_9898"):
