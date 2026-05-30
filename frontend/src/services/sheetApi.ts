@@ -8,10 +8,16 @@ import { STALLION_BASE_URL } from "./stallionApi";
 const BASE = `${STALLION_BASE_URL}/sheets`;
 
 export interface RefOption { code: string; label: string; }
+export interface ConcessionOption {
+  code: string; label: string; quantum: "full" | "capped" | "rate";
+  applies_to: string; legal: string; notes: string;
+}
+export interface VehicleCapBand { max_cc: number; cap_ttd: number; label: string; }
 export interface RefData {
   countries: RefOption[]; cpc: RefOption[]; nature_of_transaction: RefOption[];
   package_types: RefOption[]; incoterms: RefOption[]; ports: RefOption[];
   customs_regimes: RefOption[]; supplementary_units: RefOption[];
+  concessions?: ConcessionOption[]; vehicle_cap_bands?: VehicleCapBand[];
 }
 
 export interface SheetLine {
@@ -25,14 +31,36 @@ export interface SheetLine {
   relieved_override?: boolean;
   effects_group?: "household" | "personal";
   relieved?: boolean;
+  // C84 concession
+  concession_code?: string;
+  engine_cc?: number;
+  cap_override_ttd?: number;
+  conc_duty_pct?: number | null;
+  conc_vat_pct?: number | null;
+  mvt_ttd?: number;
   // computed
   freight_usd: number; cif_usd: number; cif_ttd: number;
-  duty: number; surcharge: number; vat: number; total_tax: number;
+  duty: number; surcharge: number; vat: number; mvt?: number; total_tax: number;
+  // concession breakdown (filled when concession_code set)
+  relief_duty?: number; relief_surcharge?: number; relief_vat?: number;
+  relief_mvt?: number; relief_total?: number;
+  full_duty?: number; full_surcharge?: number; full_vat?: number;
+  full_mvt?: number; full_total?: number; cap_applied_ttd?: number;
 }
 
 export interface SheetTotals {
   exworks_usd: number; freight_usd: number; cif_usd: number; cif_ttd: number;
-  duty: number; surcharge: number; vat: number; customs_user_fee: number; total_payable: number;
+  duty: number; surcharge: number; vat: number; mvt?: number;
+  customs_user_fee: number; total_payable: number;
+  relief_duty?: number; relief_surcharge?: number; relief_vat?: number;
+  relief_mvt?: number; relief_total?: number; payable_taxes?: number;
+}
+
+export interface Concession {
+  active: boolean; code: string;
+  beneficiary_name: string; beneficiary_id: string; approval_ref: string;
+  residence_abroad_from: string; residence_abroad_to: string;
+  return_date: string; declaration_no: string; notes: string;
 }
 
 export interface Sheet {
@@ -46,6 +74,8 @@ export interface Sheet {
   incoterm: string; exchange_rate: number; freight_usd: number;
   insurance_usd: number; other_usd?: number; inland_usd?: number; uplift_pct?: number; customs_user_fee: number;
   customs_regime: string; nature_of_transaction: string;
+  declaration_type?: string;
+  concession?: Concession;
   entry_mode?: "dutiable" | "relieved";
   rollup_9898?: boolean;
   total_packages: number; gross_weight: number;
@@ -92,6 +122,7 @@ export const classify = (id: string, description: string): Promise<{ suggestions
   fetch(`${BASE}/${id}/classify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description }) }).then(j);
 
 export const worksheetUrl = (id: string) => `${BASE}/${id}/worksheet?fmt=xlsx`;
+export const c84WorksheetUrl = (id: string) => `${BASE}/${id}/c84`;
 
 export const generateXml = async (id: string, patch?: Partial<Sheet>): Promise<void> => {
   const r = await fetch(`${BASE}/${id}/xml`, {

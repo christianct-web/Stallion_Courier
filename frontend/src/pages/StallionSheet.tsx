@@ -22,9 +22,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getSheet, updateHeader, addLine, updateLine, deleteLine,
-  classify, getReference, worksheetUrl, generateXml, uploadExtract,
+  classify, getReference, worksheetUrl, c84WorksheetUrl, generateXml, uploadExtract,
   setStatus, listClients,
-  Sheet, SheetLine, RefOption, RefData, Client,
+  Sheet, SheetLine, RefOption, RefData, Client, Concession,
 } from "@/services/sheetApi";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
@@ -202,8 +202,143 @@ function RowDrawer({ line, refData, onUpdate }: {
               onCommit={v => onUpdate({ relieved_override: v === "yes" })} width={110} />
           </Field>
         </div>
+
+        {/* C84 concession block */}
+        {(refData.concessions?.length ?? 0) > 0 && (
+          <ConcessionRow line={line} refData={refData} onUpdate={onUpdate} />
+        )}
       </td>
     </tr>
+  );
+}
+
+// ── per-line C84 concession controls ──────────────────────────────────────────
+function ConcessionRow({ line, refData, onUpdate }: {
+  line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => void;
+}) {
+  const cat = refData.concessions?.find(c => c.code === line.concession_code);
+  const quantum = cat?.quantum;
+  const relief = line.relief_total ?? 0;
+  const fmt = (n?: number) =>
+    (n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return (
+    <div style={{
+      marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.paperBorder}`,
+      display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end",
+    }}>
+      <Field label="C84 Concession">
+        <Select
+          value={line.concession_code || ""}
+          options={[{ code: "", label: "— none (dutiable) —" },
+            ...(refData.concessions || []).map(c => ({ code: c.code, label: c.label }))]}
+          onCommit={v => onUpdate({ concession_code: v })} width={320} />
+      </Field>
+
+      {quantum === "capped" && (
+        <>
+          <Field label="Engine (cc)">
+            <Cell value={line.engine_cc ?? 0} type="number" align="right" width={90}
+              onCommit={v => onUpdate({ engine_cc: Number(v) })} />
+          </Field>
+          <Field label="Motor Veh. Tax (TT$)">
+            <Cell value={line.mvt_ttd ?? 0} type="number" align="right" width={120}
+              onCommit={v => onUpdate({ mvt_ttd: Number(v) })} />
+          </Field>
+          <Field label="Cap Override (TT$, 0=band)">
+            <Cell value={line.cap_override_ttd ?? 0} type="number" align="right" width={150}
+              onCommit={v => onUpdate({ cap_override_ttd: Number(v) })} />
+          </Field>
+        </>
+      )}
+
+      {quantum === "rate" && (
+        <>
+          <Field label="Conc. Duty %">
+            <Cell value={line.conc_duty_pct ?? 0} type="number" align="right" width={100}
+              onCommit={v => onUpdate({ conc_duty_pct: Number(v) })} />
+          </Field>
+          <Field label="Conc. VAT %">
+            <Cell value={line.conc_vat_pct ?? line.vat_pct} type="number" align="right" width={100}
+              onCommit={v => onUpdate({ conc_vat_pct: Number(v) })} />
+          </Field>
+        </>
+      )}
+
+      {line.concession_code && (
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkMid,
+          background: "#EBF5EE", border: "1px solid #1A5C3A33", borderRadius: 4,
+          padding: "8px 12px",
+        }}>
+          <span style={{ color: "#1A5C3A", fontWeight: 700 }}>Relief TT$ {fmt(relief)}</span>
+          {quantum === "capped" && (line.cap_applied_ttd ?? 0) > 0 && (
+            <span> · cap applied TT$ {fmt(line.cap_applied_ttd)}</span>
+          )}
+          <span> · payable TT$ {fmt(line.total_tax)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── C84 concession header panel (beneficiary + qualification) ──────────────────
+function ConcessionHeaderPanel({ sheet, refData, onPatch }: {
+  sheet: Sheet; refData: RefData;
+  onPatch: (patch: Partial<Concession>) => void;
+}) {
+  const c = sheet.concession || ({} as Concession);
+  const t = sheet.totals || ({} as any);
+  const codes = refData.concessions || [];
+  return (
+    <div style={{
+      background: "#fff", border: `1px solid ${C.approved}44`,
+      borderLeft: `3px solid ${C.approved}`, borderRadius: 6, padding: 16, marginBottom: 14,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.approved }}>
+          C84 — DUTY / TAX CONCESSION
+        </div>
+        {(t.relief_total ?? 0) > 0 && (
+          <div style={{ fontFamily: MONO, fontSize: 12, color: C.approved, fontWeight: 700 }}>
+            Total relief: TT$ {fmt(t.relief_total)}
+          </div>
+        )}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+        <Field label="Primary Concession">
+          <Select value={c.code || ""} width={300}
+            options={[{ code: "", label: "— select —" },
+              ...codes.map(x => ({ code: x.code, label: x.label }))]}
+            onCommit={v => onPatch({ code: v, active: !!v })} />
+        </Field>
+        <Field label="Beneficiary Name">
+          <Cell value={c.beneficiary_name || ""} mono={false} width={220}
+            onCommit={v => onPatch({ beneficiary_name: v })} /></Field>
+        <Field label="ID / Passport">
+          <Cell value={c.beneficiary_id || ""} width={160}
+            onCommit={v => onPatch({ beneficiary_id: v })} /></Field>
+        <Field label="C84 No.">
+          <Cell value={c.declaration_no || ""} width={130}
+            onCommit={v => onPatch({ declaration_no: v })} /></Field>
+        <Field label="Approval Ref">
+          <Cell value={c.approval_ref || ""} width={150}
+            onCommit={v => onPatch({ approval_ref: v })} /></Field>
+        <Field label="Return Date">
+          <Cell value={c.return_date || ""} type="date" width={150}
+            onCommit={v => onPatch({ return_date: v })} /></Field>
+        <Field label="Abroad From">
+          <Cell value={c.residence_abroad_from || ""} width={110}
+            onCommit={v => onPatch({ residence_abroad_from: v })} /></Field>
+        <Field label="Abroad To">
+          <Cell value={c.residence_abroad_to || ""} width={110}
+            onCommit={v => onPatch({ residence_abroad_to: v })} /></Field>
+      </div>
+      <div style={{ fontFamily: MONO, fontSize: 10, color: C.inkLight, marginTop: 10, fontStyle: "italic" }}>
+        Set the concession per line in each row's drawer. Vehicle relief caps are
+        defaults — confirm against the current Customs notice before filing.
+      </div>
+    </div>
   );
 }
 
@@ -276,6 +411,10 @@ export default function StallionSheet() {
   const patchHeader = useCallback(async (patch: Partial<Sheet>) => {
     const s = await updateHeader(sheetId, patch); setSheet(s);
   }, [sheetId]);
+  const patchConcession = useCallback(async (patch: Partial<Concession>) => {
+    const merged = { ...(sheet?.concession || {}), ...patch } as Concession;
+    const s = await updateHeader(sheetId, { concession: merged }); setSheet(s);
+  }, [sheetId, sheet]);
   const patchLine = useCallback(async (lineNo: number, patch: Partial<SheetLine>) => {
     const s = await updateLine(sheetId, lineNo, patch); setSheet(s);
   }, [sheetId]);
@@ -434,6 +573,12 @@ export default function StallionSheet() {
         </div>
       </div>
 
+      {/* ── C84 concession panel (shown for C84 declarations) ── */}
+      {(sheet.declaration_type === "c84" || sheet.concession?.active) &&
+        (refData.concessions?.length ?? 0) > 0 && (
+        <ConcessionHeaderPanel sheet={sheet} refData={refData} onPatch={patchConcession} />
+      )}
+
       {/* ── line grid ── */}
       <div style={{ background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6, overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -500,11 +645,21 @@ export default function StallionSheet() {
           <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.gold, marginBottom: 10 }}>
             ASSESSMENT SUMMARY (TTD)</div>
           {[["Total CIF", t.cif_ttd], ["Import Duty", t.duty], ["Surcharge", t.surcharge],
+            ...((t.mvt ?? 0) > 0 ? [["Motor Vehicle Tax", t.mvt] as [string, number]] : []),
             ["VAT", t.vat], ["Customs User Fee", t.customs_user_fee]].map(([l, v]) => (
             <div key={l as string} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontFamily: MONO, fontSize: 12, color: C.inkMid }}>
               <span>{l}</span><span>{fmt(v as number)}</span>
             </div>
           ))}
+          {(t.relief_total ?? 0) > 0 && (
+            <div style={{
+              display: "flex", justifyContent: "space-between", marginTop: 8, padding: "6px 10px",
+              background: "#EBF5EE", border: "1px solid #1A5C3A33", borderRadius: 4,
+              fontFamily: MONO, fontSize: 12, color: C.approved, fontWeight: 700,
+            }}>
+              <span>C84 RELIEF</span><span>− {fmt(t.relief_total)}</span>
+            </div>
+          )}
           <div style={{
             display: "flex", justifyContent: "space-between", marginTop: 8, padding: "10px 12px",
             background: C.ink, color: "#fff", borderRadius: 4, fontFamily: MONO, fontSize: 14, fontWeight: 700,
@@ -518,6 +673,13 @@ export default function StallionSheet() {
           <button onClick={() => fileRef.current?.click()} style={btn(C, "outline")}>Upload documents</button>
           <a href={worksheetUrl(sheetId)} style={{ ...btn(C, "outline"), textAlign: "center", textDecoration: "none" }}>
             Download Worksheet</a>
+          {(sheet.declaration_type === "c84" || sheet.concession?.active ||
+            sheet.lines?.some(l => l.concession_code)) && (
+            <a href={c84WorksheetUrl(sheetId)} style={{
+              ...btn(C, "outline"), textAlign: "center", textDecoration: "none",
+              borderColor: C.approved, color: C.approved,
+            }}>Download C84 Claim</a>
+          )}
           <button onClick={() => setShowGen(true)} style={btn(C, "solid")}>Generate C82 XML</button>
         </div>
       </div>

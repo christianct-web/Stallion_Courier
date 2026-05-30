@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from ..store import _safe_read, _safe_write, DATA
+from . import concession_service
 
 SHEETS_FILE = DATA / "declaration_sheets.json"
 
@@ -56,10 +57,16 @@ def _compute_line(line: Dict[str, Any], exch: float, factor: float,
     cif_ttd   = exworks_usd * factor              (factor already folds freight+FX)
     freight_usd = exworks_usd * (factor/exch - 1) -> informational split only
     cif_usd   = cif_ttd / exch
-    duty      = 0 if relieved else cif_ttd * duty_pct/100
-    surcharge = 0 if relieved else cif_ttd * surcharge_pct/100
-    vat       = 0 if relieved else (cif_ttd + duty + surcharge) * vat_pct/100
-    total_tax = duty + surcharge + vat
+
+    Tax treatment, in priority order:
+      1. A C84 concession_code on the line -> route through concession_service,
+         which computes the payable/relieved split (full | capped | rate).
+      2. Legacy `relieved` flag (returning-resident effects, whole-entry relief)
+         -> duty/surcharge/vat all zero. Equivalent to a FULL concession.
+      3. Otherwise -> full assessment.
+
+    The concession path additionally writes relief_* and full_* fields so the
+    C84 form and the relief totals have the per-line breakdown.
     """
     exworks = _f(line.get("exworks_usd"))
 
@@ -70,23 +77,59 @@ def _compute_line(line: Dict[str, Any], exch: float, factor: float,
     duty_pct = _f(line.get("duty_pct"))
     surch_pct = _f(line.get("surcharge_pct"))
     vat_pct = _f(line.get("vat_pct"), 12.5)
+    mvt = _f(line.get("mvt_ttd"))
 
+    concession_code = (line.get("concession_code") or "").strip() or None
+
+    line["freight_usd"] = freight_usd
+    line["cif_usd"] = cif_usd
+    line["cif_ttd"] = cif_ttd
+
+    # Relief keys we may set; clear them first so toggling concession off resets.
+    _relief_keys = ["mvt", "relief_duty", "relief_surcharge", "relief_vat",
+                    "relief_mvt", "relief_total", "full_duty", "full_surcharge",
+                    "full_vat", "full_mvt", "full_total", "cap_applied_ttd"]
+
+    if concession_code:
+        r = concession_service.compute_line_relief(
+            cif_ttd=cif_ttd, duty_pct=duty_pct, surcharge_pct=surch_pct,
+            vat_pct=vat_pct, concession_code=concession_code,
+            engine_cc=_f(line.get("engine_cc")),
+            cap_override_ttd=(None if line.get("cap_override_ttd") in (None, "", 0)
+                              else _f(line.get("cap_override_ttd"))),
+            conc_duty_pct=line.get("conc_duty_pct"),
+            conc_vat_pct=line.get("conc_vat_pct"),
+            mvt_ttd=mvt,
+        )
+        line["duty"] = r["duty"]
+        line["surcharge"] = r["surcharge"]
+        line["vat"] = r["vat"]
+        line["total_tax"] = r["total_tax"]
+        line["relieved"] = r["relief_total"] > 0
+        for k in _relief_keys:
+            line[k] = r[k]
+        return line
+
+    # No concession on the line. Legacy full-relief or full assessment.
     if relieved:
         duty = surcharge = vat = 0.0
     else:
         duty = round(cif_ttd * duty_pct / 100, 2)
         surcharge = round(cif_ttd * surch_pct / 100, 2)
-        vat = round((cif_ttd + duty + surcharge) * vat_pct / 100, 2)
-    total_tax = round(duty + surcharge + vat, 2)
+        vat = round((cif_ttd + duty + surcharge + mvt) * vat_pct / 100, 2)
+    total_tax = round(duty + surcharge + vat + (0.0 if relieved else mvt), 2)
 
-    line["freight_usd"] = freight_usd
-    line["cif_usd"] = cif_usd
-    line["cif_ttd"] = cif_ttd
     line["duty"] = duty
     line["surcharge"] = surcharge
     line["vat"] = vat
+    line["mvt"] = 0.0 if relieved else round(mvt, 2)
     line["total_tax"] = total_tax
     line["relieved"] = relieved
+    # Clear concession-only breakdown fields when no concession is active.
+    for k in ["relief_duty", "relief_surcharge", "relief_vat", "relief_mvt",
+              "relief_total", "full_duty", "full_surcharge", "full_vat",
+              "full_mvt", "full_total", "cap_applied_ttd"]:
+        line[k] = 0.0
     return line
 
 
@@ -137,21 +180,34 @@ def recompute(sheet: Dict[str, Any]) -> Dict[str, Any]:
         "duty": round(sum(_f(l.get("duty")) for l in lines), 2),
         "surcharge": round(sum(_f(l.get("surcharge")) for l in lines), 2),
         "vat": round(sum(_f(l.get("vat")) for l in lines), 2),
+        "mvt": round(sum(_f(l.get("mvt")) for l in lines), 2),
         "customs_user_fee": round(cfu, 2),
     }
-    # ACE-style relief vs payable: relieved lines' notional duty/VAT is "relief"
-    relief_duty = relief_vat = 0.0
+    # Relief vs payable. Concession lines already carry an exact relief_* split
+    # from concession_service; legacy whole-entry relief lines (no concession
+    # code, relieved=True) still need their notional relief derived here.
+    relief_duty = relief_surch = relief_vat = relief_mvt = 0.0
     for l in lines:
-        if l.get("relieved"):
+        if l.get("concession_code"):
+            relief_duty += _f(l.get("relief_duty"))
+            relief_surch += _f(l.get("relief_surcharge"))
+            relief_vat += _f(l.get("relief_vat"))
+            relief_mvt += _f(l.get("relief_mvt"))
+        elif l.get("relieved"):
             base = _f(l.get("cif_ttd"))
             d = round(base * _f(l.get("duty_pct")) / 100, 2)
-            v = round((base + d) * _f(l.get("vat_pct"), 12.5) / 100, 2)
+            s = round(base * _f(l.get("surcharge_pct")) / 100, 2)
+            v = round((base + d + s) * _f(l.get("vat_pct"), 12.5) / 100, 2)
             relief_duty += d
+            relief_surch += s
             relief_vat += v
     totals["relief_duty"] = round(relief_duty, 2)
+    totals["relief_surcharge"] = round(relief_surch, 2)
     totals["relief_vat"] = round(relief_vat, 2)
-    totals["relief_total"] = round(relief_duty + relief_vat, 2)
-    totals["payable_taxes"] = round(totals["duty"] + totals["surcharge"] + totals["vat"], 2)
+    totals["relief_mvt"] = round(relief_mvt, 2)
+    totals["relief_total"] = round(relief_duty + relief_surch + relief_vat + relief_mvt, 2)
+    totals["payable_taxes"] = round(
+        totals["duty"] + totals["surcharge"] + totals["vat"] + totals["mvt"], 2)
     totals["total_payable"] = round(totals["payable_taxes"] + cfu, 2)
     sheet["totals"] = totals
     sheet["updated_at"] = _utcnow()
@@ -184,10 +240,22 @@ def _blank_line() -> Dict[str, Any]:
         # returning-resident handling
         "relieved_override": False,        # relieve this line individually
         "effects_group": "household",      # household | personal -> rolls to 9898 code on XML
+        # C84 concession handling (see concession_service)
+        "concession_code": "",             # "" | RR_EFFECTS | RR_VEHICLE | DIPLOMATIC | …
+        "engine_cc": 0.0,                  # vehicle: drives the relief cap band
+        "cap_override_ttd": 0.0,           # vehicle: override the default cap (0 = use band)
+        "conc_duty_pct": None,             # rate concession: concessionary duty %
+        "conc_vat_pct": None,              # rate concession: concessionary VAT %
+        "mvt_ttd": 0.0,                    # vehicle: Motor Vehicle Tax in TT$
         # computed (filled by _compute_line)
         "freight_usd": 0.0, "cif_usd": 0.0, "cif_ttd": 0.0,
-        "duty": 0.0, "surcharge": 0.0, "vat": 0.0, "total_tax": 0.0,
+        "duty": 0.0, "surcharge": 0.0, "vat": 0.0, "mvt": 0.0, "total_tax": 0.0,
         "relieved": False,
+        # concession breakdown (filled when concession_code set)
+        "relief_duty": 0.0, "relief_surcharge": 0.0, "relief_vat": 0.0,
+        "relief_mvt": 0.0, "relief_total": 0.0,
+        "full_duty": 0.0, "full_surcharge": 0.0, "full_vat": 0.0,
+        "full_mvt": 0.0, "full_total": 0.0, "cap_applied_ttd": 0.0,
     }
 
 
@@ -231,6 +299,21 @@ def _blank_sheet() -> Dict[str, Any]:
         "nature_of_transaction": "1",
         "total_packages": 0,
         "gross_weight": 0.0,
+        # declaration type (set by the New Declaration chooser on the frontend)
+        "declaration_type": "import_c82",
+        # C84 concession header (the beneficiary / qualification block)
+        "concession": {
+            "active": False,
+            "code": "",                 # primary concession on the declaration
+            "beneficiary_name": "",
+            "beneficiary_id": "",       # passport / national ID / mission ref
+            "approval_ref": "",         # Cabinet/Customs approval or grant reference
+            "residence_abroad_from": "",
+            "residence_abroad_to": "",
+            "return_date": "",
+            "declaration_no": "",       # the C84 form serial once filed
+            "notes": "",
+        },
         # data
         "cif_factor": 0.0,
         "lines": [],
@@ -241,6 +324,30 @@ def _blank_sheet() -> Dict[str, Any]:
 
 
 # ── store CRUD ───────────────────────────────────────────────────────────────
+def _migrate_sheet(sheet: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Backfill fields added after a sheet was first written, so older records in
+    the JSON store don't KeyError when the new concession code touches them.
+    Idempotent; safe to call on every read/update.
+    """
+    blank = _blank_sheet()
+    for k, v in blank.items():
+        if k in ("id", "created_at", "updated_at"):
+            continue
+        if k not in sheet:
+            sheet[k] = v
+    # concession sub-keys
+    if isinstance(sheet.get("concession"), dict):
+        for k, v in blank["concession"].items():
+            sheet["concession"].setdefault(k, v)
+    blank_line = _blank_line()
+    for ln in sheet.get("lines", []):
+        for k, v in blank_line.items():
+            if k not in ln:
+                ln[k] = v
+    return sheet
+
+
 def _load() -> List[Dict[str, Any]]:
     return _safe_read(SHEETS_FILE)
 
@@ -254,7 +361,8 @@ def list_sheets() -> List[Dict[str, Any]]:
 
 
 def get_sheet(sheet_id: str) -> Optional[Dict[str, Any]]:
-    return next((s for s in _load() if s["id"] == sheet_id), None)
+    s = next((s for s in _load() if s["id"] == sheet_id), None)
+    return _migrate_sheet(s) if s else None
 
 
 def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
@@ -280,9 +388,15 @@ def update_header(sheet_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, An
     sheet = next((s for s in items if s["id"] == sheet_id), None)
     if not sheet:
         return None
+    _migrate_sheet(sheet)
     for k, v in patch.items():
-        if k in sheet and k not in ("id", "lines", "totals", "created_at", "status",
-                                    "status_history", "reviewed_at", "submitted_at"):
+        if k in ("id", "lines", "totals", "created_at", "status",
+                 "status_history", "reviewed_at", "submitted_at"):
+            continue
+        # Deep-merge the concession block so partial updates don't wipe fields.
+        if k == "concession" and isinstance(v, dict):
+            sheet.setdefault("concession", {}).update(v)
+        elif k in sheet:
             sheet[k] = v
     recompute(sheet)
     _save(items)
@@ -487,9 +601,11 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
     if sheet.get("rollup_9898"):
         items = _rollup_9898(sheet)
     else:
+        conc = sheet.get("concession", {}) or {}
+        c84_no = conc.get("declaration_no", "")
         items = []
         for ln in sheet.get("lines", []):
-            items.append({
+            item = {
                 "cpc": ln.get("cpc"),
                 "extendedCustomsProcedure": int(_f(ln.get("cpc"), 4000)) or 4000,
                 "nationalCustomsProcedure": 0,
@@ -502,6 +618,7 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
                 "exchangeRate": _f(sheet.get("exchange_rate"), 1.0),
                 "dutyRate": ln.get("duty_pct"),
                 "vatRate": ln.get("vat_pct"),
+                # duty/vat reflect PAYABLE amounts after any C84 concession.
                 "duty": ln.get("duty"),
                 "vat": ln.get("vat"),
                 "natureOfTransaction": nature,
@@ -511,7 +628,16 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
                 "packageCount": ln.get("package_count"),
                 "packageType": ln.get("package_type"),
                 "licenceNo": ln.get("licence_no"),
-            })
+            }
+            # When a concession is claimed on the line, attach the C84 linkage so
+            # the SAD references the supporting concession document, and surface
+            # the relieved amount for downstream consumers.
+            if ln.get("concession_code"):
+                item["concessionCode"] = ln.get("concession_code")
+                item["reliefTotal"] = _f(ln.get("relief_total"))
+                if c84_no:
+                    item["c84Reference"] = c84_no
+            items.append(item)
     return {"header": header, "worksheet": worksheet, "items": items, "containers": []}
 
 

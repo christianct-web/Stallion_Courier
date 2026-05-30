@@ -1233,3 +1233,21 @@ REFERENCE = {
     }
   ]
 }
+
+# C84 concession reference, sourced from concession_service so there is a single
+# source of truth for the catalogue and the vehicle cap bands.
+try:
+    from ..services import concession_service as _cs
+
+    REFERENCE["concessions"] = [
+        {"code": c["code"], "label": c["label"], "quantum": c["quantum"],
+         "applies_to": c["applies_to"], "legal": c["legal"], "notes": c["notes"]}
+        for c in _cs.CONCESSIONS
+    ]
+    REFERENCE["vehicle_cap_bands"] = [
+        {"max_cc": b["max_cc"], "cap_ttd": b["cap_ttd"], "label": b["label"]}
+        for b in _cs.VEHICLE_CAP_BANDS
+    ]
+except Exception:  # pragma: no cover - reference still serves without concessions
+    REFERENCE.setdefault("concessions", [])
+    REFERENCE.setdefault("vehicle_cap_bands", [])

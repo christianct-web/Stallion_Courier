@@ -210,6 +210,19 @@ def worksheet(sheet_id: str, fmt: str = "xlsx"):
     })
 
 
+# ── C84 concession document download ─────────────────────────────────────────
+@router.get("/{sheet_id}/c84")
+def c84_document(sheet_id: str):
+    s = sheet_service.get_sheet(sheet_id)
+    if not s:
+        raise HTTPException(404, "Sheet not found")
+    from ..services import c84_document
+    data, filename, media = c84_document.build(s)
+    return Response(content=data, media_type=media, headers={
+        "Content-Disposition": f'attachment; filename="{filename}"'
+    })
+
+
 # ── C82 XML generation ───────────────────────────────────────────────────────
 @router.post("/{sheet_id}/xml")
 def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
