@@ -621,8 +621,11 @@ export default function StallionSheet() {
         <ConcessionHeaderPanel sheet={sheet} refData={refData} onPatch={patchConcession} />
       )}
 
-      {/* ── line grid ── */}
-      <div style={{ background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6, overflow: "hidden" }}>
+      {/* ── grid + sticky duty rail: true two-column layout ── */}
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
+      {/* ── line grid (left column) ── */}
+      <div style={{ flex: "1 1 520px", minWidth: 0, background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6, overflow: "hidden" }}>
+        <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
@@ -675,17 +678,16 @@ export default function StallionSheet() {
             })}
           </tbody>
         </table>
+        </div>
         <button onClick={addRow} style={{
           width: "100%", padding: "10px", fontFamily: MONO, fontSize: 12, cursor: "pointer",
           border: "none", borderTop: `1px solid ${C.paperBorder}`, background: C.paperAlt, color: C.inkMid,
         }}>+ Add line</button>
       </div>
 
-      {/* ── totals + actions: sticky dark duty rail ── */}
-      <div style={{ display: "flex", gap: 14, marginTop: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 auto", minWidth: 0 }} />
+      {/* ── sticky dark duty rail (right column) ── */}
         <div style={{
-          width: 260, flexShrink: 0, position: "sticky", top: 16,
+          width: 264, flexShrink: 0, position: "sticky", top: 16,
           background: C.void, borderRadius: 8, padding: "18px 18px", color: C.ghost,
         }}>
           <div style={{

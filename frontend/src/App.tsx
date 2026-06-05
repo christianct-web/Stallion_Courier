@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 const DeclarationsList = lazy(() => import("./pages/DeclarationsList"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StallionShell = lazy(() => import("./components/StallionShell"));
 const BrokerReview4 = lazy(() => import("./pages/BrokerReview4")); // legacy, off-nav
 const StallionSheet = lazy(() => import("./pages/StallionSheet"));
@@ -32,13 +33,14 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<DeclarationsList />} />
-            {/* New simplified flow (replaces Workbench + Extract).
-                Wrapped in StallionShell so they get TopNav like every other page. */}
+            {/* Dashboard is the landing page. Wrapped in StallionShell for nav. */}
             <Route element={<StallionShell />}>
+              <Route path="/" element={<Dashboard />} />
               <Route path="/stallion/sheets" element={<StallionSheetList />} />
               <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
             </Route>
+            {/* Full declarations list (was the old landing page). */}
+            <Route path="/stallion/declarations" element={<DeclarationsList />} />
             {/* Legacy: kept only so the existing declarations stay openable.
                 Off the nav. Remove once they have aged out / been migrated. */}
             <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
