@@ -26,6 +26,17 @@ const C = {
 const SERIF = "'Fraunces', Georgia, serif";
 const MONO = "'JetBrains Mono', 'SFMono-Regular', monospace";
 
+// Per-accent tint palette: soft fill + darker title ink + muted label ink.
+// Keeps each card unmistakably its module colour without shouting.
+const TINT: Record<string, { bg: string; border: string; title: string; label: string }> = {
+  green:  { bg: "#EDF3EC", border: "#CFE1CC", title: "#143D28", label: "#3E6B52" },
+  blue:   { bg: "#ECF1F8", border: "#C9D9EE", title: "#163963", label: "#3F608C" },
+  amber:  { bg: "#FBEEE6", border: "#E5A06B", title: "#7A3A12", label: "#993C1D" },
+  gold:   { bg: "#FAF3E2", border: "#E8D199", title: "#6B4E0A", label: "#8A6D00" },
+  purple: { bg: "#F1ECF7", border: "#D6C7E8", title: "#3D2960", label: "#5A3A8A" },
+  neutral:{ bg: "#EFECE6", border: "#D8D2C7", title: "#2C2820", label: "#4A453D" },
+};
+
 type Counts = {
   tradeTotal: number; tradeCorrections: number;
   courierTotal: number; courierExamined: number;
@@ -89,7 +100,7 @@ export default function Dashboard() {
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
 
         {/* masthead */}
-        <div style={{ marginBottom: 30 }}>
+        <div style={{ marginBottom: 22 }}>
           <div style={{
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
             color: C.amber, textTransform: "uppercase", marginBottom: 8,
@@ -100,108 +111,160 @@ export default function Dashboard() {
           }}>Customs operations infrastructure</h1>
         </div>
 
-        {/* 3×2 module grid */}
+        {/* ── attention strip: everything actionable in one place ── */}
         <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16,
+          background: C.void, borderRadius: 10, padding: "16px 22px",
+          display: "flex", alignItems: "center", gap: 30, flexWrap: "wrap",
+          marginBottom: 16,
         }}>
+          <div style={{
+            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+            color: C.ghostDim, textTransform: "uppercase", lineHeight: 1.3,
+          }}>Needs<br />Attention</div>
+
+          <AttnStat v={c.reviewLowConf} label="low confidence"
+            tone={c.reviewLowConf > 0 ? "#F09595" : "#fff"}
+            sub={c.reviewLowConf > 0 ? "#E5A06B" : C.ghostDim} loaded={c.loaded} />
+          <AttnStat v={c.reviewPending} label="pending"
+            tone={c.reviewPending > 0 ? "#FAC775" : "#fff"} sub={C.ghostDim} loaded={c.loaded} />
+          <AttnStat v={c.tradeCorrections} label="corrections"
+            tone={c.tradeCorrections > 0 ? "#F09595" : "#fff"} sub={C.ghostDim} loaded={c.loaded} />
+
+          <button onClick={() => nav("/stallion/brokerreview4")} style={{
+            marginLeft: "auto", fontFamily: MONO, fontSize: 10, fontWeight: 700,
+            letterSpacing: "0.06em", textTransform: "uppercase", padding: "9px 18px",
+            cursor: "pointer", borderRadius: 4, border: "none", background: C.amber, color: "#fff",
+          }}>Review queue →</button>
+        </div>
+
+        {/* ── metric modules (tinted stat cards) ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           <ModuleCard
-            accent={C.green} title="Trade Declarations"
-            stats={[
-              { v: c.tradeTotal, l: "total" },
-              { v: c.tradeCorrections, l: "corrections", tone: c.tradeCorrections > 0 ? C.red : undefined },
-            ]}
-            action="Open" onClick={() => nav("/stallion/sheets")} loaded={c.loaded}
+            tint="green" title="Trade Declarations" icon="▤"
+            big={{ v: c.tradeTotal, l: "total" }}
+            note={c.tradeCorrections > 0 ? `${c.tradeCorrections} corrections` : "0 corrections"}
+            noteAlert={c.tradeCorrections > 0}
+            onClick={() => nav("/stallion/sheets")} loaded={c.loaded}
           />
           <ModuleCard
-            accent={C.blue} title="Courier Worksheets"
-            stats={[
-              { v: c.courierTotal, l: "total" },
-              { v: c.courierExamined, l: "examined" },
-            ]}
-            action="Open" onClick={() => nav("/stallion/courier")} loaded={c.loaded}
+            tint="blue" title="Courier Worksheets" icon="✈"
+            big={{ v: c.courierTotal, l: "total" }}
+            note={`${c.courierExamined} examined`}
+            onClick={() => nav("/stallion/courier")} loaded={c.loaded}
           />
           <ModuleCard
-            accent={C.amber} title="Review Queue"
-            stats={[
-              { v: c.reviewPending, l: "pending", tone: c.reviewPending > 0 ? C.gold : undefined },
-              { v: c.reviewLowConf, l: "low confidence", tone: c.reviewLowConf > 0 ? C.red : undefined },
-            ]}
-            action="Review" onClick={() => nav("/stallion/brokerreview4")} loaded={c.loaded}
+            tint="amber" title="Review Queue"
+            badge={c.reviewLowConf > 0 ? `${c.reviewLowConf} flagged` : undefined}
+            big={{ v: c.reviewLowConf, l: "low confidence", alert: c.reviewLowConf > 0 }}
+            note={c.reviewPending > 0 ? `${c.reviewPending} pending` : "0 pending"}
+            onClick={() => nav("/stallion/brokerreview4")} loaded={c.loaded}
           />
-          <ModuleCard
-            accent={C.gold} title="Tariff Database"
-            subtitle="Search HS codes"
-            action="Search" onClick={() => nav("/stallion/courier/tariff")} loaded={c.loaded}
-          />
-          <ModuleCard
-            accent={C.purple} title="Clients"
-            stats={[{ v: c.clients, l: "registered" }]}
-            action="Open" onClick={() => nav("/stallion/clients")} loaded={c.loaded}
-          />
-          <ModuleCard
-            accent={C.inkLight} title="Activity Log"
-            stats={[{ v: c.events, l: "events" }]}
-            action="View" onClick={() => nav("/stallion/log")} loaded={c.loaded}
-          />
+        </div>
+
+        {/* ── utility modules (slim rows) ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginTop: 14 }}>
+          <UtilityCard tint="gold" title="Tariff Database" right="Search →"
+            onClick={() => nav("/stallion/courier/tariff")} />
+          <UtilityCard tint="purple" title="Clients" count={c.loaded ? c.clients : undefined} right="Open →"
+            onClick={() => nav("/stallion/clients")} />
+          <UtilityCard tint="neutral" title="Activity Log" count={c.loaded ? c.events : undefined} right="View →"
+            onClick={() => nav("/stallion/log")} />
         </div>
       </div>
     </div>
   );
 }
 
-function ModuleCard({ accent, title, subtitle, stats, action, onClick, loaded }: {
-  accent: string; title: string; subtitle?: string;
-  stats?: { v: number; l: string; tone?: string }[];
-  action: string; onClick: () => void; loaded: boolean;
+// Stat shown in the dark attention strip.
+function AttnStat({ v, label, tone, sub, loaded }: {
+  v: number; label: string; tone: string; sub: string; loaded: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <span style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 700, color: tone, lineHeight: 1 }}>
+        {loaded ? v : "—"}</span>
+      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: sub }}>{label}</span>
+    </div>
+  );
+}
+
+// Slim utility module row.
+function UtilityCard({ tint, title, count, right, onClick }: {
+  tint: string; title: string; count?: number; right: string; onClick: () => void;
 }) {
   const [hover, setHover] = useState(false);
+  const t = TINT[tint] || TINT.neutral;
   return (
-    <div
+    <button
+      onClick={onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        background: "#fff", border: `1px solid ${C.paperBorder}`,
-        borderLeft: `4px solid ${accent}`, borderRadius: 8,
-        padding: "20px 22px", display: "flex", flexDirection: "column",
-        minHeight: 168, transition: "box-shadow 0.14s, transform 0.14s",
-        boxShadow: hover ? "0 8px 24px rgba(0,0,0,0.08)" : "none",
+        background: t.bg, border: `1px solid ${t.border}`, borderRadius: 10,
+        padding: "16px 18px", cursor: "pointer", textAlign: "left",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        transition: "transform 0.14s, box-shadow 0.14s",
         transform: hover ? "translateY(-2px)" : "none",
+        boxShadow: hover ? "0 6px 18px rgba(0,0,0,0.07)" : "none",
       }}
     >
-      <h2 style={{
-        fontFamily: SERIF, fontSize: 19, fontWeight: 700, color: C.ink,
-        margin: "0 0 14px 0", letterSpacing: "-0.01em",
-      }}>{title}</h2>
+      <span style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 700, color: t.title, letterSpacing: "-0.01em" }}>
+        {title}{count != null ? ` · ${count}` : ""}
+      </span>
+      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: t.label, letterSpacing: "0.04em" }}>
+        {right}
+      </span>
+    </button>
+  );
+}
 
-      <div style={{ flex: 1 }}>
-        {subtitle && (
-          <div style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid }}>
-            {subtitle}
-          </div>
-        )}
-        {stats && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {stats.map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                <span style={{
-                  fontFamily: MONO, fontSize: 20, fontWeight: 700,
-                  color: s.tone || C.ink, lineHeight: 1, minWidth: 28,
-                }}>{loaded ? s.v : "—"}</span>
-                <span style={{
-                  fontFamily: MONO, fontSize: 11, fontWeight: 600,
-                  color: s.tone || C.inkMid, letterSpacing: "0.02em",
-                }}>{s.l}</span>
-              </div>
-            ))}
-          </div>
-        )}
+function ModuleCard({ tint, title, icon, badge, big, note, noteAlert, onClick, loaded }: {
+  tint: string; title: string; icon?: string; badge?: string;
+  big: { v: number; l: string; alert?: boolean };
+  note?: string; noteAlert?: boolean; onClick: () => void; loaded: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const t = TINT[tint] || TINT.neutral;
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{
+        background: t.bg, border: `${big.alert ? 2 : 1}px solid ${big.alert ? t.border : t.border}`,
+        borderRadius: 10, padding: "18px 20px", cursor: "pointer", textAlign: "left",
+        display: "flex", flexDirection: "column", minHeight: 132,
+        transition: "transform 0.14s, box-shadow 0.14s",
+        transform: hover ? "translateY(-2px)" : "none",
+        boxShadow: hover ? "0 8px 22px rgba(0,0,0,0.08)" : "none",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+        <span style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 700, color: t.title, letterSpacing: "-0.01em" }}>{title}</span>
+        {badge ? (
+          <span style={{
+            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
+            textTransform: "uppercase", background: C.red, color: "#fff",
+            padding: "2px 8px", borderRadius: 10,
+          }}>{badge}</span>
+        ) : icon ? (
+          <span style={{ color: t.label, fontSize: 16 }}>{icon}</span>
+        ) : null}
       </div>
 
-      <button onClick={onClick} style={{
-        marginTop: 16, alignSelf: "flex-start",
-        fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
-        textTransform: "uppercase", padding: "8px 18px", cursor: "pointer",
-        borderRadius: 4, border: "none", background: C.ink, color: "#fff",
-      }}>{action}</button>
-    </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
+        <span style={{
+          fontFamily: SERIF, fontSize: 40, fontWeight: 700, lineHeight: 1,
+          color: big.alert ? C.red : t.title,
+        }}>{loaded ? big.v : "—"}</span>
+        <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: big.alert ? "#993C1D" : t.label }}>
+          {big.l}</span>
+      </div>
+
+      {note && (
+        <div style={{
+          fontFamily: MONO, fontSize: 11, fontWeight: 600, marginTop: 7,
+          color: noteAlert ? C.red : t.label,
+        }}>{note}</div>
+      )}
+    </button>
   );
 }
