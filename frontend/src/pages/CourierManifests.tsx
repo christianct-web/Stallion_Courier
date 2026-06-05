@@ -214,21 +214,21 @@ export default function CourierManifests() {
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
           <div>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-              letterSpacing: "0.12em", color: C.amber, textTransform: "uppercase",
-              marginBottom: 6,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
+              letterSpacing: "0.14em", color: C.amber, textTransform: "uppercase",
+              marginBottom: 8,
             }}>
               Stallion · Courier Module
             </div>
             <h1 style={{
-              fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 36,
-              color: C.ink, margin: 0, letterSpacing: "-0.01em",
+              fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 40,
+              color: C.ink, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.02,
             }}>
               Non Trade Express Worksheets
             </h1>
             <p style={{
-              fontFamily: "'Fraunces', serif", fontSize: 14, color: C.inkLight,
-              margin: "6px 0 0 0", maxWidth: 640,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600,
+              color: C.inkMid, margin: "8px 0 0 0", maxWidth: 640, lineHeight: 1.5,
             }}>
               Process express consignment worksheets — line classification,
               duty calculation, officer examination, and worksheet/hazmat export.

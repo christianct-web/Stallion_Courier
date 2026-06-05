@@ -14,9 +14,9 @@ import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 // ─── Design tokens ──────────────────────────────────────────────────────────
 const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#A0AABB", ghostDim: "#6B7585",
+  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
   pending: "#96700A", approved: "#1A5E3A", correction: "#963A10",
   rejected: "#7A1E1E", warn: "#FEF3DC", warnBorder: "#D4A020",
   warnText: "#7A5000", critical: "#FEE8E8", critBorder: "#B02020",
@@ -376,11 +376,11 @@ export default function DeclarationsList() {
         {/* ── Hero ── */}
         <div style={{ background: C.void, borderBottom: `1px solid ${C.voidBorder}`, padding: "28px 32px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.16em", color: C.ghostDim, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", color: "#C65911", marginBottom: 8 }}>
               DECLARATIONS
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 32, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1 }}>
+              <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 38, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1, letterSpacing: "-0.02em" }}>
                 All Declarations
               </h1>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -750,7 +750,7 @@ export default function DeclarationsList() {
                   ].map(([step, desc]) => (
                     <div key={step} style={{ display: "flex", gap: 8, fontSize: 12 }}>
                       <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 60, flexShrink: 0 }}>{step}</span>
-                      <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                      <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                     </div>
                   ))}
                 </div>

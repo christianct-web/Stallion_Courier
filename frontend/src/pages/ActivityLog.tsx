@@ -7,9 +7,9 @@ import { STALLION_BASE_URL } from "@/services/stallionApi";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   void_: "#111318", voidSurface: "#1F2430", voidBorder: "#2E3748",
-  ghost: "#A0AABB", ghostDim: "#6B7585",
+  ghost: "#B8C0CE", ghostDim: "#8A93A3",
   approved: "#1A5E3A", pending: "#96700A", correction: "#963A10",
   rejected: "#7A1E1E", submitted: "#1E4A8C", receipted: "#1E4A8C",
   extracted: "#1A5E3A",

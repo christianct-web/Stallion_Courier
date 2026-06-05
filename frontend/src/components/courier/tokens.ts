@@ -4,9 +4,9 @@
  */
 export const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#A0AABB", ghostDim: "#6B7585",
+  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
   green: "#1A5C3A", greenMid: "#2E7D52", greenLight: "#EBF5EE",
   warn: "#FEF3DC", warnBorder: "#D4A020", warnText: "#7A5000",
   critical: "#FEE8E8", critBorder: "#B02020",

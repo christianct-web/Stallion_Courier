@@ -19,7 +19,7 @@ import { listSheets, createSheet, deleteSheet, Sheet } from "@/services/sheetApi
 /* ------------------------------------------------------------------ tokens */
 const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   green: "#1A5C3A", greenLight: "#EBF5EE",
   amber: "#C65911", amberLight: "#FDF2E5",
   blue: "#1E4A8C", blueLight: "#EEF2FA",
@@ -108,7 +108,7 @@ type DeclChoice = {
 const DECL_CHOICES: DeclChoice[] = [
   { key: "import", title: "Import Declaration",
     desc: "C82 home-use entry — invoice extraction, classification, duty cascade, ASYCUDA XML.",
-    regime: "C4", declaration_type: "import_c82", accent: C.ink },
+    regime: "C4", declaration_type: "import_c82", accent: C.green },
   { key: "export", title: "Export Declaration",
     desc: "C82 export (EX1/EX3) — outbound shipment documentation and declaration.",
     regime: "E1", declaration_type: "export_c82", accent: C.blue },
@@ -142,14 +142,14 @@ function NewDeclarationModal({ onPick, onClose, busy }: {
         background: C.paper, borderRadius: 6, border: `1px solid ${C.paperBorder}`,
         padding: 28, boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
       }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em",
-          color: C.amber, textTransform: "uppercase", marginBottom: 6 }}>
+        <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+          color: C.amber, textTransform: "uppercase", marginBottom: 9 }}>
           Stallion · Trade Module
         </div>
-        <h2 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 24, color: C.ink, margin: 0 }}>
+        <h2 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 26, color: C.ink, margin: 0, letterSpacing: "-0.01em" }}>
           New Declaration
         </h2>
-        <p style={{ fontFamily: SERIF, fontSize: 13, color: C.inkLight, margin: "6px 0 20px 0" }}>
+        <p style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid, margin: "7px 0 20px 0", lineHeight: 1.5 }}>
           Choose a declaration type. Stallion routes you into the right workflow and
           pre-sets the ASYCUDA regime.
         </p>
@@ -159,16 +159,16 @@ function NewDeclarationModal({ onPick, onClose, busy }: {
               style={{
                 textAlign: "left", cursor: busy ? "wait" : "pointer",
                 background: "#fff", border: `1px solid ${C.paperBorder}`,
-                borderLeft: `3px solid ${c.accent}`, borderRadius: 5, padding: "14px 16px",
+                borderLeft: `4px solid ${c.accent}`, borderRadius: 6, padding: "14px 16px",
                 transition: "background 0.12s, transform 0.12s",
               }}
               onMouseEnter={e => { e.currentTarget.style.background = C.paperAlt; }}
               onMouseLeave={e => { e.currentTarget.style.background = "#fff"; }}
             >
-              <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: C.ink, marginBottom: 4 }}>
+              <div style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 700, color: C.ink, marginBottom: 5, letterSpacing: "-0.01em" }}>
                 {c.title}
               </div>
-              <div style={{ fontFamily: SERIF, fontSize: 12, color: C.inkLight, lineHeight: 1.45 }}>
+              <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, color: C.inkMid, lineHeight: 1.5 }}>
                 {c.desc}
               </div>
             </button>
@@ -274,16 +274,16 @@ export default function StallionSheetList() {
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between",
           gap: 16, flexWrap: "wrap", marginBottom: 26 }}>
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.12em",
-              color: C.amber, textTransform: "uppercase", marginBottom: 6 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
+              color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>
               Stallion · Trade Module
             </div>
-            <h1 style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 36, color: C.ink,
-              margin: 0, letterSpacing: "-0.01em" }}>
+            <h1 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 40, color: C.ink,
+              margin: 0, letterSpacing: "-0.02em", lineHeight: 1.02 }}>
               Trade Declarations
             </h1>
-            <p style={{ fontFamily: SERIF, fontSize: 14, color: C.inkLight,
-              margin: "6px 0 0 0", maxWidth: 660 }}>
+            <p style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid,
+              margin: "8px 0 0 0", maxWidth: 660, lineHeight: 1.5 }}>
               Prepare import/export declarations, C82 worksheets, C84 concessions,
               C75/C76 warehousing, and ASYCUDA-ready submissions.
             </p>
@@ -293,12 +293,12 @@ export default function StallionSheetList() {
               padding: "10px 16px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
               textTransform: "uppercase", background: "transparent",
               border: `1px solid ${C.paperMid}`, borderRadius: 4, color: C.inkMid,
-              cursor: "pointer", fontWeight: 600,
+              cursor: "pointer", fontWeight: 700,
             }}>⊞ Tariff Database</button>
             <button onClick={() => setShowNew(true)} style={{
               padding: "10px 18px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
-              textTransform: "uppercase", background: C.ink, border: `1px solid ${C.ink}`,
-              borderRadius: 4, color: C.paper, cursor: "pointer", fontWeight: 600,
+              textTransform: "uppercase", background: C.amber, border: `1px solid ${C.amber}`,
+              borderRadius: 4, color: "#fff", cursor: "pointer", fontWeight: 700,
             }}>+ New Declaration</button>
           </div>
         </div>

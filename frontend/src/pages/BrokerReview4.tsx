@@ -18,10 +18,10 @@ import { HsLookup } from "@/components/HsLookup";
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
   paper:      "#F6F3EE", paperAlt:  "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid:   "#CCC7BE", ink:       "#18150F", inkMid:      "#3D3830",
-  inkLight:   "#6B6560", void:      "#111318", voidMid:     "#191D26",
-  voidSurface:"#1F2430", voidBorder:"#2E3748", ghost:       "#A0AABB",
-  ghostDim:   "#6B7585", approved:  "#1A5E3A", pending:     "#96700A",
+  paperMid:   "#CCC7BE", ink:       "#18150F", inkMid:      "#2C2820",
+  inkLight:   "#4A453D", void:      "#111318", voidMid:     "#191D26",
+  voidSurface:"#1F2430", voidBorder:"#2E3748", ghost:       "#B8C0CE",
+  ghostDim:   "#8A93A3", approved:  "#1A5E3A", pending:     "#96700A",
   correction: "#963A10", warn:      "#FEF3DC", warnBorder:  "#D4A020",
   warnText:   "#7A5000", critical:  "#FEE8E8", critBorder:  "#B02020",
   submitted:  "#1E4A8C", receipted: "#1E4A8C",
@@ -1599,7 +1599,7 @@ export default function BrokerReview4() {
             <div style={{ width: 100, height: 2, background: "#2E3748", borderRadius: 1 }}>
               <div style={{ height: "100%", borderRadius: 1, width: `${progress}%`, background: "#1A5E3A", transition: "width 0.4s" }} />
             </div>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#A0AABB" }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#B8C0CE" }}>
               {reviewed}/{batch.length}
             </span>
           </div>
@@ -1657,8 +1657,8 @@ export default function BrokerReview4() {
                         ["5. Approve or flag", "If all fields are correct, click Approve. If something needs fixing, click Flag Correction and add notes."],
                       ].map(([step, desc]) => (
                         <div key={step} style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
-                          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#3D3830", marginBottom: 2 }}>{step}</div>
-                          <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#6B6560" }}>{desc}</div>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>{step}</div>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>{desc}</div>
                         </div>
                       ))}
                     </div>
@@ -1674,7 +1674,7 @@ export default function BrokerReview4() {
                       ].map(([action, desc]) => (
                         <div key={action} style={{ display: "flex", gap: 8, fontSize: 12 }}>
                           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 120 }}>{action}</span>
-                          <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                          <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                         </div>
                       ))}
                     </div>
@@ -1688,7 +1688,7 @@ export default function BrokerReview4() {
                       ].map(([key, desc]) => (
                         <div key={key} style={{ display: "flex", gap: 8, fontSize: 12 }}>
                           <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1E4A8C", minWidth: 60 }}>{key}</span>
-                          <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                          <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                         </div>
                       ))}
                     </div>
@@ -1712,7 +1712,7 @@ export default function BrokerReview4() {
                       ].map(f => (
                         <div key={f} style={{ display: "flex", gap: 8, fontSize: 12 }}>
                           <span style={{ color: "#963A10", flexShrink: 0 }}>✕</span>
-                          <span style={{ fontFamily: "'Fraunces', serif", color: "#6B6560", fontStyle: "italic" }}>{f}</span>
+                          <span style={{ fontFamily: "'Fraunces', serif", color: "#4A453D", fontStyle: "italic" }}>{f}</span>
                         </div>
                       ))}
                     </div>

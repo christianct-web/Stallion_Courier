@@ -7,9 +7,9 @@ import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 // Design tokens (matching paper/void system from other pages)
 const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   void_: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#A0AABB", ghostDim: "#6B7585",
+  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
   approved: "#1A5E3A", pending: "#96700A", warn: "#FEF3DC", warnBorder: "#D4A020",
 };
 
@@ -155,8 +155,8 @@ export default function DocumentUpload() {
                 ["Health / Free-Sale Certificate", "If present, certificate number and issuing authority are extracted and stored against the declaration."],
               ].map(([name, desc]) => (
                 <div key={name} style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#3D3830", marginBottom: 2 }}>{name}</div>
-                  <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#6B6560" }}>{desc}</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>{name}</div>
+                  <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>{desc}</div>
                 </div>
               ))}
             </div>
@@ -164,15 +164,15 @@ export default function DocumentUpload() {
             <HelpHeading>BATCH vs SEPARATE MODE</HelpHeading>
             <div style={{ display: "grid", gap: 6 }}>
               <div style={{ paddingLeft: 12, borderLeft: "2px solid #D4A020" }}>
-                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#3D3830", marginBottom: 2 }}>Batch mode</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#6B6560" }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>Batch mode</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>
                   All uploaded files relate to <strong>one shipment</strong>. Stallion reads them together and merges the data.
                   Use this when you have an invoice + AWB for the same consignment.
                 </div>
               </div>
               <div style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
-                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#3D3830", marginBottom: 2 }}>Separate mode</div>
-                <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#6B6560" }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>Separate mode</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>
                   Each uploaded file is a <strong>different shipment</strong>. Stallion creates one declaration per file.
                   Use this when processing multiple invoices at once.
                 </div>
@@ -180,7 +180,7 @@ export default function DocumentUpload() {
             </div>
 
             <HelpHeading>CONFIDENCE SCORE</HelpHeading>
-            <p style={{ margin: "0 0 6px", fontStyle: "italic", color: "#6B6560", fontSize: 12 }}>
+            <p style={{ margin: "0 0 6px", fontStyle: "italic", color: "#4A453D", fontSize: 12 }}>
               After extraction, each result shows a confidence score (0–100%). This reflects how completely and clearly the AI could read the document.
             </p>
             <div style={{ display: "grid", gap: 4 }}>
@@ -191,7 +191,7 @@ export default function DocumentUpload() {
               ].map(([range, desc]) => (
                 <div key={range} style={{ display: "flex", gap: 8, fontSize: 12 }}>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 70 }}>{range}</span>
-                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -377,7 +377,7 @@ export default function DocumentUpload() {
                               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#96700A" }}>
                                 IMPORT PERMIT REQUIRED
                               </span>
-                              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#3D3830" }}>
+                              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#2C2820" }}>
                                 {p.ttbizlinkName}
                               </span>
                               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#96700A", marginLeft: "auto" }}>
@@ -401,11 +401,11 @@ export default function DocumentUpload() {
                               <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#1A5E3A" }}>
                                 {c.type}
                               </span>
-                              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#3D3830" }}>
+                              <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#2C2820" }}>
                                 {c.number || "No cert number"}
                               </span>
                               {c.issuer && (
-                                <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: "#6B6560" }}>
+                                <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: "#4A453D" }}>
                                   {c.issuer}
                                 </span>
                               )}

@@ -30,13 +30,14 @@ import {
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
 const C = {
   paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
+  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
   void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430", voidBorder: "#2E3748",
-  ghost: "#A0AABB", ghostDim: "#6B7585",
-  gold: "#B8860B", amber: "#FFF4D6", amberText: "#8A6D00",
+  ghost: "#B8C0CE", ghostDim: "#8A93A3",
+  gold: "#B8860B", amber: "#FFF4D6", amberText: "#8A6D00", amberAction: "#C65911",
   approved: "#1A5E3A", warn: "#FEF3DC", warnBorder: "#D4A020",
 };
 const MONO = "'JetBrains Mono','SFMono-Regular',monospace";
+const SERIF = "'Fraunces',Georgia,serif";
 const fmt = (n: number | undefined) =>
   (n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -529,32 +530,67 @@ export default function StallionSheet() {
     approved: "#1A5E3A", submitted: "#2A4D8F", receipted: "#5A3A8A",
   };
 
+  // Lifecycle track shown as a stepper in the status bar.
+  const LIFECYCLE = ["draft", "pending", "approved", "submitted", "receipted"];
+  const curIdx = LIFECYCLE.indexOf(sheet.status);
+
   return (
     <div style={{ background: C.paper, minHeight: "100%", padding: 20 }}>
-      {/* ── breadcrumb + status bar ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+      {/* ── two-tier status bar: breadcrumb + lifecycle track + actions ── */}
+      <div style={{
+        background: C.void, borderRadius: 8, padding: "14px 18px", marginBottom: 16,
+        display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+      }}>
         <button onClick={() => nav("/stallion/sheets")} style={{
-          fontFamily: MONO, fontSize: 12, padding: "6px 12px", cursor: "pointer",
-          border: `1px solid ${C.paperMid}`, borderRadius: 4, background: "#fff", color: C.ink,
-        }}>← Sheets</button>
-        <span style={{ fontFamily: MONO, fontSize: 13, color: C.inkMid }}>
-          {sheet.reference || "(untitled sheet)"}{sheet.consignee ? ` · ${sheet.consignee}` : ""}
-        </span>
-        <span style={{
-          fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase",
-          padding: "3px 9px", borderRadius: 3, color: "#fff",
-          background: statusColor[sheet.status] || C.inkLight,
-        }}>{sheet.status}</span>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-          {(NEXT[sheet.status] || []).map(t => (
-            <button key={t.to} onClick={() => advance(t.to)} style={{
-              fontFamily: MONO, fontSize: 12, padding: "6px 14px", cursor: "pointer", borderRadius: 4,
-              border: t.to === "correction" ? `1px solid ${C.paperMid}` : "none",
-              background: t.to === "correction" ? "#fff" : C.ink,
-              color: t.to === "correction" ? C.ink : "#fff",
-            }}>{t.label}</button>
-          ))}
+          fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "6px 12px", cursor: "pointer",
+          border: `1px solid ${C.voidBorder}`, borderRadius: 4, background: "transparent", color: C.ghost,
+        }}>‹ Declarations</button>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0 }}>
+          <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
+            {sheet.reference || "(untitled)"}</span>
+          {sheet.consignee && (
+            <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.ghost }}>
+              · {sheet.consignee}</span>
+          )}
         </div>
+        {/* lifecycle stepper */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+          {curIdx >= 0 && LIFECYCLE.map((st, i) => (
+            <div key={st} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+                textTransform: "uppercase", padding: "3px 9px", borderRadius: 3,
+                color: i === curIdx ? "#fff" : i < curIdx ? C.ghost : C.ghostDim,
+                background: i === curIdx ? (statusColor[st] || C.inkLight) : "transparent",
+                border: i === curIdx ? "none" : `1px solid ${C.voidBorder}`,
+              }}>{st}</span>
+              {i < LIFECYCLE.length - 1 && (
+                <span style={{ color: i < curIdx ? C.ghost : C.voidBorder, fontSize: 11 }}>›</span>
+              )}
+            </div>
+          ))}
+          {sheet.status === "correction" && (
+            <span style={{
+              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+              textTransform: "uppercase", padding: "3px 9px", borderRadius: 3, color: "#fff",
+              background: statusColor.correction,
+            }}>correction</span>
+          )}
+        </div>
+        {/* action buttons */}
+        {(NEXT[sheet.status] || []).length > 0 && (
+          <div style={{ display: "flex", gap: 8, width: "100%", justifyContent: "flex-end" }}>
+            {(NEXT[sheet.status] || []).map(t => (
+              <button key={t.to} onClick={() => advance(t.to)} style={{
+                fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "7px 16px", cursor: "pointer",
+                borderRadius: 4, textTransform: "uppercase", letterSpacing: "0.04em",
+                border: t.to === "correction" ? `1px solid ${C.voidBorder}` : "none",
+                background: t.to === "correction" ? "transparent" : C.amberAction,
+                color: t.to === "correction" ? C.ghost : "#fff",
+              }}>{t.label}</button>
+            ))}
+          </div>
+        )}
       </div>
       {/* ── header strip ── */}
       <div style={{
@@ -696,51 +732,65 @@ export default function StallionSheet() {
         }}>+ Add line</button>
       </div>
 
-      {/* ── totals + actions ── */}
-      <div style={{ display: "flex", gap: 14, marginTop: 14, flexWrap: "wrap" }}>
+      {/* ── totals + actions: sticky dark duty rail ── */}
+      <div style={{ display: "flex", gap: 14, marginTop: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 auto", minWidth: 0 }} />
         <div style={{
-          flex: 1, minWidth: 280, background: "#fff", border: `1px solid ${C.paperBorder}`,
-          borderRadius: 6, padding: 16,
+          width: 260, flexShrink: 0, position: "sticky", top: 16,
+          background: C.void, borderRadius: 8, padding: "18px 18px", color: C.ghost,
         }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.gold, marginBottom: 10 }}>
-            ASSESSMENT SUMMARY (TTD)</div>
+          <div style={{
+            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: C.ghostDim, marginBottom: 14,
+          }}>Duties &amp; Totals</div>
+
           {[["Total CIF", t.cif_ttd], ["Import Duty", t.duty], ["Surcharge", t.surcharge],
             ...((t.mvt ?? 0) > 0 ? [["Motor Vehicle Tax", t.mvt] as [string, number]] : []),
             ["VAT", t.vat], ["Customs User Fee", t.customs_user_fee]].map(([l, v]) => (
-            <div key={l as string} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontFamily: MONO, fontSize: 12, color: C.inkMid }}>
-              <span>{l}</span><span>{fmt(v as number)}</span>
+            <div key={l as string} style={{
+              display: "flex", justifyContent: "space-between", marginBottom: 9,
+              fontFamily: MONO, fontSize: 11, fontWeight: 600,
+            }}>
+              <span style={{ color: C.ghostDim }}>{l}</span>
+              <span style={{ color: "#fff" }}>{fmt(v as number)}</span>
             </div>
           ))}
+
           {(t.relief_total ?? 0) > 0 && (
             <div style={{
-              display: "flex", justifyContent: "space-between", marginTop: 8, padding: "6px 10px",
-              background: "#EBF5EE", border: "1px solid #1A5C3A33", borderRadius: 4,
-              fontFamily: MONO, fontSize: 12, color: C.approved, fontWeight: 700,
+              display: "flex", justifyContent: "space-between", marginBottom: 9,
+              fontFamily: MONO, fontSize: 11, fontWeight: 700,
             }}>
-              <span>C84 RELIEF</span><span>− {fmt(t.relief_total)}</span>
+              <span style={{ color: "#5DCAA5" }}>C84 Relief (R)</span>
+              <span style={{ color: "#5DCAA5" }}>− {fmt(t.relief_total)}</span>
             </div>
           )}
-          <div style={{
-            display: "flex", justifyContent: "space-between", marginTop: 8, padding: "10px 12px",
-            background: C.ink, color: "#fff", borderRadius: 4, fontFamily: MONO, fontSize: 14, fontWeight: 700,
-          }}>
-            <span>TOTAL PAYABLE</span><span>{fmt(t.total_payable)}</span>
+
+          <div style={{ height: 1, background: C.voidBorder, margin: "14px 0" }} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 18 }}>
+            <span style={{
+              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+              textTransform: "uppercase", color: C.ghostDim,
+            }}>Payable</span>
+            <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 700, color: C.amberAction, letterSpacing: "-0.01em" }}>
+              {fmt(t.total_payable)}</span>
           </div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 220 }}>
-          <input ref={fileRef} type="file" hidden accept=".pdf,.png,.jpg,.jpeg"
-            onChange={e => e.target.files?.[0] && onUpload(e.target.files[0])} />
-          <button onClick={() => fileRef.current?.click()} style={btn(C, "outline")}>Upload documents</button>
-          <a href={worksheetUrl(sheetId)} style={{ ...btn(C, "outline"), textAlign: "center", textDecoration: "none" }}>
-            Download Worksheet</a>
-          {(sheet.declaration_type === "c84" || sheet.concession?.active ||
-            sheet.lines?.some(l => l.concession_code)) && (
-            <a href={c84WorksheetUrl(sheetId)} style={{
-              ...btn(C, "outline"), textAlign: "center", textDecoration: "none",
-              borderColor: C.approved, color: C.approved,
-            }}>Download C84 Claim</a>
-          )}
-          <button onClick={() => setShowGen(true)} style={btn(C, "solid")}>Generate C82 XML</button>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <input ref={fileRef} type="file" hidden accept=".pdf,.png,.jpg,.jpeg"
+              onChange={e => e.target.files?.[0] && onUpload(e.target.files[0])} />
+            <button onClick={() => fileRef.current?.click()} style={railBtn(C, "ghost")}>Upload documents</button>
+            <a href={worksheetUrl(sheetId)} style={{ ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none" }}>
+              Download worksheet</a>
+            {(sheet.declaration_type === "c84" || sheet.concession?.active ||
+              sheet.lines?.some(l => l.concession_code)) && (
+              <a href={c84WorksheetUrl(sheetId)} style={{
+                ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none",
+                borderColor: "#2E7D52", color: "#5DCAA5",
+              }}>Download C84 claim</a>
+            )}
+            <button onClick={() => setShowGen(true)} style={railBtn(C, "solid")}>Generate C82 XML</button>
+          </div>
         </div>
       </div>
 
@@ -756,5 +806,16 @@ function btn(c: typeof C, kind: "solid" | "outline"): React.CSSProperties {
     border: kind === "solid" ? "none" : `1px solid ${c.paperMid}`,
     background: kind === "solid" ? c.ink : "#fff",
     color: kind === "solid" ? "#fff" : c.ink,
+  };
+}
+
+function railBtn(c: typeof C, kind: "solid" | "ghost"): React.CSSProperties {
+  return {
+    fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: kind === "solid" ? "10px 12px" : "9px 12px",
+    cursor: "pointer", borderRadius: 4, letterSpacing: "0.06em", textTransform: "uppercase",
+    textAlign: "center" as const, display: "block",
+    border: kind === "solid" ? "none" : `1px solid ${c.voidBorder}`,
+    background: kind === "solid" ? c.amberAction : "transparent",
+    color: kind === "solid" ? "#fff" : c.ghost,
   };
 }

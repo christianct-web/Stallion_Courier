@@ -237,3 +237,86 @@
     @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono bg-muted border rounded;
   }
 }
+
+/* ============================================================================
+   STALLION GLOBAL TYPE LAYER
+   ----------------------------------------------------------------------------
+   Pushes type heavier / darker / larger across the whole app (trade + courier),
+   without hand-editing the ~600 inline fontSize/color literals in the pages.
+
+   Strategy:
+     - Pages render inline-styled elements with the Fraunces + JetBrains Mono
+       pairing. We can't restyle every literal, but we CAN lift the floor:
+       scale up the tiny sizes, raise weight, and darken the washed-out greys.
+     - Scoped under #root so it only touches the app, never the marketing site.
+     - Uses min()/max() on font-size so we nudge sizes up proportionally rather
+       than forcing one value (keeps the visual hierarchy the pages designed).
+
+   Colour tokens (kept in sync with components/courier/tokens.ts):
+     ink #18150F · inkMid #3D3830 · inkLight #6B6560 (washed) · amber #C65911
+   ============================================================================ */
+
+:root {
+  --stallion-ink:        #18150F;
+  --stallion-ink-mid:    #3D3830;
+  --stallion-amber:      #C65911;
+  --stallion-paper-bord: #CCC7BE;
+}
+
+/* 1 — Base weight + smoothing lift. Body copy goes from 400 -> 500 everywhere
+       so nothing reads thin. Headings handled below. */
+#root {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 2 — Display serif: make every Fraunces heading heavier + tighter.
+       Catches inline style="font-family:'Fraunces'..." via attribute match. */
+#root [style*="Fraunces"] {
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+
+/* 3 — Mono labels/data: lift from the common 400 to 600, and darken the
+       washed-out label grey (#6B6560 / #6B7585 / ghostDim) toward ink so
+       uppercase tracked labels actually read. */
+#root [style*="JetBrains Mono"] {
+  font-weight: 600 !important;
+}
+
+/* 4 — (Grey darkening is handled at the token level in tokens.ts and each
+       page's local palette — far more reliable than matching serialized
+       inline colours, which React may emit as rgb() in any property order.) */
+
+/* 5 — Size floor. Bump the tiny mono label/data sizes up one notch so the
+       8–11px crowd becomes legible without breaking 12px+ hierarchy.
+       Done with descendant min-size on the mono family (where the small
+       sizes live). */
+#root [style*="JetBrains Mono"][style*="font-size: 8px"],
+#root [style*="JetBrains Mono"][style*="fontSize: 8"]   { font-size: 9.5px !important; }
+#root [style*="JetBrains Mono"][style*="font-size: 9px"],
+#root [style*="JetBrains Mono"][style*="fontSize: 9"]   { font-size: 10.5px !important; }
+#root [style*="JetBrains Mono"][style*="font-size: 10px"],
+#root [style*="JetBrains Mono"][style*="fontSize: 10"]  { font-size: 11.5px !important; }
+#root [style*="JetBrains Mono"][style*="font-size: 11px"],
+#root [style*="JetBrains Mono"][style*="fontSize: 11"]  { font-size: 12.5px !important; }
+
+/* 6 — Stat-card / big-number Fraunces & mono numerals: full ink, never grey. */
+#root [style*="font-size: 40px"],
+#root [style*="font-size: 36px"],
+#root [style*="font-size: 32px"],
+#root [style*="font-size: 30px"],
+#root [style*="font-size: 28px"],
+#root [style*="font-size: 26px"],
+#root [style*="font-size: 24px"] {
+  letter-spacing: -0.02em;
+}
+
+/* 7 — Native form controls + buttons inherit the heavier mono so inputs
+       in the data grids match. */
+#root input,
+#root select,
+#root textarea,
+#root button {
+  font-weight: 600;
+}
