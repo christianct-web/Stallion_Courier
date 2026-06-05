@@ -22,10 +22,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getSheet, updateHeader, addLine, updateLine, deleteLine,
-  classify, getReference, worksheetUrl, c84WorksheetUrl, generateXml, uploadExtract,
+  getReference, worksheetUrl, c84WorksheetUrl, generateXml, uploadExtract,
   getWarnings, setStatus, listClients,
   Sheet, SheetLine, RefOption, RefData, Client, Concession,
 } from "@/services/sheetApi";
+import { HsClassifyCell } from "./HsClassifyCell";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
 const C = {
@@ -93,62 +94,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// ── HS lookup popover on the description cell ──────────────────────────────────
-function DescriptionCell({ line, sheetId, onUpdate, refData }: {
-  line: SheetLine; sheetId: string; onUpdate: (patch: Partial<SheetLine>) => void; refData: RefData;
-}) {
-  const [open, setOpen] = useState(false);
-  const [sug, setSug] = useState<any[]>([]);
-  const [busy, setBusy] = useState(false);
-
-  const runClassify = useCallback(async () => {
-    if (!line.description?.trim()) return;
-    setBusy(true);
-    try {
-      const r = await classify(sheetId, line.description);
-      setSug(r.suggestions || []); setOpen(true);
-    } finally { setBusy(false); }
-  }, [sheetId, line.description]);
-
-  return (
-    <div style={{ position: "relative" }}>
-      <div style={{ display: "flex", gap: 4 }}>
-        <Cell value={line.description}
-          onCommit={v => onUpdate({ description: v })} mono={false} />
-        <button onClick={runClassify} disabled={busy} title="Classify (HS lookup)"
-          style={{
-            fontFamily: MONO, fontSize: 10, padding: "0 8px", cursor: "pointer",
-            border: `1px solid ${C.gold}`, borderRadius: 3, background: C.amber,
-            color: C.amberText, whiteSpace: "nowrap",
-          }}>{busy ? "…" : "HS"}</button>
-      </div>
-      {open && sug.length > 0 && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 60,
-          background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 4,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.15)", maxHeight: 280, overflowY: "auto",
-        }}>
-          {sug.map((s, i) => (
-            <button key={i} onClick={() => {
-              onUpdate({
-                hs_code: s.code, duty_pct: s.dutyPct ?? s.duty_rate ?? 0,
-                vat_pct: s.vatPct ?? 12.5,
-              });
-              setOpen(false);
-            }} style={{
-              display: "block", width: "100%", textAlign: "left", padding: "7px 10px",
-              border: "none", borderBottom: `1px solid ${C.paperAlt}`, cursor: "pointer",
-              background: "#fff", fontFamily: MONO, fontSize: 11,
-            }}>
-              <strong>{s.code}</strong> · {(s.dutyPct ?? s.duty_rate ?? 0)}% duty
-              <div style={{ color: C.inkLight, fontSize: 10 }}>{(s.description || "").slice(0, 70)}</div>
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// HS lookup is handled by HsClassifyCell, matching the Courier Workbench picker.
 
 // ── expandable row drawer (C82-only fields, all dropdowns) ─────────────────────
 function RowDrawer({ line, refData, onUpdate }: {
@@ -156,7 +102,7 @@ function RowDrawer({ line, refData, onUpdate }: {
 }) {
   return (
     <tr>
-      <td colSpan={12} style={{ background: C.paperAlt, padding: "12px 16px" }}>
+      <td colSpan={11} style={{ background: C.paperAlt, padding: "12px 16px" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
           <Field label="CPC">
             <Select value={line.cpc} options={refData.cpc}
@@ -680,8 +626,8 @@ export default function StallionSheet() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              {TH("", 28)}{TH("#", 32, "center")}{TH("HS Code", 100, "center")}
-              {TH("Description")}{TH("EX-WORKS", 90, "right")}{TH("Freight", 80, "right")}
+              {TH("", 28)}{TH("#", 32, "center")}
+              {TH("Description & HS Code")}{TH("EX-WORKS", 90, "right")}{TH("Freight", 80, "right")}
               {TH("CIF USD", 90, "right")}{TH("CIF TTD", 100, "right")}
               {TH("Duty %", 60, "center")}{TH("Duty", 90, "right")}{TH("VAT", 90, "right")}
               {TH("Total Tax", 100, "right")}
@@ -702,10 +648,13 @@ export default function StallionSheet() {
                         {expanded.has(ln.line_no) ? "▾" : "▸"}</button>
                     </td>
                     <td style={{ ...cellTd, textAlign: "center", fontFamily: MONO, fontSize: 11, color: C.inkLight }}>{ln.line_no}</td>
-                    <td style={cellTd}><Cell value={ln.hs_code} align="center"
-                      onCommit={v => patchLine(ln.line_no, { hs_code: v })} /></td>
-                    <td style={cellTd}><DescriptionCell line={ln} sheetId={sheetId} refData={refData}
-                      onUpdate={p => patchLine(ln.line_no, p)} /></td>
+                    <td style={{ ...cellTd, minWidth: 320 }}>
+                      <HsClassifyCell
+                        line={ln}
+                        onUpdate={p => patchLine(ln.line_no, p)}
+                        onReload={() => getSheet(sheetId).then(setSheet)}
+                      />
+                    </td>
                     <td style={cellTd}><Cell value={ln.exworks_usd} type="number" align="right"
                       onCommit={v => patchLine(ln.line_no, { exworks_usd: Number(v) })} /></td>
                     {num(ln.freight_usd)}{num(ln.cif_usd)}{num(ln.cif_ttd)}
