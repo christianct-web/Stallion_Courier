@@ -14,7 +14,8 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listSheets, createSheet, deleteSheet, Sheet } from "@/services/sheetApi";
+import { listDeclarations, deleteDeclaration } from "@/services/stallionApi";
+import { createSheet, Sheet } from "@/services/sheetApi";
 
 /* ------------------------------------------------------------------ tokens */
 const C = {
@@ -35,9 +36,12 @@ const SERIF = "'Fraunces', serif";
 const STATUS_STYLE: Record<string, { fg: string; bg: string; border: string; label: string }> = {
   draft:      { fg: C.inkLight,  bg: C.paperAlt,    border: C.paperBorder,  label: "DRAFT" },
   pending:    { fg: C.warnText,  bg: C.warn,        border: C.warnBorder,   label: "BROKER REVIEW" },
+  pending_review: { fg: C.warnText, bg: C.warn,     border: C.warnBorder,   label: "BROKER REVIEW" },
   correction: { fg: C.critBorder, bg: C.critical,   border: C.critBorder,   label: "CORRECTION" },
+  needs_correction: { fg: C.critBorder, bg: C.critical, border: C.critBorder, label: "CORRECTION" },
   approved:   { fg: C.green,     bg: C.greenLight,  border: C.green + "55", label: "APPROVED" },
   submitted:  { fg: C.blue,      bg: C.blueLight,   border: C.blue + "55",  label: "SUBMITTED" },
+  Exported:   { fg: C.blue,      bg: C.blueLight,   border: C.blue + "55",  label: "SUBMITTED" },
   receipted:  { fg: C.purple,    bg: C.purpleLight, border: C.purple + "55", label: "RECEIPTED" },
 };
 
@@ -62,21 +66,44 @@ const TYPE_LABEL: Record<string, string> = {
   c84: "C84 Concession", c75: "C75 Warehouse", c76: "C76 Ex-Warehouse",
   c86: "C86 Bill of Sight", manual: "Worksheet",
 };
-function declType(s: Sheet & { declaration_type?: string }): string {
-  if (s.declaration_type && TYPE_LABEL[s.declaration_type]) return TYPE_LABEL[s.declaration_type];
-  return REGIME_LABEL[s.customs_regime] || "Import C82";
+type DashboardDeclaration = Record<string, any>;
+
+function normalizeStatus(status?: string) {
+  const s = String(status || "draft").toLowerCase();
+  if (s === "pending_review") return "pending";
+  if (s === "needs_correction") return "correction";
+  if (s === "exported") return "submitted";
+  return s;
+}
+
+function declType(d: DashboardDeclaration): string {
+  const rawType = d.declaration_type || d.header?.declaration_type || d.payload_json?.declaration_type;
+  if (rawType && TYPE_LABEL[rawType]) return TYPE_LABEL[rawType];
+  const regime = d.customs_regime || d.header?.customsRegime || d.header?.customs_regime || d.payload_json?.customs_regime;
+  return REGIME_LABEL[regime] || "Import C82";
 }
 
 /* -------------------------------------------------------------- confidence */
-function rowConfidence(s: Sheet): { label: string; fg: string; bg: string } | null {
-  const cs = (s.lines || [])
-    .map(l => (l as any).thn_confidence ?? (l as any).confidence)
-    .filter((c): c is number => typeof c === "number");
-  if (!cs.length) return null;
-  const min = Math.min(...cs);
-  if (min >= 0.85) return { label: `HIGH ${Math.round(min * 100)}%`, fg: C.green, bg: C.greenLight };
-  if (min >= 0.65) return { label: `REVIEW ${Math.round(min * 100)}%`, fg: C.warnText, bg: C.warn };
-  return { label: `LOW ${Math.round(min * 100)}%`, fg: C.critBorder, bg: C.critical };
+function getConfidence(d: DashboardDeclaration): number | null {
+  const raw =
+    d?.confidence ??
+    d?.confidence_score ??
+    d?.extraction_confidence ??
+    d?.payload_json?.confidence ??
+    d?.payload_json?.confidence_score ??
+    d?.review?.confidence;
+
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  return n > 1 ? Math.max(0, Math.min(100, n)) : Math.max(0, Math.min(100, n * 100));
+}
+
+function rowConfidence(d: DashboardDeclaration): { label: string; fg: string; bg: string; border: string } | null {
+  const conf = getConfidence(d);
+  if (conf == null) return null;
+  if (conf >= 90) return { label: `${Math.round(conf)}%`, fg: C.green, bg: C.greenLight, border: C.green + "44" };
+  if (conf >= 70) return { label: `${Math.round(conf)}%`, fg: C.warnText, bg: C.warn, border: C.warnBorder };
+  return { label: `${Math.round(conf)}%`, fg: C.critBorder, bg: C.critical, border: C.critBorder };
 }
 
 /* --------------------------------------------------------------- utilities */
@@ -188,40 +215,61 @@ function NewDeclarationModal({ onPick, onClose, busy }: {
 }
 
 /* ============================================================ main component */
-const TABS: { key: string; label: string; match: (s: Sheet) => boolean }[] = [
+function refLabel(d: DashboardDeclaration): string {
+  return d.reference_number || d.header?.declarationRef || d.reference || d.id?.slice(0, 12) || "—";
+}
+
+function consigneeLabel(d: DashboardDeclaration): string {
+  return d.header?.consigneeName || d.header?.consignee_name || d.consignee || d.payload_json?.consigneeName || "—";
+}
+
+function lineCount(d: DashboardDeclaration): number {
+  return (d.items || d.payload_json?.items || d.lines || []).length;
+}
+
+const TABS: { key: string; label: string; match: (d: DashboardDeclaration) => boolean }[] = [
   { key: "all",        label: "All",            match: () => true },
-  { key: "draft",      label: "Draft",          match: s => s.status === "draft" },
-  { key: "pending",    label: "Broker Review",  match: s => s.status === "pending" },
-  { key: "correction", label: "Corrections",    match: s => s.status === "correction" },
-  { key: "submitted",  label: "Submitted",      match: s => s.status === "submitted" },
-  { key: "approved",   label: "Approved",       match: s => s.status === "approved" },
-  { key: "receipted",  label: "Receipted",      match: s => s.status === "receipted" },
+  { key: "draft",      label: "Draft",          match: d => normalizeStatus(d.status) === "draft" },
+  { key: "pending",    label: "Broker Review",  match: d => normalizeStatus(d.status) === "pending" },
+  { key: "correction", label: "Corrections",    match: d => normalizeStatus(d.status) === "correction" },
+  { key: "submitted",  label: "Submitted",      match: d => normalizeStatus(d.status) === "submitted" },
+  { key: "approved",   label: "Approved",       match: d => normalizeStatus(d.status) === "approved" },
+  { key: "receipted",  label: "Receipted",      match: d => normalizeStatus(d.status) === "receipted" },
 ];
 
 export default function StallionSheetList() {
   const nav = useNavigate();
-  const [sheets, setSheets] = useState<Sheet[]>([]);
+  const [declarations, setDeclarations] = useState<DashboardDeclaration[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [q, setQ] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string>("");
 
   const load = () => {
     setLoading(true);
-    listSheets().then(setSheets).finally(() => setLoading(false));
+    listDeclarations()
+      .then(({ items }) => setDeclarations(items))
+      .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 
   const createFrom = async (c: DeclChoice) => {
     setCreating(true);
+    setCreateError("");
     try {
       const s = await createSheet({
         customs_regime: c.regime,
         ...( { declaration_type: c.declaration_type } as Partial<Sheet> ),
       });
+      setShowNew(false);
       nav(`/stallion/sheet/${s.id}`);
+    } catch (e: any) {
+      const msg = e?.message ? String(e.message) : "Could not create declaration.";
+      setCreateError(msg);
+      window.alert(`Could not create declaration.\n\n${msg}\n\nAPI: ${window.location.protocol}//${window.location.hostname}:8022`);
     } finally {
       setCreating(false);
     }
@@ -230,41 +278,60 @@ export default function StallionSheetList() {
   const remove = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm("Delete this declaration?")) return;
-    await deleteSheet(id); load();
+    await deleteDeclaration(id);
+    setDeclarations(prev => prev.filter(d => d.id !== id));
   };
 
   const summary = useMemo(() => ({
-    total:      sheets.length,
-    draft:      sheets.filter(s => s.status === "draft").length,
-    pending:    sheets.filter(s => s.status === "pending").length,
-    correction: sheets.filter(s => s.status === "correction").length,
-    approved:   sheets.filter(s => s.status === "approved").length,
-    receipted:  sheets.filter(s => s.status === "receipted").length,
-  }), [sheets]);
+    total:      declarations.length,
+    draft:      declarations.filter(d => normalizeStatus(d.status) === "draft").length,
+    pending:    declarations.filter(d => normalizeStatus(d.status) === "pending").length,
+    correction: declarations.filter(d => normalizeStatus(d.status) === "correction").length,
+    approved:   declarations.filter(d => normalizeStatus(d.status) === "approved").length,
+    receipted:  declarations.filter(d => normalizeStatus(d.status) === "receipted").length,
+  }), [declarations]);
 
   const typeOptions = useMemo(() => {
     const set = new Set<string>();
-    sheets.forEach(s => set.add(declType(s)));
+    declarations.forEach(d => set.add(declType(d)));
     return Array.from(set).sort();
-  }, [sheets]);
+  }, [declarations]);
 
   const rows = useMemo(() => {
     const tabDef = TABS.find(t => t.key === tab)!;
     const needle = q.trim().toLowerCase();
-    return sheets
+    return declarations
       .filter(tabDef.match)
       .filter(s => !typeFilter || declType(s) === typeFilter)
-      .filter(s => {
+      .filter(d => {
         if (!needle) return true;
-        return [s.reference, s.consignee, s.consignor, s.bl_number, s.vessel, s.port]
+        return [refLabel(d), consigneeLabel(d), d.status, d.header?.blNumber, d.header?.vesselName, d.header?.portOfEntry]
           .filter(Boolean).join(" ").toLowerCase().includes(needle);
       })
       .sort((a, b) => {
-        if (a.status === "draft" && b.status !== "draft") return -1;
-        if (b.status === "draft" && a.status !== "draft") return 1;
+        const priority = (status: string) => {
+          const s = normalizeStatus(status);
+          if (s === "pending") return 0;
+          if (s === "correction") return 1;
+          if (s === "approved") return 2;
+          if (s === "receipted") return 3;
+          return 4;
+        };
+        const pa = priority(a.status);
+        const pb = priority(b.status);
+        if (pa !== pb) return pa - pb;
+
+        const ca = getConfidence(a);
+        const cb = getConfidence(b);
+        if (ca != null || cb != null) {
+          if (ca == null) return 1;
+          if (cb == null) return -1;
+          if (ca !== cb) return ca - cb;
+        }
+
         return (b.updated_at || "").localeCompare(a.updated_at || "");
       });
-  }, [sheets, tab, q, typeFilter]);
+  }, [declarations, tab, q, typeFilter]);
 
   return (
     <div style={{ background: C.paperAlt, minHeight: "100%" }}>
@@ -303,6 +370,22 @@ export default function StallionSheetList() {
           </div>
         </div>
 
+        {createError && (
+          <div style={{
+            marginBottom: 14,
+            background: C.critical,
+            border: `1px solid ${C.critBorder}55`,
+            color: C.critBorder,
+            borderRadius: 4,
+            padding: "10px 12px",
+            fontFamily: MONO,
+            fontSize: 11,
+            letterSpacing: "0.02em",
+          }}>
+            Create failed: {createError}
+          </div>
+        )}
+
         {/* Stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 22 }}>
           {[
@@ -332,7 +415,7 @@ export default function StallionSheetList() {
         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 14 }}>
           {TABS.map(t => {
             const active = tab === t.key;
-            const count = t.key === "all" ? sheets.length : sheets.filter(t.match).length;
+            const count = t.key === "all" ? declarations.length : declarations.filter(t.match).length;
             return (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
                 fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", textTransform: "uppercase",
@@ -378,15 +461,15 @@ export default function StallionSheetList() {
           ) : rows.length === 0 ? (
             <div style={{ padding: 60, textAlign: "center" }}>
               <div style={{ fontFamily: SERIF, fontSize: 20, color: C.inkLight, marginBottom: 8 }}>
-                {sheets.length === 0 ? "No trade declarations yet" : "Nothing matches this view"}
+                {declarations.length === 0 ? "No trade declarations yet" : "Nothing matches this view"}
               </div>
               <div style={{ fontFamily: SERIF, fontSize: 13, color: C.inkLight,
                 fontStyle: "italic", maxWidth: 460, margin: "0 auto 18px" }}>
-                {sheets.length === 0
+                {declarations.length === 0
                   ? "Create your first import/export declaration. Stallion will extract the invoice, classify items, and prepare the worksheet."
                   : "Try clearing the search box, the type filter, or switching tabs."}
               </div>
-              {sheets.length === 0 && (
+              {declarations.length === 0 && (
                 <button onClick={() => setShowNew(true)} style={{
                   padding: "10px 18px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
                   textTransform: "uppercase", background: C.ink, border: `1px solid ${C.ink}`,
@@ -414,11 +497,15 @@ export default function StallionSheetList() {
                 <tbody>
                   {rows.map(s => {
                     const conf = rowConfidence(s);
-                    const cifTtd = (s.totals as any)?.cif_ttd;
-                    const taxes = (s.totals?.duty ?? 0) + (s.totals?.surcharge ?? 0) + (s.totals?.vat ?? 0);
+                    const cifTtd = s.totals?.cif_ttd ?? s.worksheet?.cif_ttd ?? s.header?.cif_ttd;
+                    const taxes =
+                      s.totals?.total_payable ??
+                      s.worksheet?.total_payable ??
+                      ((s.totals?.duty ?? 0) + (s.totals?.surcharge ?? 0) + (s.totals?.vat ?? 0));
+                    const port = s.header?.portOfEntry || s.header?.port || s.port || "—";
                     return (
                       <tr key={s.id}
-                        onClick={() => nav(`/stallion/sheet/${s.id}`)}
+                        onClick={() => nav(`/stallion/brokerreview4?id=${s.id}`)}
                         onMouseEnter={e => e.currentTarget.style.background = C.paperAlt}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         style={{ borderBottom: `1px solid ${C.paperBorder}`, cursor: "pointer",
@@ -426,12 +513,12 @@ export default function StallionSheetList() {
                       >
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 13,
                           color: C.ink, fontWeight: 700, whiteSpace: "nowrap" }}>
-                          {s.reference || <span style={{ color: C.inkLight, fontWeight: 400 }}>(untitled)</span>}
+                          {refLabel(s)}
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: SERIF, fontSize: 13,
                           color: C.inkMid, maxWidth: 220, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {s.consignee || "—"}
+                          {consigneeLabel(s)}
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 11.5,
                           color: C.inkMid, whiteSpace: "nowrap" }}>
@@ -439,14 +526,14 @@ export default function StallionSheetList() {
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 12,
                           color: C.inkMid }}>
-                          {s.port || "—"}
+                          {port}
                         </td>
                         <td style={{ padding: "12px 14px" }}>
                           <StatusPill status={s.status} />
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 13,
                           color: C.inkMid, textAlign: "right" }}>
-                          {s.lines?.length ?? 0}
+                          {lineCount(s)}
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 12.5,
                           color: C.inkMid, textAlign: "right" }}>
@@ -460,6 +547,7 @@ export default function StallionSheetList() {
                           {conf ? (
                             <span style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 700,
                               letterSpacing: "0.05em", color: conf.fg, background: conf.bg,
+                              border: `1px solid ${conf.border}`,
                               padding: "3px 7px", borderRadius: 3, whiteSpace: "nowrap" }}>
                               {conf.label}
                             </span>
@@ -488,7 +576,7 @@ export default function StallionSheetList() {
         </div>
 
         <div style={{ fontFamily: MONO, fontSize: 11, color: C.inkLight, marginTop: 12 }}>
-          {rows.length} of {sheets.length} declaration{sheets.length === 1 ? "" : "s"}
+          {rows.length} of {declarations.length} declaration{declarations.length === 1 ? "" : "s"}
           {tab !== "all" || typeFilter || q ? " (filtered)" : ""}
         </div>
       </div>
