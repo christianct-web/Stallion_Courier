@@ -29,6 +29,9 @@ export interface SheetLine {
   duty_pct: number; surcharge_pct: number; vat_pct: number;
   country_of_origin: string; supplementary_qty: number; supplementary_unit: string;
   package_count: number; package_type: string; licence_no: string;
+  gross_kg?: number; net_kg?: number;
+  package_type_name?: string; marks1?: string; marks2?: string;
+  national_customs_procedure?: string; quota_code?: string; rate_of_adjustment?: number;
   relieved_override?: boolean;
   effects_group?: "household" | "personal";
   relieved?: boolean;
@@ -74,6 +77,11 @@ export interface Sheet {
   consignor: string; consignor_address?: string;
   declarant_tin?: string; declarant_name?: string; declarant_address?: string;
   vessel: string; bl_number: string; port: string; arrival_date: string;
+  rotation_no?: string; bl_date?: string; mode_of_transport?: number;
+  invoice_no?: string; invoice_date?: string; currency?: string;
+  export_country_code?: string; export_country_name?: string;
+  trading_country?: string; country_first_destination?: string; country_of_origin_name?: string;
+  bank_code?: number; mode_of_payment?: string; terms_code?: number; terms_description?: string;
   incoterm: string; exchange_rate: number; freight_usd: number;
   insurance_usd: number; other_usd?: number; inland_usd?: number; uplift_pct?: number; customs_user_fee: number;
   customs_regime: string; nature_of_transaction: string;

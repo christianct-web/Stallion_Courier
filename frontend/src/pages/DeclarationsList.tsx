@@ -321,7 +321,9 @@ export default function DeclarationsList() {
     try {
       const s = await createSheet({});
       navigate(`/stallion/sheet/${s.id}`);
-    } catch {
+    } catch (e: any) {
+      const msg = e?.message ? String(e.message) : "Could not create declaration.";
+      window.alert(`Could not create declaration.\n\n${msg}\n\nAPI: ${window.location.protocol}//${window.location.hostname}:8022`);
       navigate("/stallion/sheets");
     }
   };

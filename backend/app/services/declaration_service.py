@@ -326,6 +326,7 @@ def build_complete_declaration(
             "delivery_terms_code": header.get("term", "CIF"),
             "delivery_terms_place": header.get("port", ""),
             "means_of_transport_border_information_identity": header.get("vesselName", ""),
+            "means_of_transport_border_information_mode": int(header.get("modeOfTransport", 1) or 1),
             "means_of_transport_departure_arrival_information_identity": header.get("vesselName", ""),
         },
         "financial": {

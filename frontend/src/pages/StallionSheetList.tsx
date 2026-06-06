@@ -14,8 +14,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listDeclarations, deleteDeclaration } from "@/services/stallionApi";
-import { createSheet, Sheet } from "@/services/sheetApi";
+import { createSheet, deleteSheet, listSheets, Sheet } from "@/services/sheetApi";
 
 /* ------------------------------------------------------------------ tokens */
 const C = {
@@ -250,8 +249,8 @@ export default function StallionSheetList() {
 
   const load = () => {
     setLoading(true);
-    listDeclarations()
-      .then(({ items }) => setDeclarations(items))
+    listSheets()
+      .then(items => setDeclarations(items))
       .finally(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
@@ -278,7 +277,7 @@ export default function StallionSheetList() {
   const remove = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!window.confirm("Delete this declaration?")) return;
-    await deleteDeclaration(id);
+    await deleteSheet(id);
     setDeclarations(prev => prev.filter(d => d.id !== id));
   };
 
@@ -505,7 +504,7 @@ export default function StallionSheetList() {
                     const port = s.header?.portOfEntry || s.header?.port || s.port || "—";
                     return (
                       <tr key={s.id}
-                        onClick={() => nav(`/stallion/brokerreview4?id=${s.id}`)}
+                        onClick={() => nav(`/stallion/sheet/${s.id}`)}
                         onMouseEnter={e => e.currentTarget.style.background = C.paperAlt}
                         onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                         style={{ borderBottom: `1px solid ${C.paperBorder}`, cursor: "pointer",

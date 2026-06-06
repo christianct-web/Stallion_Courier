@@ -169,6 +169,8 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
                 "hs_code": li.get("hsCode") or "",
                 "exworks_usd": li.get("lineTotal") or li.get("unitPrice") or 0,
                 "country_of_origin": li.get("countryOfOrigin") or parsed.get("countryOfOrigin") or "TT",
+                "gross_kg": li.get("grossKg") or li.get("grossWeightKg") or 0,
+                "net_kg": li.get("netKg") or li.get("netWeightKg") or 0,
             }
             if li.get("quantity") not in (None, ""):
                 payload["supplementary_qty"] = li.get("quantity")
@@ -179,6 +181,8 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
             "hs_code": parsed.get("hsCode", ""),
             "exworks_usd": parsed.get("invoiceValueForeign", 0),
             "country_of_origin": parsed.get("countryOfOrigin", "TT"),
+            "gross_kg": parsed.get("grossKg") or parsed.get("grossWeightKg") or 0,
+            "net_kg": parsed.get("netKg") or parsed.get("netWeightKg") or 0,
         })
 
     patch = {
@@ -187,10 +191,13 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
         "vessel": parsed.get("vesselOrFlight", ""),
         "bl_number": parsed.get("blAwbNumber", ""),
         "arrival_date": parsed.get("shippedOnBoardDate", ""),
+        "bl_date": parsed.get("blAwbDate") or parsed.get("shippedOnBoardDate", ""),
         "rotation_no": parsed.get("rotationNumber", ""),
         "invoice_no": parsed.get("invoiceNumber", ""),
         "invoice_date": parsed.get("invoiceDate", ""),
         "currency": parsed.get("currency", "USD"),
+        "mode_of_transport": parsed.get("modeOfTransport") or 1,
+        "export_country_code": parsed.get("exportCountryCode") or parsed.get("countryOfExport") or "US",
         "freight_usd": parsed.get("freightCharges") or 0,
         "reference": parsed.get("invoiceNumber") or s.get("reference") or "",
     }

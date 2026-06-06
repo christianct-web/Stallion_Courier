@@ -232,11 +232,19 @@ def _blank_line() -> Dict[str, Any]:
         "vat_pct": 12.5,
         # C82-only fields (edited in the row drawer, dropdown-driven)
         "country_of_origin": "TT",
+        "gross_kg": 0.0,
+        "net_kg": 0.0,
         "supplementary_qty": 0,
         "supplementary_unit": "",
         "package_count": 1,
         "package_type": "PK",
+        "package_type_name": "Package",
+        "marks1": "AS ADDRESSED",
+        "marks2": "",
         "licence_no": "",
+        "national_customs_procedure": "000",
+        "quota_code": "NEW",
+        "rate_of_adjustment": 1,
         # returning-resident handling
         "relieved_override": False,        # relieve this line individually
         "effects_group": "household",      # household | personal -> rolls to 9898 code on XML
@@ -281,9 +289,20 @@ def _blank_sheet() -> Dict[str, Any]:
         "port": "TTPTS",
         "arrival_date": "",
         "rotation_no": "",
+        "bl_date": "",
+        "mode_of_transport": 1,
         "invoice_no": "",
         "invoice_date": "",
         "currency": "USD",
+        "export_country_code": "US",
+        "export_country_name": "United States",
+        "trading_country": "US",
+        "country_first_destination": "US",
+        "country_of_origin_name": "United States",
+        "bank_code": 1,
+        "mode_of_payment": "CASH",
+        "terms_code": 99,
+        "terms_description": "Basic",
         "incoterm": "CFR",
         "exchange_rate": 0.0,
         "freight_usd": 0.0,
@@ -554,6 +573,16 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
             "natureOfTransaction": sheet.get("nature_of_transaction", "1"),
             "packageCount": sum(int(_f(r.get("package_count"), 1)) for r in rows),
             "packageType": rows[0].get("package_type", "PK"),
+            "packageTypeName": rows[0].get("package_type_name", "Package"),
+            "marks1": rows[0].get("marks1", "AS ADDRESSED"),
+            "marks2": rows[0].get("marks2", ""),
+            "grossKg": round(sum(_f(r.get("gross_kg")) for r in rows), 3),
+            "netKg": round(sum(_f(r.get("net_kg")) for r in rows), 3),
+            "qty": round(sum(_f(r.get("supplementary_qty")) for r in rows), 3),
+            "unitCode": rows[0].get("supplementary_unit", "NMB"),
+            "nationalCustomsProcedure": rows[0].get("national_customs_procedure", "000"),
+            "quotaCode": rows[0].get("quota_code", "NEW"),
+            "rateOfAdjustment": rows[0].get("rate_of_adjustment", 1),
             "relieved": all(r.get("relieved") for r in rows),
         })
     return rolled
@@ -577,6 +606,20 @@ def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
         w.append("Consignee TIN/code is empty — required for import declarations.")
     if not (sheet.get("consignor") or "").strip():
         w.append("Consignor (supplier/exporter) name is empty.")
+    if not (sheet.get("invoice_no") or "").strip():
+        w.append("Invoice number is empty — supplier document XML will use 0.")
+    if not (sheet.get("invoice_date") or "").strip():
+        w.append("Invoice date is empty — supplier document date will be blank.")
+    if not (sheet.get("bl_date") or "").strip():
+        w.append("B/L or AWB date is empty — ASYCUDA comments will not match the transport document.")
+    if not (sheet.get("rotation_no") or "").strip():
+        w.append("Rotation or manifest number is empty — confirm manifest linkage before filing.")
+    if not (sheet.get("export_country_code") or "").strip():
+        w.append("Export country is empty — XML may default to United States.")
+    if not (sheet.get("trading_country") or "").strip():
+        w.append("Trading country is empty — XML may default to United States.")
+    if not (sheet.get("mode_of_transport") or ""):
+        w.append("Mode of transport is empty — set sea/air/road before XML export.")
     lines = sheet.get("lines", [])
     if not lines:
         w.append("No line items — at least one is required.")
@@ -587,6 +630,10 @@ def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
                      f"'{coo or 'blank'}' — confirm it isn't defaulting.")
         if not (ln.get("hs_code") or "").strip():
             w.append(f"Line {ln.get('line_no')}: HS code is blank.")
+        if _f(ln.get("gross_kg")) <= 0:
+            w.append(f"Line {ln.get('line_no')}: gross weight is 0 kg.")
+        if _f(ln.get("net_kg")) <= 0:
+            w.append(f"Line {ln.get('line_no')}: net weight is 0 kg.")
     return w
 
 
@@ -617,6 +664,16 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         "invoiceNumber": sheet.get("invoice_no"),
         "invoiceDate": sheet.get("invoice_date"),
         "currency": sheet.get("currency", "USD"),
+        "modeOfTransport": sheet.get("mode_of_transport", 1),
+        "exportCountryCode": sheet.get("export_country_code", "US"),
+        "exportCountryName": sheet.get("export_country_name", "United States"),
+        "tradingCountry": sheet.get("trading_country", "US"),
+        "countryFirstDestination": sheet.get("country_first_destination", "US"),
+        "countryOfOriginName": sheet.get("country_of_origin_name", "United States"),
+        "bankCode": sheet.get("bank_code", 1),
+        "modeOfPayment": sheet.get("mode_of_payment", "CASH"),
+        "termsCode": sheet.get("terms_code", 99),
+        "termsDescription": sheet.get("terms_description", "Basic"),
         "port": sheet.get("port"),
         "arrivalDate": sheet.get("arrival_date"),
         "etaDate": sheet.get("arrival_date"),
@@ -661,11 +718,19 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
                 "vat": ln.get("vat"),
                 "natureOfTransaction": nature,
                 "countryOfOrigin": ln.get("country_of_origin"),
+                "grossKg": ln.get("gross_kg"),
+                "netKg": ln.get("net_kg"),
                 "qty": ln.get("supplementary_qty"),
-                "supplementaryUnit": ln.get("supplementary_unit"),
+                "unitCode": ln.get("supplementary_unit"),
                 "packageCount": ln.get("package_count"),
                 "packageType": ln.get("package_type"),
+                "packageTypeName": ln.get("package_type_name"),
+                "marks1": ln.get("marks1"),
+                "marks2": ln.get("marks2"),
                 "licenceNo": ln.get("licence_no"),
+                "nationalCustomsProcedure": ln.get("national_customs_procedure"),
+                "quotaCode": ln.get("quota_code"),
+                "rateOfAdjustment": ln.get("rate_of_adjustment"),
             }
             # When a concession is claimed on the line, attach the C84 linkage so
             # the SAD references the supporting concession document, and surface

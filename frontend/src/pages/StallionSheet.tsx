@@ -116,9 +116,21 @@ function RowDrawer({ line, refData, onUpdate }: {
             <Select value={line.country_of_origin} options={refData.countries}
               onCommit={v => onUpdate({ country_of_origin: v })} width={200} />
           </Field>
+          <Field label="Gross Kg">
+            <Cell value={line.gross_kg ?? 0} type="number" align="right" width={90}
+              onCommit={v => onUpdate({ gross_kg: Number(v) })} />
+          </Field>
+          <Field label="Net Kg">
+            <Cell value={line.net_kg ?? 0} type="number" align="right" width={90}
+              onCommit={v => onUpdate({ net_kg: Number(v) })} />
+          </Field>
           <Field label="Package Type">
             <Select value={line.package_type} options={refData.package_types}
               onCommit={v => onUpdate({ package_type: v })} width={160} />
+          </Field>
+          <Field label="Package Name">
+            <Cell value={line.package_type_name || ""} width={150}
+              onCommit={v => onUpdate({ package_type_name: v })} />
           </Field>
           <Field label="Package Count">
             <Cell value={line.package_count} type="number" align="right" width={90}
@@ -135,6 +147,26 @@ function RowDrawer({ line, refData, onUpdate }: {
           <Field label="Licence No.">
             <Cell value={line.licence_no} width={160}
               onCommit={v => onUpdate({ licence_no: v })} />
+          </Field>
+          <Field label="National CPC">
+            <Cell value={line.national_customs_procedure || "000"} width={100}
+              onCommit={v => onUpdate({ national_customs_procedure: v })} />
+          </Field>
+          <Field label="Quota Code">
+            <Cell value={line.quota_code || "NEW"} width={100}
+              onCommit={v => onUpdate({ quota_code: v })} />
+          </Field>
+          <Field label="Rate Adj.">
+            <Cell value={line.rate_of_adjustment ?? 1} type="number" align="right" width={90}
+              onCommit={v => onUpdate({ rate_of_adjustment: Number(v) })} />
+          </Field>
+          <Field label="Marks 1">
+            <Cell value={line.marks1 || ""} width={180}
+              onCommit={v => onUpdate({ marks1: v })} />
+          </Field>
+          <Field label="Marks 2">
+            <Cell value={line.marks2 || ""} width={180}
+              onCommit={v => onUpdate({ marks2: v })} />
           </Field>
           <Field label="Effects Group">
             <Select value={line.effects_group || "household"}
@@ -479,6 +511,8 @@ export default function StallionSheet() {
     return <div style={{ padding: 40, fontFamily: MONO, color: C.inkLight }}>Loading sheet…</div>;
   }
   const t = sheet.totals || {} as any;
+  const countryName = (code: string) =>
+    refData.countries.find(c => c.code === code)?.label || code;
 
   const TH = (label: string, w?: number, align: any = "left") => (
     <th style={{
@@ -588,6 +622,10 @@ export default function StallionSheet() {
             onCommit={v => patchHeader({ vessel: v })} /></Field>
           <Field label="Bill of Lading"><Cell value={sheet.bl_number} width={150}
             onCommit={v => patchHeader({ bl_number: v })} /></Field>
+          <Field label="B/L Date"><Cell value={sheet.bl_date || ""} type="date" width={150}
+            onCommit={v => patchHeader({ bl_date: v })} /></Field>
+          <Field label="Rotation No"><Cell value={sheet.rotation_no || ""} width={130}
+            onCommit={v => patchHeader({ rotation_no: v })} /></Field>
           <Field label="Port"><Select value={sheet.port} options={refData.ports} width={170}
             onCommit={v => patchHeader({ port: v })} /></Field>
           <Field label="Arrival Date"><Cell value={sheet.arrival_date} type="date" width={150}
@@ -602,8 +640,31 @@ export default function StallionSheet() {
             onCommit={v => patchHeader({ declarant_name: v })} /></Field>
           <Field label="Declarant TIN"><Cell value={sheet.declarant_tin || ""} width={130}
             onCommit={v => patchHeader({ declarant_tin: v })} /></Field>
+          <Field label="Invoice No"><Cell value={sheet.invoice_no || ""} width={130}
+            onCommit={v => patchHeader({ invoice_no: v })} /></Field>
+          <Field label="Invoice Date"><Cell value={sheet.invoice_date || ""} type="date" width={150}
+            onCommit={v => patchHeader({ invoice_date: v })} /></Field>
+          <Field label="Currency"><Cell value={sheet.currency || "USD"} width={90}
+            onCommit={v => patchHeader({ currency: v.toUpperCase() })} /></Field>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
+          <Field label="Transport Mode">
+            <Select
+              value={String(sheet.mode_of_transport ?? 1)}
+              options={[
+                { code: "1", label: "1 - Sea" },
+                { code: "2", label: "2 - Rail" },
+                { code: "3", label: "3 - Road" },
+                { code: "4", label: "4 - Air" },
+                { code: "5", label: "5 - Mail" },
+                { code: "7", label: "7 - Fixed transport" },
+                { code: "8", label: "8 - Inland waterway" },
+                { code: "9", label: "9 - Own propulsion" },
+              ]}
+              width={170}
+              onCommit={v => patchHeader({ mode_of_transport: Number(v) })}
+            />
+          </Field>
           <Field label="Incoterm"><Select value={sheet.incoterm} options={refData.incoterms} width={150}
             onCommit={v => patchHeader({ incoterm: v })} /></Field>
           <Field label="Exchange Rate"><Cell value={sheet.exchange_rate} type="number" align="right" width={120}
@@ -628,6 +689,46 @@ export default function StallionSheet() {
               width={150}
               onCommit={v => patchHeader({ entry_mode: v as any })}
             />
+          </Field>
+          <Field label="Export Country">
+            <Select value={sheet.export_country_code || "US"} options={refData.countries} width={180}
+              onCommit={v => patchHeader({ export_country_code: v, export_country_name: countryName(v) })} />
+          </Field>
+          <Field label="Trading Country">
+            <Select value={sheet.trading_country || "US"} options={refData.countries} width={180}
+              onCommit={v => patchHeader({ trading_country: v })} />
+          </Field>
+          <Field label="First Destination">
+            <Select value={sheet.country_first_destination || "US"} options={refData.countries} width={180}
+              onCommit={v => patchHeader({ country_first_destination: v })} />
+          </Field>
+          <Field label="Origin Name">
+            <Cell value={sheet.country_of_origin_name || "United States"} mono={false} width={170}
+              onCommit={v => patchHeader({ country_of_origin_name: v })} />
+          </Field>
+          <Field label="Bank Code">
+            <Cell value={sheet.bank_code ?? 1} type="number" align="right" width={90}
+              onCommit={v => patchHeader({ bank_code: Number(v) })} />
+          </Field>
+          <Field label="Payment">
+            <Select
+              value={sheet.mode_of_payment || "CASH"}
+              options={[
+                { code: "CASH", label: "CASH" },
+                { code: "CREDIT", label: "CREDIT" },
+                { code: "OTHER", label: "OTHER" },
+              ]}
+              width={120}
+              onCommit={v => patchHeader({ mode_of_payment: v })}
+            />
+          </Field>
+          <Field label="Terms Code">
+            <Cell value={sheet.terms_code ?? 99} type="number" align="right" width={95}
+              onCommit={v => patchHeader({ terms_code: Number(v) })} />
+          </Field>
+          <Field label="Terms Desc">
+            <Cell value={sheet.terms_description || "Basic"} width={130}
+              onCommit={v => patchHeader({ terms_description: v })} />
           </Field>
           <div style={{
             display: "flex", flexDirection: "column", gap: 3, justifyContent: "flex-end",
