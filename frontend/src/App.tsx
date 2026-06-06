@@ -33,20 +33,20 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            {/* Dashboard is the landing page. Wrapped in StallionShell for nav. */}
+            {/* Primary nav pages all share StallionShell (one TopNav, one layout). */}
             <Route element={<StallionShell />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/stallion/sheets" element={<StallionSheetList />} />
               <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
+              <Route path="/stallion/log" element={<ActivityLog />} />
+              <Route path="/stallion/clients" element={<ClientsPage />} />
+              <Route path="/stallion/courier" element={<CourierManifests />} />
             </Route>
             {/* Full declarations list (was the old landing page). */}
             <Route path="/stallion/declarations" element={<DeclarationsList />} />
             {/* Legacy: kept only so the existing declarations stay openable.
                 Off the nav. Remove once they have aged out / been migrated. */}
             <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
-            <Route path="/stallion/log" element={<ActivityLog />} />
-            <Route path="/stallion/clients" element={<ClientsPage />} />
-            <Route path="/stallion/courier" element={<CourierManifests />} />
             <Route path="/stallion/courier/tariff" element={<CourierTariff />} />
             <Route path="/stallion/courier/:manifestId" element={<CourierWorkbench />} />
             <Route path="/stallion/courier/:manifestId/exam" element={<CourierExam />} />

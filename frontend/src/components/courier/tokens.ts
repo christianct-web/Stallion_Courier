@@ -12,6 +12,7 @@ export const C = {
   critical: "#FEE8E8", critBorder: "#B02020",
   amber: "#C65911", amberLight: "#FDF2E5",
   blue: "#1E4A8C", blueLight: "#EEF2FA",
+  purple: "#5A3A8A", purpleLight: "#F1ECF7",
 };
 
 /** Style for the FREE / EXEMPT / 20% rate pill in line tables. */

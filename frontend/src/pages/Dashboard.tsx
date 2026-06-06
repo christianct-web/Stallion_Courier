@@ -100,15 +100,19 @@ export default function Dashboard() {
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
 
         {/* masthead */}
-        <div style={{ marginBottom: 22 }}>
+        <div style={{ marginBottom: 22, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 18 }}>
           <div style={{
             fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
             color: C.amber, textTransform: "uppercase", marginBottom: 8,
-          }}>Stallion</div>
+          }}>Stallion · Operations</div>
           <h1 style={{
-            fontFamily: SERIF, fontSize: 42, fontWeight: 700, color: C.ink,
-            margin: 0, letterSpacing: "-0.02em", lineHeight: 1.02,
+            fontFamily: SERIF, fontSize: 30, fontWeight: 700, color: C.ink,
+            margin: 0, letterSpacing: "-0.02em", lineHeight: 1.08,
           }}>Customs operations infrastructure</h1>
+          <div style={{
+            fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkLight,
+            marginTop: 8, lineHeight: 1.5,
+          }}>Live overview of declarations, courier worksheets, and the broker review queue.</div>
         </div>
 
         {/* ── attention strip: everything actionable in one place ── */}

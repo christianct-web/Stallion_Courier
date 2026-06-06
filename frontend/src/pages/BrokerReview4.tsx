@@ -14,6 +14,7 @@ import {
 import { TopNav } from "@/components/TopNav";
 import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 import { HsLookup } from "@/components/HsLookup";
+import { StatusPill } from "@/components/StatusPill";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -85,19 +86,8 @@ function normaliseDecl(raw: any): ReviewDecl {
   };
 }
 
-// ─── Status pill ─────────────────────────────────────────────────────────────
-function StatusPill({ status }: { status: string }) {
-  const cfg = statusCfg(status);
-  return (
-    <span style={{
-      fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-      fontWeight: 700, letterSpacing: "0.1em",
-      color: cfg.color, background: cfg.bg,
-      padding: "3px 8px", borderRadius: 3,
-      border: `1px solid ${cfg.color}44`, display: "inline-block",
-    }}>{cfg.label}</span>
-  );
-}
+// ─── Status pill (shared component, imported at top) ─────────────────────────
+
 
 // ─── Batch list (left panel) ─────────────────────────────────────────────────
 function BatchList({

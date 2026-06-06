@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { TopNav } from "@/components/TopNav";
 import { toast } from "sonner";
 import { STALLION_BASE_URL } from "@/services/stallionApi";
 
@@ -351,8 +350,7 @@ export default function ClientsPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: C.paperAlt, display: "flex", flexDirection: "column" }}>
-      <TopNav />
+    <div style={{ minHeight: "100%", background: C.paperAlt, display: "flex", flexDirection: "column" }}>
 
       {/* Page header */}
       <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
