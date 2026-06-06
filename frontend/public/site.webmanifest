@@ -1,19 +1,32 @@
 {
-  "name": "Stallion Courier",
-  "short_name": "Stallion",
+  "id": "/stallion/courier",
+  "name": "Stallion Courier - Non-Trade Express Worksheets",
+  "short_name": "Stallion Courier",
+  "description": "Process express consignment worksheets, classify lines, calculate duties, manage examinations, and export from any device.",
+  "start_url": "/stallion/courier",
+  "scope": "/stallion/courier",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#111318",
+  "background_color": "#111318",
   "icons": [
     {
       "src": "/stallion-icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/stallion-icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/stallion-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ],
-  "theme_color": "#111318",
-  "background_color": "#111318",
-  "display": "standalone"
+  ]
 }

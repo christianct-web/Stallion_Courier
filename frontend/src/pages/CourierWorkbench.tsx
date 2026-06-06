@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TopNav } from "@/components/TopNav";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -460,6 +461,7 @@ function LineRow({ manifestId, line, onChanged, onDelete }: {
 // ── Main page ────────────────────────────────────────────────────────────
 
 export default function CourierWorkbench() {
+  const isMobile = useIsMobile();
   const { manifestId } = useParams<{ manifestId: string }>();
   const navigate = useNavigate();
   const [manifest, setManifest] = useState<CourierManifest | null>(null);
@@ -533,7 +535,7 @@ export default function CourierWorkbench() {
   if (loading || !manifest) {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-        <TopNav />
+        {!isMobile && <TopNav />}
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
           Loading manifest…
         </div>
@@ -545,7 +547,7 @@ export default function CourierWorkbench() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      <TopNav rightSlot={
+      {!isMobile && <TopNav rightSlot={
         <button onClick={() => navigate("/stallion/courier")} style={{
           background: "transparent", border: `1px solid ${C.voidBorder}`,
           color: C.ghost, padding: "5px 12px", borderRadius: 4,
@@ -554,7 +556,7 @@ export default function CourierWorkbench() {
         }}>
           ← Manifests
         </button>
-      } />
+      } />}
 
       {/* Manifest header strip — dark band like the navigation */}
       <div style={{

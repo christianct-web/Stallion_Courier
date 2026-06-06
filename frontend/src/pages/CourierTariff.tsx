@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { TopNav } from "@/components/TopNav";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   browseTariff, tariffChapters,
   TariffEntry, TariffSection,
@@ -61,6 +62,7 @@ function tdMono(color: string, weight = 400): React.CSSProperties {
 }
 
 export default function CourierTariff() {
+  const isMobile = useIsMobile();
   const [entries, setEntries] = useState<TariffEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -175,7 +177,7 @@ export default function CourierTariff() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      <TopNav />
+      {!isMobile && <TopNav />}
 
       <div style={{
         background: C.voidMid, borderBottom: `1px solid ${C.voidBorder}`,

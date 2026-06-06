@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TopNav } from "@/components/TopNav";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import {
   getManifest, recordExamination, lookupThn,
@@ -398,6 +399,7 @@ function CorrectionCard({
 // ── Main page ────────────────────────────────────────────────────────────
 
 export default function CourierExam() {
+  const isMobile = useIsMobile();
   const { manifestId } = useParams<{ manifestId: string }>();
   const navigate = useNavigate();
   const [manifest, setManifest] = useState<CourierManifest | null>(null);
@@ -476,7 +478,7 @@ export default function CourierExam() {
   if (loading || !manifest) {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-        <TopNav />
+        {!isMobile && <TopNav />}
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
           Loading…
         </div>
@@ -491,7 +493,7 @@ export default function CourierExam() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      <TopNav rightSlot={
+      {!isMobile && <TopNav rightSlot={
         <button onClick={() => navigate(`/stallion/courier/${manifest.id}`)} style={{
           background: "transparent", border: `1px solid ${C.voidBorder}`,
           color: C.ghost, padding: "5px 12px", borderRadius: 4,
@@ -500,7 +502,7 @@ export default function CourierExam() {
         }}>
           ← Workbench
         </button>
-      } />
+      } />}
 
       {/* Header strip */}
       <div style={{
