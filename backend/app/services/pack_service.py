@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .declaration_service import build_complete_declaration, validate_decl, export_xml
+from .doc_branding import draw_stallion_wordmark
 from .worksheet_service import calculate_from_dict
 
 APP_ROOT = Path(__file__).resolve().parent.parent
@@ -166,7 +167,9 @@ def _write_lb01_worksheet_pdf(header: Dict[str, Any], worksheet: Dict[str, Any],
     title_y = H - TH - 12
     bg(ML, title_y, PW, TH, grey=0.12)
     c.setFillGray(1)
-    t(ML + 4, title_y + 5, "STALLION WORKSHEET", "Helvetica-Bold", 10, grey=1)
+    used_wordmark = draw_stallion_wordmark(c, ML + 4, title_y + 2, height=13)
+    title_label = "WORKSHEET" if used_wordmark else "STALLION WORKSHEET"
+    t(ML + (47 if used_wordmark else 4), title_y + 5, title_label, "Helvetica-Bold", 10, grey=1)
     t(MR - 4, title_y + 5, f"DATE:{now_str}    Page:1", "Helvetica", 8, align="right", grey=1)
     c.setFillGray(0)
     y = title_y - 1

@@ -24,6 +24,7 @@ from typing import Any, Dict, List
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from .doc_branding import draw_stallion_wordmark
 from .worksheet_service import calculate_from_dict
 
 GENERATED_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "generated"
@@ -168,8 +169,12 @@ def generate_costing_pdf(
     ty = H - TH - 12
     bg(ML, ty, PW, TH, grey=DARK_BG)
     c.setFillGray(1)
-    t(ML + 5,  ty + 22, "STALLION", "Helvetica-Bold", 14, grey=1)
-    t(ML + 5,  ty + 9,  "COSTING ESTIMATE", "Helvetica-Bold", 8.5, grey=1)
+    used_wordmark = draw_stallion_wordmark(c, ML + 5, ty + 5, height=25)
+    if used_wordmark:
+        t(ML + 84, ty + 15, "COSTING ESTIMATE", "Helvetica-Bold", 8.5, grey=1)
+    else:
+        t(ML + 5,  ty + 22, "STALLION", "Helvetica-Bold", 14, grey=1)
+        t(ML + 5,  ty + 9,  "COSTING ESTIMATE", "Helvetica-Bold", 8.5, grey=1)
     t(MR - 5,  ty + 22, work_ref or "DRAFT", "Helvetica-Bold", 11, align="right", grey=1)
     t(MR - 5,  ty + 9,  f"Prepared: {now_str}", "Helvetica", 8, align="right", grey=1)
     c.setFillGray(0)

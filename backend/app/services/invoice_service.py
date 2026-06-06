@@ -13,6 +13,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Table, TableStyle
 
 from ..broker_profile import get_broker_profile
+from .doc_branding import draw_stallion_wordmark
 
 GENERATED_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "generated"
 GENERATED_DIR.mkdir(parents=True, exist_ok=True)
@@ -105,8 +106,12 @@ def generate_brokerage_invoice(
     c.setFillColor(GREEN_DARK)
     c.rect(0, h_pt - 90, w_pt, 90, fill=1, stroke=0)
 
-    text(L, h_pt - 32, "STALLION", "Helvetica-Bold", 22, WHITE)
-    text(L, h_pt - 50, "Brokerage Invoice", "Helvetica", 11, colors.HexColor("#9DC8AC"))
+    used_wordmark = draw_stallion_wordmark(c, L, h_pt - 53, height=34)
+    if used_wordmark:
+        text(L + 104, h_pt - 40, "Brokerage Invoice", "Helvetica", 11, colors.HexColor("#9DC8AC"))
+    else:
+        text(L, h_pt - 32, "STALLION", "Helvetica-Bold", 22, WHITE)
+        text(L, h_pt - 50, "Brokerage Invoice", "Helvetica", 11, colors.HexColor("#9DC8AC"))
     text(R, h_pt - 32, inv_no, "Helvetica-Bold", 11, WHITE, align="right")
     text(R, h_pt - 50, now_str, "Helvetica", 9, colors.HexColor("#9DC8AC"), align="right")
 

@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+.stallion-logo-horizontal {
+  display: block;
+  width: 132px;
+  height: auto;
+}
+
+.stallion-logo-mark {
+  display: none;
+  width: 30px;
+  height: 30px;
+}
+
+@media (max-width: 720px) {
+  .stallion-logo-horizontal {
+    display: none;
+  }
+
+  .stallion-logo-mark {
+    display: block;
+  }
+}
+
 /* ACE Replacement - Trinidad & Tobago Customs Declaration System
    Enterprise-grade design system for data-correctness and speed
    Professional, utilitarian aesthetic optimized for brokers

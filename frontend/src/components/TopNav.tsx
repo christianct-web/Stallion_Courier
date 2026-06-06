@@ -34,14 +34,27 @@ export function TopNav({ rightSlot }: { rightSlot?: ReactNode }) {
     }}>
       {/* Logo */}
       <button
+        aria-label="Stallion home"
         onClick={() => navigate("/")}
         style={{
           background: "transparent", border: "none", cursor: "pointer",
-          fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 17, color: "#fff",
-          padding: "0 12px 0 0", letterSpacing: "0.01em",
+          padding: "0 14px 0 0",
+          height: 36,
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        Stallion
+        <img
+          className="stallion-logo-horizontal"
+          src="/brand/stallion-horizontal.svg"
+          alt="Stallion"
+        />
+        <img
+          className="stallion-logo-mark"
+          src="/brand/stallion-mark.svg"
+          alt=""
+          aria-hidden="true"
+        />
       </button>
       <div style={{ width: 1, height: 14, background: voidBorder, marginRight: 8 }} />
 
