@@ -15,6 +15,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSheet, deleteSheet, listSheets, Sheet } from "@/services/sheetApi";
+import { StatusPill } from "@/components/StatusPill";
 
 /* ------------------------------------------------------------------ tokens */
 const C = {
@@ -30,30 +31,6 @@ const C = {
 };
 const MONO = "'JetBrains Mono', monospace";
 const SERIF = "'Fraunces', serif";
-
-/* ------------------------------------------------------------- status model */
-const STATUS_STYLE: Record<string, { fg: string; bg: string; border: string; label: string }> = {
-  draft:      { fg: C.inkLight,  bg: C.paperAlt,    border: C.paperBorder,  label: "DRAFT" },
-  pending:    { fg: C.warnText,  bg: C.warn,        border: C.warnBorder,   label: "BROKER REVIEW" },
-  pending_review: { fg: C.warnText, bg: C.warn,     border: C.warnBorder,   label: "BROKER REVIEW" },
-  correction: { fg: C.critBorder, bg: C.critical,   border: C.critBorder,   label: "CORRECTION" },
-  needs_correction: { fg: C.critBorder, bg: C.critical, border: C.critBorder, label: "CORRECTION" },
-  approved:   { fg: C.green,     bg: C.greenLight,  border: C.green + "55", label: "APPROVED" },
-  submitted:  { fg: C.blue,      bg: C.blueLight,   border: C.blue + "55",  label: "SUBMITTED" },
-  Exported:   { fg: C.blue,      bg: C.blueLight,   border: C.blue + "55",  label: "SUBMITTED" },
-  receipted:  { fg: C.purple,    bg: C.purpleLight, border: C.purple + "55", label: "RECEIPTED" },
-};
-
-function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || STATUS_STYLE.draft;
-  return (
-    <span style={{
-      fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
-      color: s.fg, background: s.bg, border: `1px solid ${s.border}`,
-      padding: "3px 8px", borderRadius: 3, display: "inline-block", whiteSpace: "nowrap",
-    }}>{s.label}</span>
-  );
-}
 
 /* ------------------------------------------------- declaration-type derivation */
 const REGIME_LABEL: Record<string, string> = {
@@ -334,18 +311,17 @@ export default function StallionSheetList() {
 
   return (
     <div style={{ background: C.paperAlt, minHeight: "100%" }}>
-      <div style={{ maxWidth: 1320, margin: "0 auto", padding: "32px 28px" }}>
-
-        {/* Header */}
+      {/* Page header band (full-width, matches Clients/Log) */}
+      <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between",
-          gap: 16, flexWrap: "wrap", marginBottom: 26 }}>
+          gap: 16, flexWrap: "wrap" }}>
           <div>
             <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
               color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>
               Stallion · Trade Module
             </div>
-            <h1 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 40, color: C.ink,
-              margin: 0, letterSpacing: "-0.02em", lineHeight: 1.02 }}>
+            <h1 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 30, color: C.ink,
+              margin: 0, letterSpacing: "-0.02em", lineHeight: 1.08 }}>
               Trade Declarations
             </h1>
             <p style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid,
@@ -368,6 +344,10 @@ export default function StallionSheetList() {
             }}>+ New Declaration</button>
           </div>
         </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ margin: "24px 40px 48px" }}>
 
         {createError && (
           <div style={{
@@ -480,21 +460,22 @@ export default function StallionSheetList() {
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1040 }}>
                 <thead>
-                  <tr style={{ background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}` }}>
+                  <tr style={{ background: C.ink, borderBottom: `2px solid ${C.ink}` }}>
                     {["REFERENCE", "CLIENT / CONSIGNEE", "TYPE", "PORT", "STATUS",
                       "LINES", "CIF (TTD)", "TAXES (TTD)", "CONF.", "UPDATED", ""]
                       .map((h, i) => (
                         <th key={h + i} style={{
                           textAlign: i >= 5 && i <= 7 ? "right" : "left",
-                          padding: "10px 14px", fontFamily: MONO, fontSize: 9.5,
-                          letterSpacing: "0.07em", color: C.inkLight, fontWeight: 600,
-                          whiteSpace: "nowrap",
+                          padding: "11px 14px", fontFamily: MONO, fontSize: 9.5,
+                          letterSpacing: "0.1em", color: C.paperMid, fontWeight: 700,
+                          textTransform: "uppercase", whiteSpace: "nowrap",
+                          position: "sticky", top: 0,
                         }}>{h}</th>
                       ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map(s => {
+                  {rows.map((s, rowIdx) => {
                     const conf = rowConfidence(s);
                     const cifTtd = s.totals?.cif_ttd ?? s.worksheet?.cif_ttd ?? s.header?.cif_ttd;
                     const taxes =
@@ -502,13 +483,14 @@ export default function StallionSheetList() {
                       s.worksheet?.total_payable ??
                       ((s.totals?.duty ?? 0) + (s.totals?.surcharge ?? 0) + (s.totals?.vat ?? 0));
                     const port = s.header?.portOfEntry || s.header?.port || s.port || "—";
+                    const zebra = rowIdx % 2 === 1 ? C.paperAlt : C.paper;
                     return (
                       <tr key={s.id}
                         onClick={() => nav(`/stallion/sheet/${s.id}`)}
-                        onMouseEnter={e => e.currentTarget.style.background = C.paperAlt}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        style={{ borderBottom: `1px solid ${C.paperBorder}`, cursor: "pointer",
-                          transition: "background 0.1s" }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#F2EDE4"}
+                        onMouseLeave={e => e.currentTarget.style.background = zebra}
+                        style={{ background: zebra, borderBottom: `1px solid ${C.paperBorder}`,
+                          cursor: "pointer", transition: "background 0.1s" }}
                       >
                         <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 13,
                           color: C.ink, fontWeight: 700, whiteSpace: "nowrap" }}>

@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
-import { TopNav } from "@/components/TopNav";
 import { STALLION_BASE_URL } from "@/services/stallionApi";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -144,8 +143,7 @@ export default function ActivityLog() {
         ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: ${C.paperBorder}; border-radius: 3px; }
       `}</style>
 
-      <div style={{ minHeight: "100vh", background: C.paper, fontFamily: "'Fraunces', serif", color: C.ink }}>
-        <TopNav />
+      <div style={{ minHeight: "100%", background: C.paper, fontFamily: "'Fraunces', serif", color: C.ink }}>
 
         {/* Page header */}
         <div style={{ borderBottom: `1px solid ${C.paperBorder}`, padding: "24px 32px 20px" }}>

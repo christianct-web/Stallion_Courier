@@ -5,7 +5,6 @@
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { TopNav } from "@/components/TopNav";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -19,29 +18,7 @@ import {
 } from "@/services/courierApi";
 import { C, fmtTtd } from "@/components/courier/tokens";
 import { UploadTemplateDialog } from "@/components/courier/UploadTemplateDialog";
-
-const STATUS_STYLE: Record<string, { color: string; bg: string; border: string; label: string }> = {
-  draft:      { color: C.ghostDim, bg: C.paperAlt, border: C.paperBorder, label: "DRAFT" },
-  submitted:  { color: C.blue, bg: C.blueLight, border: C.blue + "44", label: "SUBMITTED" },
-  examined:   { color: C.amber, bg: C.amberLight, border: C.amber + "44", label: "EXAMINED" },
-  finalised:  { color: C.green, bg: C.greenLight, border: C.green + "44", label: "FINALISED" },
-};
-
-function StatusPill({ status }: { status: string }) {
-  const s = STATUS_STYLE[status] || STATUS_STYLE.draft;
-  return (
-    <span style={{
-      fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-      color: s.color, background: s.bg,
-      padding: "3px 8px", borderRadius: 3,
-      border: `1px solid ${s.border}`,
-      display: "inline-block",
-    }}>
-      {s.label}
-    </span>
-  );
-}
+import { StatusPill } from "@/components/StatusPill";
 
 function Field({ label, value, onChange, placeholder, type = "text", required = false }: {
   label: string; value: string | number; onChange: (v: string) => void;
@@ -197,21 +174,11 @@ export default function CourierManifests() {
   }), [manifests]);
 
   return (
-    <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      <TopNav rightSlot={
-        <button onClick={() => navigate("/")} style={{
-          background: "transparent", border: `1px solid ${C.voidBorder}`,
-          color: C.ghost, padding: "5px 12px", borderRadius: 4,
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-          letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
-        }}>
-          ← Dashboard
-        </button>
-      } />
-
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 28px" }}>
+    <div style={{ minHeight: "100%", background: C.paperAlt }}>
+      {/* Page header band (full-width, matches Clients/Log/Sheets) */}
+      <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28, gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
@@ -221,8 +188,8 @@ export default function CourierManifests() {
               Stallion · Courier Module
             </div>
             <h1 style={{
-              fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 40,
-              color: C.ink, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.02,
+              fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 30,
+              color: C.ink, margin: 0, letterSpacing: "-0.02em", lineHeight: 1.08,
             }}>
               Non Trade Express Worksheets
             </h1>
@@ -261,6 +228,10 @@ export default function CourierManifests() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ margin: "24px 40px 48px" }}>
 
         {/* Summary cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
@@ -312,13 +283,15 @@ export default function CourierManifests() {
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}` }}>
+                <tr style={{ background: C.ink, borderBottom: `2px solid ${C.ink}` }}>
                   {["MANIFEST NO.", "ARRIVAL", "REPORTER", "RATE", "LINES", "TOTAL TAXES (TTD)", "STATUS", ""]
-                    .map(h => (
+                    .map((h, i) => (
                       <th key={h} style={{
-                        textAlign: "left", padding: "10px 14px",
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                        letterSpacing: "0.08em", color: C.inkLight, fontWeight: 600,
+                        textAlign: i >= 3 && i <= 5 ? "right" : "left", padding: "11px 14px",
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5,
+                        letterSpacing: "0.1em", color: C.paperMid, fontWeight: 700,
+                        textTransform: "uppercase", whiteSpace: "nowrap",
+                        position: "sticky", top: 0,
                       }}>
                         {h}
                       </th>
@@ -326,32 +299,35 @@ export default function CourierManifests() {
                 </tr>
               </thead>
               <tbody>
-                {manifests.map(m => (
+                {manifests.map((m, rowIdx) => {
+                  const zebra = rowIdx % 2 === 1 ? C.paperAlt : C.paper;
+                  return (
                   <tr key={m.id}
                     style={{
+                      background: zebra,
                       borderBottom: `1px solid ${C.paperBorder}`, cursor: "pointer",
                       transition: "background 0.1s",
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.paperAlt}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    onMouseEnter={e => e.currentTarget.style.background = "#F2EDE4"}
+                    onMouseLeave={e => e.currentTarget.style.background = zebra}
                     onClick={() => navigate(`/stallion/courier/${m.id}`)}
                   >
-                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.ink, fontWeight: 600 }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.ink, fontWeight: 700, whiteSpace: "nowrap" }}>
                       {m.manifest_no}
                     </td>
-                    <td style={{ padding: "12px 14px", fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkMid }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.inkMid, whiteSpace: "nowrap" }}>
                       {m.arrival_date}
                     </td>
-                    <td style={{ padding: "12px 14px", fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkMid }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkMid, maxWidth: 200 }}>
                       {m.cargo_reporter}
                     </td>
-                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.inkMid }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.inkMid, textAlign: "right" }}>
                       {m.exch_rate.toFixed(5)}
                     </td>
-                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.inkMid }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.inkMid, textAlign: "right" }}>
                       {m.lines?.length ?? 0}
                     </td>
-                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.ink, textAlign: "right" }}>
+                    <td style={{ padding: "12px 14px", fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.ink, fontWeight: 600, textAlign: "right" }}>
                       {fmtTtd(m.totals?.total_taxes)}
                     </td>
                     <td style={{ padding: "12px 14px" }}>
@@ -401,7 +377,8 @@ export default function CourierManifests() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           )}
