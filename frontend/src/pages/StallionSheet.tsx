@@ -27,6 +27,8 @@ import {
   Sheet, SheetLine, RefOption, RefData, Client, Concession,
 } from "@/services/sheetApi";
 import { HsClassifyCell } from "./HsClassifyCell";
+import { ChecklistModal } from "./ChecklistModal";
+import { presubmissionCheck, type ChecklistReport } from "@/services/sheetApi";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
 const C = {
@@ -94,7 +96,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// HS lookup is handled by HsClassifyCell, matching the Courier Workbench picker.
+// (HS lookup is now handled by HsClassifyCell — see ./HsClassifyCell.tsx,
+//  which brings full parity with the Courier Workbench's ThnClassifyCell.)
+
 
 // ── expandable row drawer (C82-only fields, all dropdowns) ─────────────────────
 function RowDrawer({ line, refData, onUpdate }: {
@@ -377,6 +381,9 @@ export default function StallionSheet() {
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [showGen, setShowGen] = useState(false);
   const [loadError, setLoadError] = useState<string>("");
+  // Checklist: post-extraction review + pre-submission gate share this state.
+  const [checklist, setChecklist] = useState<{ report: ChecklistReport; mode: "extraction" | "presubmission" } | null>(null);
+  const [checking, setChecking] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { getReference().then(setRefData); }, []);
@@ -430,8 +437,27 @@ export default function StallionSheet() {
   }, [sheetId]);
 
   const onUpload = useCallback(async (file: File) => {
-    const s = await uploadExtract(sheetId, file); setSheet(s);  // auto-populates grid
-    toast.success("Documents extracted");
+    try {
+      const { sheet: s, report } = await uploadExtract(sheetId, file);
+      setSheet(s);  // auto-populated grid
+      toast.success("Document extracted");
+      setChecklist({ report, mode: "extraction" });  // show what was / wasn't found
+    } catch (e: any) {
+      toast.error(`Extraction failed: ${e?.message || "error"}`);
+    }
+  }, [sheetId]);
+
+  // Pre-submission gate: run the check, then open the checklist. If clean the
+  // broker can proceed straight to the Generate modal from inside it.
+  const runPresubmission = useCallback(async () => {
+    setChecking(true);
+    try {
+      const { report } = await presubmissionCheck(sheetId);
+      setChecklist({ report, mode: "presubmission" });
+    } catch (e: any) {
+      toast.error(`Check failed: ${e?.message || "error"}`);
+      setShowGen(true);  // fall through to generate if the check itself errors
+    } finally { setChecking(false); }
   }, [sheetId]);
 
   const onGenerate = useCallback(async (patch: Partial<Sheet>) => {
@@ -740,10 +766,25 @@ export default function StallionSheet() {
                 borderColor: "#2E7D52", color: "#5DCAA5",
               }}>Download C84 claim</a>
             )}
-            <button onClick={() => setShowGen(true)} style={railBtn(C, "solid")}>Generate C82 XML</button>
+            <button onClick={runPresubmission} disabled={checking} style={railBtn(C, "solid")}>
+              {checking ? "Checking…" : "Generate C82 XML"}</button>
           </div>
         </div>
       </div>
+
+      {checklist && (
+        <ChecklistModal
+          report={checklist.report}
+          mode={checklist.mode}
+          onClose={() => setChecklist(null)}
+          onProceed={() => {
+            const wasPresub = checklist.mode === "presubmission";
+            setChecklist(null);
+            if (wasPresub) setShowGen(true);  // proceed to XML generation
+            // extraction mode: "Start working" just closes — sheet is already populated
+          }}
+        />
+      )}
 
       {showGen && <GenerateModal sheet={sheet} refData={refData}
         onClose={() => setShowGen(false)} onGenerate={onGenerate} />}

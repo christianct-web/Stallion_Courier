@@ -155,9 +155,32 @@ export const generateXml = async (id: string, patch?: Partial<Sheet>): Promise<v
   URL.revokeObjectURL(url);
 };
 
-// Inline extraction: upload a doc, server extracts + auto-populates lines, returns the sheet.
-export const uploadExtract = async (id: string, file: File): Promise<Sheet> => {
+// ── Checklist / pre-submission report ────────────────────────────────────────
+export interface ChecklistItem {
+  field?: string;
+  label: string;
+  status: "ok" | "missing" | "review";
+  severity: "critical" | "warn" | "info";
+  detail?: string;
+}
+export interface ChecklistReport {
+  items: ChecklistItem[];
+  counts: { critical: number; warn: number; ok: number; total: number };
+  ready: boolean;
+  confidence?: number | null;
+}
+
+// Inline extraction: upload a doc, server extracts + auto-populates lines,
+// and returns the updated sheet PLUS a checklist report of what was / wasn't
+// extracted and any permit/risk flags.
+export const uploadExtract = async (
+  id: string, file: File,
+): Promise<{ sheet: Sheet; report: ChecklistReport }> => {
   const fd = new FormData(); fd.append("file", file);
   const r = await fetchWith404Fallback(`/${id}/extract`, { method: "POST", body: fd });
   return j(r);
 };
+
+// Pre-submission check: same report shape, computed from current sheet state.
+export const presubmissionCheck = (id: string): Promise<{ report: ChecklistReport }> =>
+  fetchWith404Fallback(`/${id}/presubmission`).then(j);

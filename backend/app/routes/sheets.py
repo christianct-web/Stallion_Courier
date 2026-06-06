@@ -30,6 +30,7 @@ from fastapi.responses import Response
 from ..services import sheet_service
 from ..services import tariff_service
 from ..services import declaration_service
+from ..services import checklist_service
 from .extract import _extract_with_claude, _fallback_extract
 from .reference_data import REFERENCE
 
@@ -194,7 +195,21 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
         "reference": parsed.get("invoiceNumber") or s.get("reference") or "",
     }
     sheet_service.update_header(sheet_id, patch)
-    return sheet_service.get_sheet(sheet_id)
+
+    # Build the post-extraction checklist from the raw parsed object (which
+    # carries confidence, the model's notes, and which fields came back null)
+    # so the UI can show "what we extracted vs. what needs a human".
+    report = checklist_service.build_extraction_report(parsed)
+    return {"sheet": sheet_service.get_sheet(sheet_id), "report": report}
+
+
+@router.get("/{sheet_id}/presubmission")
+def presubmission_check(sheet_id: str):
+    """Pre-submission checklist computed from the current sheet state."""
+    s = sheet_service.get_sheet(sheet_id)
+    if not s:
+        raise HTTPException(404, "Sheet not found")
+    return {"report": checklist_service.build_presubmission_report(s)}
 
 
 # ── worksheet download ───────────────────────────────────────────────────────
