@@ -1,6 +1,7 @@
-const BASE_URL =
-  (import.meta.env.VITE_STALLION_API_URL as string | undefined)?.replace(/\/$/, "") ||
-  `${window.location.protocol}//${window.location.hostname}:8022`;
+const envBaseUrl = (import.meta.env.VITE_STALLION_API_URL as string | undefined)?.replace(/\/$/, "");
+const isNetlifyHost = window.location.hostname.endsWith(".netlify.app");
+const defaultBaseUrl = isNetlifyHost ? "/api" : `${window.location.protocol}//${window.location.hostname}:8022`;
+const BASE_URL = envBaseUrl || defaultBaseUrl;
 
 const REQUEST_TIMEOUT_MS = 12000;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
