@@ -1,5 +1,5 @@
 /**
- * ThnClassifyCell — a clickable table cell that shows a THN with its
+ * ThnClassifyCell - a clickable table cell that shows a THN with its
  * classification confidence color, and opens a popover for the broker to
  * pick an alternative suggestion or type a manual THN.
  *
@@ -16,6 +16,7 @@ import {
 import { C, ratePillStyle, thnConfidenceStyle } from "./tokens";
 import { MaintainTariffDialog } from "./MaintainTariffDialog";
 import { createPortal } from "react-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Props = {
   line: CourierLine;
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
+  const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [maintainOpen, setMaintainOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -153,7 +155,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
 
   // Search the classifier by free-text description. Lets the broker type
   // what the item actually is ("kids clothing", "phone case", "yarn") and
-  // get ranked THN options to pick from — no need to know the code.
+  // get ranked THN options to pick from - no need to know the code.
   const searchByDescription = async () => {
     const q = descQuery.trim();
     if (!q) {
@@ -165,7 +167,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       const res = await classifyDescription(q, 8);
       setDescResults(res.suggestions || []);
       if (!res.suggestions || res.suggestions.length === 0) {
-        toast.error("No matches — try simpler words");
+        toast.error("No matches - try simpler words");
       }
     } catch (e: any) {
       toast.error(e.message || "Search failed");
@@ -191,6 +193,336 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       setBusy(false);
     }
   };
+
+  const popoverBody = (
+    <>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 3 }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+                    color: C.inkLight, fontWeight: 700,
+                  }}>
+                    Line {line.line_no}
+                  </div>
+                  {line.thn && (
+                    <button
+                      onClick={() => {
+                        setMaintainOpen(true);
+                        setOpen(false);
+                      }}
+                      style={{
+                        padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
+                        fontWeight: 700,
+                        background: C.amber, color: "#fff",
+                        border: `1px solid ${C.amber}`, borderRadius: 3,
+                        cursor: "pointer",
+                      }}
+                      title="Open the Maintain Tariff window to edit this THN's description, duty %, or exemption class"
+                    >
+                      Maintain {line.thn}
+                    </button>
+                  )}
+                </div>
+                <div style={{
+                  fontFamily: "'Fraunces', serif", fontSize: 13, color: C.ink,
+                }}>
+                  {line.description || "(no description)"}
+                </div>
+              </div>
+
+              {/* Suggestions */}
+              {suggestions.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                    letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
+                    marginBottom: 6, fontWeight: 600,
+                  }}>
+                    Suggestions
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto" }}>
+                    {suggestions.map((s, i) => {
+                      const isCurrent = s.thn === line.thn;
+                      const pill = ratePillStyle(s.exemption_class, s.duty_rate);
+                      const conf = thnConfidenceStyle(s.confidence);
+                      return (
+                        <button
+                          key={s.thn + i}
+                          onClick={() => !isCurrent && pickSuggestion(s.thn)}
+                          disabled={busy || isCurrent}
+                          style={{
+                            textAlign: "left",
+                            padding: "8px 10px",
+                            background: isCurrent ? C.paperAlt : "transparent",
+                            border: `1px solid ${isCurrent ? C.green : C.paperBorder}`,
+                            borderRadius: 3,
+                            cursor: isCurrent ? "default" : "pointer",
+                            opacity: busy ? 0.6 : 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrent) e.currentTarget.style.background = C.paperAlt;
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrent) e.currentTarget.style.background = "transparent";
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: 13, fontWeight: 700, color: C.ink,
+                            }}>
+                              {s.thn}
+                            </span>
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: 9, fontWeight: 700,
+                              color: pill.color, background: pill.bg,
+                              padding: "1px 5px", borderRadius: 2,
+                              letterSpacing: "0.06em",
+                            }}>
+                              {pill.label}
+                            </span>
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                              color: conf.fg, background: conf.bg,
+                              padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em",
+                              fontWeight: 600,
+                            }}>
+                              {Math.round(s.confidence * 100)}%
+                            </span>
+                            {isCurrent && (
+                              <span style={{
+                                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                                color: C.green, letterSpacing: "0.08em",
+                                marginLeft: "auto", fontWeight: 700,
+                              }}>
+                                CURRENT
+                              </span>
+                            )}
+                          </div>
+                          <div style={{
+                            fontFamily: "'Fraunces', serif", fontSize: 11,
+                            color: C.inkMid, marginBottom: 1, lineHeight: 1.3,
+                          }}>
+                            {s.description}
+                          </div>
+                          <div style={{
+                            fontFamily: "'Fraunces', serif", fontSize: 10,
+                            color: C.inkLight, fontStyle: "italic",
+                          }}>
+                            {s.match_reason}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Search by description */}
+              <div style={{
+                paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
+                display: "flex", flexDirection: "column", gap: 6,
+              }}>
+                <div style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
+                  fontWeight: 600,
+                }}>
+                  Search by description
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    value={descQuery}
+                    onChange={(e) => setDescQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") searchByDescription();
+                    }}
+                    placeholder="e.g. kids clothing, phone case, yarn"
+                    style={{
+                      flex: 1,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                      padding: "6px 8px",
+                      border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+                      background: "#fff", color: C.ink, outline: "none",
+                    }}
+                  />
+                  <button
+                    onClick={searchByDescription}
+                    disabled={descSearching || !descQuery.trim()}
+                    style={{
+                      padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 10, background: C.ink, color: C.paper,
+                      border: `1px solid ${C.ink}`, borderRadius: 3,
+                      letterSpacing: "0.06em", cursor: "pointer",
+                      fontWeight: 600, textTransform: "uppercase",
+                      opacity: descSearching || !descQuery.trim() ? 0.5 : 1,
+                    }}
+                  >
+                    {descSearching ? "..." : "Search"}
+                  </button>
+                </div>
+                {descResults && descResults.length > 0 && (
+                  <div style={{
+                    display: "flex", flexDirection: "column", gap: 4,
+                    maxHeight: 220, overflowY: "auto", marginTop: 2,
+                  }}>
+                    {descResults.map((s, i) => {
+                      const pill = thnConfidenceStyle(s.confidence ?? 0);
+                      return (
+                        <button
+                          key={`${s.thn}-${i}`}
+                          onClick={async () => {
+                            setBusy(true);
+                            try {
+                              await onUpdate({ thn: s.thn });
+                              setOpen(false);
+                              toast.success(`THN set to ${s.thn}`);
+                            } catch (e: any) {
+                              toast.error(e.message || "Failed to update THN");
+                            } finally {
+                              setBusy(false);
+                            }
+                          }}
+                          style={{
+                            textAlign: "left", cursor: "pointer",
+                            background: C.paperAlt, border: `1px solid ${C.paperBorder}`,
+                            borderRadius: 3, padding: "6px 8px",
+                            display: "flex", flexDirection: "column", gap: 2,
+                          }}
+                        >
+                          <div style={{
+                            display: "flex", justifyContent: "space-between",
+                            alignItems: "center", gap: 8,
+                          }}>
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace",
+                              fontSize: 12, fontWeight: 700, color: C.ink,
+                            }}>
+                              {s.thn}
+                            </span>
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                              padding: "1px 6px", borderRadius: 2,
+                              background: pill.bg, color: pill.fg,
+                              fontWeight: 700,
+                            }}>
+                              {Math.round((s.confidence ?? 0) * 100)}%
+                              {s.needs_review ? " / REVIEW" : ""}
+                            </span>
+                          </div>
+                          <div style={{
+                            fontFamily: "'Fraunces', serif", fontSize: 11,
+                            color: C.inkMid,
+                          }}>
+                            {s.description || s.match_reason}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Manual entry */}
+              <div style={{
+                paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
+                display: "flex", flexDirection: "column", gap: 6,
+              }}>
+                <div style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
+                  fontWeight: 600,
+                }}>
+                  Or set a THN manually
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    value={manualThn}
+                    onChange={(e) => {
+                      setManualThn(e.target.value);
+                      setManualLookup(null);
+                    }}
+                    placeholder="8-digit THN"
+                    style={{
+                      flex: 1,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                      padding: "6px 8px",
+                      border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+                      background: "#fff", color: C.ink, outline: "none",
+                    }}
+                  />
+                  <button
+                    onClick={lookupManual}
+                    disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
+                    style={{
+                      padding: "6px 10px",
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                      background: "transparent", color: C.inkMid,
+                      border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+                      letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
+                    }}
+                  >
+                    Lookup
+                  </button>
+                  <button
+                    onClick={applyManual}
+                    disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
+                    style={{
+                      padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: 10, background: C.ink, color: C.paper,
+                      border: `1px solid ${C.ink}`, borderRadius: 3,
+                      letterSpacing: "0.06em", cursor: "pointer",
+                      fontWeight: 600, textTransform: "uppercase",
+                    }}
+                  >
+                    Apply
+                  </button>
+                </div>
+                {manualLookup && (
+                  <div style={{
+                    fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid,
+                    background: C.paperAlt, padding: "6px 8px", borderRadius: 3,
+                  }}>
+                    <strong>{manualLookup.description}</strong> -{" "}
+                    {manualLookup.exemption_class === "full_exempt" ? "Exempt"
+                      : manualLookup.exemption_class === "duty_free_only" ? "Duty-free"
+                      : `${Math.round(manualLookup.duty_rate * 100)}% duty`}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
+                <button
+                  onClick={reclassify}
+                  disabled={busy || !line.description}
+                  style={{
+                    padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 10, background: "transparent", color: C.amber,
+                    border: `1px solid ${C.amber}`, borderRadius: 3,
+                    letterSpacing: "0.06em", cursor: "pointer",
+                    textTransform: "uppercase", fontWeight: 600,
+                  }}
+                >
+                  Re-run Classifier
+                </button>
+                <button
+                  onClick={() => setOpen(false)}
+                  style={{
+                    padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 10, background: "transparent", color: C.inkMid,
+                    border: `1px solid ${C.paperBorder}`, borderRadius: 3,
+                    letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+    </>
+  );
 
   return (
     <div style={{ position: "relative", display: "inline-block" }}>
@@ -221,7 +553,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
               : "No classification yet"
         }
       >
-        <span>{line.thn || "—"}</span>
+        <span>{line.thn || "-"}</span>
         <span style={{
           fontSize: 9, letterSpacing: "0.08em",
           background: "rgba(0,0,0,0.06)", padding: "1px 4px", borderRadius: 2,
@@ -232,6 +564,39 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       </button>
 
       {open && createPortal(
+        isMobile ? (
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 9999,
+              background: "rgba(0,0,0,0.45)",
+              display: "flex", alignItems: "flex-end",
+            }}
+          >
+            <div
+              ref={popoverRef}
+              onClick={(ev) => ev.stopPropagation()}
+              style={{
+                width: "100%",
+                maxHeight: "85vh",
+                overflowY: "auto",
+                background: C.paper,
+                borderTopLeftRadius: 14,
+                borderTopRightRadius: 14,
+                boxShadow: "0 -12px 40px rgba(0,0,0,0.25)",
+                padding: 16,
+                paddingBottom: "calc(16px + env(safe-area-inset-bottom))",
+              }}
+            >
+              {/* grab handle */}
+              <div style={{
+                width: 36, height: 4, borderRadius: 2, background: C.paperBorder,
+                margin: "0 auto 14px",
+              }} />
+              {popoverBody}
+            </div>
+          </div>
+        ) : (
         <div
           ref={popoverRef}
           style={{
@@ -251,332 +616,9 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
             padding: 14,
           }}
         >
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 3 }}>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
-                color: C.inkLight, fontWeight: 700,
-              }}>
-                Line {line.line_no}
-              </div>
-              {line.thn && (
-                <button
-                  onClick={() => {
-                    setMaintainOpen(true);
-                    setOpen(false);
-                  }}
-                  style={{
-                    padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
-                    fontWeight: 700,
-                    background: C.amber, color: "#fff",
-                    border: `1px solid ${C.amber}`, borderRadius: 3,
-                    cursor: "pointer",
-                  }}
-                  title="Open the Maintain Tariff window to edit this THN's description, duty %, or exemption class"
-                >
-                  ✎ Maintain {line.thn}
-                </button>
-              )}
-            </div>
-            <div style={{
-              fontFamily: "'Fraunces', serif", fontSize: 13, color: C.ink,
-            }}>
-              {line.description || "(no description)"}
-            </div>
-          </div>
-
-          {/* Suggestions */}
-          {suggestions.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-                letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
-                marginBottom: 6, fontWeight: 600,
-              }}>
-                Suggestions
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto" }}>
-                {suggestions.map((s, i) => {
-                  const isCurrent = s.thn === line.thn;
-                  const pill = ratePillStyle(s.exemption_class, s.duty_rate);
-                  const conf = thnConfidenceStyle(s.confidence);
-                  return (
-                    <button
-                      key={s.thn + i}
-                      onClick={() => !isCurrent && pickSuggestion(s.thn)}
-                      disabled={busy || isCurrent}
-                      style={{
-                        textAlign: "left",
-                        padding: "8px 10px",
-                        background: isCurrent ? C.paperAlt : "transparent",
-                        border: `1px solid ${isCurrent ? C.green : C.paperBorder}`,
-                        borderRadius: 3,
-                        cursor: isCurrent ? "default" : "pointer",
-                        opacity: busy ? 0.6 : 1,
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isCurrent) e.currentTarget.style.background = C.paperAlt;
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isCurrent) e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 13, fontWeight: 700, color: C.ink,
-                        }}>
-                          {s.thn}
-                        </span>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 9, fontWeight: 700,
-                          color: pill.color, background: pill.bg,
-                          padding: "1px 5px", borderRadius: 2,
-                          letterSpacing: "0.06em",
-                        }}>
-                          {pill.label}
-                        </span>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-                          color: conf.fg, background: conf.bg,
-                          padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em",
-                          fontWeight: 600,
-                        }}>
-                          {Math.round(s.confidence * 100)}%
-                        </span>
-                        {isCurrent && (
-                          <span style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-                            color: C.green, letterSpacing: "0.08em",
-                            marginLeft: "auto", fontWeight: 700,
-                          }}>
-                            CURRENT
-                          </span>
-                        )}
-                      </div>
-                      <div style={{
-                        fontFamily: "'Fraunces', serif", fontSize: 11,
-                        color: C.inkMid, marginBottom: 1, lineHeight: 1.3,
-                      }}>
-                        {s.description}
-                      </div>
-                      <div style={{
-                        fontFamily: "'Fraunces', serif", fontSize: 10,
-                        color: C.inkLight, fontStyle: "italic",
-                      }}>
-                        {s.match_reason}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Search by description */}
-          <div style={{
-            paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
-            display: "flex", flexDirection: "column", gap: 6,
-          }}>
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-              letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
-              fontWeight: 600,
-            }}>
-              Search by description
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                value={descQuery}
-                onChange={(e) => setDescQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") searchByDescription();
-                }}
-                placeholder="e.g. kids clothing, phone case, yarn"
-                style={{
-                  flex: 1,
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                  padding: "6px 8px",
-                  border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-                  background: "#fff", color: C.ink, outline: "none",
-                }}
-              />
-              <button
-                onClick={searchByDescription}
-                disabled={descSearching || !descQuery.trim()}
-                style={{
-                  padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 10, background: C.ink, color: C.paper,
-                  border: `1px solid ${C.ink}`, borderRadius: 3,
-                  letterSpacing: "0.06em", cursor: "pointer",
-                  fontWeight: 600, textTransform: "uppercase",
-                  opacity: descSearching || !descQuery.trim() ? 0.5 : 1,
-                }}
-              >
-                {descSearching ? "…" : "Search"}
-              </button>
-            </div>
-            {descResults && descResults.length > 0 && (
-              <div style={{
-                display: "flex", flexDirection: "column", gap: 4,
-                maxHeight: 220, overflowY: "auto", marginTop: 2,
-              }}>
-                {descResults.map((s, i) => {
-                  const pill = thnConfidenceStyle(s.confidence ?? 0);
-                  return (
-                    <button
-                      key={`${s.thn}-${i}`}
-                      onClick={async () => {
-                        setBusy(true);
-                        try {
-                          await onUpdate({ thn: s.thn });
-                          setOpen(false);
-                          toast.success(`THN set to ${s.thn}`);
-                        } catch (e: any) {
-                          toast.error(e.message || "Failed to update THN");
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                      style={{
-                        textAlign: "left", cursor: "pointer",
-                        background: C.paperAlt, border: `1px solid ${C.paperBorder}`,
-                        borderRadius: 3, padding: "6px 8px",
-                        display: "flex", flexDirection: "column", gap: 2,
-                      }}
-                    >
-                      <div style={{
-                        display: "flex", justifyContent: "space-between",
-                        alignItems: "center", gap: 8,
-                      }}>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 12, fontWeight: 700, color: C.ink,
-                        }}>
-                          {s.thn}
-                        </span>
-                        <span style={{
-                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-                          padding: "1px 6px", borderRadius: 2,
-                          background: pill.bg, color: pill.fg,
-                          fontWeight: 700,
-                        }}>
-                          {Math.round((s.confidence ?? 0) * 100)}%
-                          {s.needs_review ? " · REVIEW" : ""}
-                        </span>
-                      </div>
-                      <div style={{
-                        fontFamily: "'Fraunces', serif", fontSize: 11,
-                        color: C.inkMid,
-                      }}>
-                        {s.description || s.match_reason}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Manual entry */}
-          <div style={{
-            paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
-            display: "flex", flexDirection: "column", gap: 6,
-          }}>
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-              letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
-              fontWeight: 600,
-            }}>
-              Or set a THN manually
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <input
-                value={manualThn}
-                onChange={(e) => {
-                  setManualThn(e.target.value);
-                  setManualLookup(null);
-                }}
-                placeholder="8-digit THN"
-                style={{
-                  flex: 1,
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                  padding: "6px 8px",
-                  border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-                  background: "#fff", color: C.ink, outline: "none",
-                }}
-              />
-              <button
-                onClick={lookupManual}
-                disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
-                style={{
-                  padding: "6px 10px",
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                  background: "transparent", color: C.inkMid,
-                  border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-                  letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
-                }}
-              >
-                Lookup
-              </button>
-              <button
-                onClick={applyManual}
-                disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
-                style={{
-                  padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 10, background: C.ink, color: C.paper,
-                  border: `1px solid ${C.ink}`, borderRadius: 3,
-                  letterSpacing: "0.06em", cursor: "pointer",
-                  fontWeight: 600, textTransform: "uppercase",
-                }}
-              >
-                Apply
-              </button>
-            </div>
-            {manualLookup && (
-              <div style={{
-                fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid,
-                background: C.paperAlt, padding: "6px 8px", borderRadius: 3,
-              }}>
-                <strong>{manualLookup.description}</strong> —{" "}
-                {manualLookup.exemption_class === "full_exempt" ? "Exempt"
-                  : manualLookup.exemption_class === "duty_free_only" ? "Duty-free"
-                  : `${Math.round(manualLookup.duty_rate * 100)}% duty`}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
-            <button
-              onClick={reclassify}
-              disabled={busy || !line.description}
-              style={{
-                padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10, background: "transparent", color: C.amber,
-                border: `1px solid ${C.amber}`, borderRadius: 3,
-                letterSpacing: "0.06em", cursor: "pointer",
-                textTransform: "uppercase", fontWeight: 600,
-              }}
-            >
-              Re-run Classifier
-            </button>
-            <button
-              onClick={() => setOpen(false)}
-              style={{
-                padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 10, background: "transparent", color: C.inkMid,
-                border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-                letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>,
+          {popoverBody}
+        </div>
+        ),
         document.body,
       )}
 
@@ -584,15 +626,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
         <MaintainTariffDialog
           thn={line.thn}
           onClose={() => setMaintainOpen(false)}
-          onSaved={async () => {
-            // After the broker edits the tariff entry, the manifest needs to
-            // be reloaded so duty/OPT/VAT recompute for every line using the
-            // new rule. We call onReload (if provided) — the parent fetches
-            // the manifest fresh and the new values flow back to this cell.
-            if (onReload) {
-              await onReload();
-            }
-          }}
+          onSaved={async () => { setMaintainOpen(false); if (onReload) await onReload(); }}
         />
       )}
     </div>

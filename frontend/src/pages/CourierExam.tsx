@@ -1,5 +1,5 @@
 /**
- * CourierExam — record officer examination corrections after physical inspection.
+ * CourierExam - record officer examination corrections after physical inspection.
  *
  * Each existing line gets a "Has correction?" toggle. Toggling reveals the
  * Section 3 entry: officer THN, new description, add cost USD, adjusted CIF,
@@ -69,7 +69,7 @@ function draftToCorrection(d: DraftCorrection): OfficerCorrection {
   };
 }
 
-// ── Helper: compute uplift values from add_cost and exch rate ────────────
+// Helper: compute uplift values from add_cost and exch rate
 
 function computeUpliftFromCost(addCostUsd: number, exchRate: number, dutyPct: number): {
   adj_cif: number; add_duty: number; add_opt: number; add_vat: number;
@@ -81,16 +81,17 @@ function computeUpliftFromCost(addCostUsd: number, exchRate: number, dutyPct: nu
   return { adj_cif: cif, add_duty: duty, add_opt: opt, add_vat: vat };
 }
 
-// ── Correction card ──────────────────────────────────────────────────────
+// Correction card
 
 function CorrectionCard({
-  draft, line, exchRate, onChange, onRemove,
+  draft, line, exchRate, onChange, onRemove, isMobile,
 }: {
   draft: DraftCorrection;
   line?: CourierLine;
   exchRate: number;
   onChange: (d: DraftCorrection) => void;
   onRemove: () => void;
+  isMobile?: boolean;
 }) {
   const isNewLine = draft.line_no == null;
 
@@ -243,7 +244,7 @@ function CorrectionCard({
         });
         toast.success("Removed duty (OPT and VAT remain)");
       } else {
-        toast.error(`THN ${draft.officer_thn} is not exempt — manual entry required`);
+      toast.error(`THN ${draft.officer_thn} is not exempt - manual entry required`);
       }
     } catch (e: any) {
       toast.error(e.message || "Lookup failed");
@@ -270,13 +271,13 @@ function CorrectionCard({
       border: `1px solid ${isNewLine ? C.amber + "44" : C.paperBorder}`,
       borderRadius: 4, padding: 14, marginBottom: 10,
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
         <div style={{
           fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
           letterSpacing: "0.08em", color: isNewLine ? C.amber : C.ink, textTransform: "uppercase",
         }}>
           {isNewLine
-            ? "✚ Officer-discovered line"
+            ? "+ Officer-discovered line"
             : `Correction on Line ${draft.line_no}`}
         </div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -311,12 +312,12 @@ function CorrectionCard({
           background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 3,
           padding: 8, marginBottom: 12, fontFamily: "'Fraunces', serif", fontSize: 12, color: C.inkMid,
         }}>
-          <strong>Original:</strong> {line.description} · THN {line.thn} · ${fmtUsd(line.cost_usd)} ·
-          CIF ${fmtTtd(line.cif_ttd)} · Total taxes ${fmtTtd(line.total_taxes)}
+          <strong>Original:</strong> {line.description} / THN {line.thn} / ${fmtUsd(line.cost_usd)} /
+          CIF ${fmtTtd(line.cif_ttd)} / Total taxes ${fmtTtd(line.total_taxes)}
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "150px 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "150px 1fr", gap: 10 }}>
         <div>
           <div style={labelStyle}>Officer THN</div>
           <input style={inputStyle} value={draft.officer_thn}
@@ -331,7 +332,7 @@ function CorrectionCard({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10, marginTop: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(5, 1fr)", gap: 10, marginTop: 10 }}>
         <div>
           <div style={labelStyle}>Add Cost USD</div>
           <input style={inputStyle} type="number" value={draft.add_cost_usd}
@@ -370,9 +371,10 @@ function CorrectionCard({
             onChange={e => onChange({ ...draft, dep_in_tshed: e.target.checked })} />
           Dep. in T/Shed
         </label>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+        <div style={{ marginLeft: isMobile ? 0 : "auto", display: "flex", gap: 6, width: isMobile ? "100%" : "auto" }}>
           <button onClick={recomputeFromCost} style={{
-            padding: "5px 10px", fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            padding: isMobile ? "9px 10px" : "5px 10px", flex: isMobile ? 1 : "0 0 auto",
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
             letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
             background: "transparent", color: C.amber,
             border: `1px solid ${C.amber}`, borderRadius: 3, cursor: "pointer",
@@ -381,7 +383,8 @@ function CorrectionCard({
           </button>
           {line && (
             <button onClick={applyTaxRemoval} style={{
-              padding: "5px 10px", fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              padding: isMobile ? "9px 10px" : "5px 10px", flex: isMobile ? 1 : "0 0 auto",
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
               letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
               background: "transparent", color: C.green,
               border: `1px solid ${C.green}`, borderRadius: 3, cursor: "pointer",
@@ -395,7 +398,7 @@ function CorrectionCard({
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────
+// Main page
 
 export default function CourierExam() {
   const isMobile = useIsMobile();
@@ -478,7 +481,7 @@ export default function CourierExam() {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
-          Loading…
+          Loading...
         </div>
       </div>
     );
@@ -494,9 +497,9 @@ export default function CourierExam() {
       {/* Header strip */}
       <div style={{
         background: C.amber, borderBottom: `1px solid ${C.amber}88`,
-        padding: "16px 28px",
+        padding: isMobile ? "14px 16px" : "16px 28px",
       }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 12 : 24, flexWrap: "wrap" }}>
           <div>
             <button onClick={() => navigate(`/stallion/courier/${manifest.id}`)} style={{
               background: "transparent", border: "none", padding: 0, cursor: "pointer",
@@ -504,7 +507,7 @@ export default function CourierExam() {
               letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff8",
               marginBottom: 6, display: "block",
             }}>
-              ← Workbench
+              Workbench
             </button>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
@@ -517,7 +520,7 @@ export default function CourierExam() {
               {manifest.manifest_no}
             </div>
           </div>
-          <div style={{ width: 1, alignSelf: "stretch", background: "#fff4" }} />
+          {!isMobile && <div style={{ width: 1, alignSelf: "stretch", background: "#fff4" }} />}
           <div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
               Examined At
@@ -529,7 +532,7 @@ export default function CourierExam() {
                 background: "rgba(255,255,255,0.15)", color: "#fff", outline: "none",
               }} />
           </div>
-          <div>
+          <div style={{ flex: isMobile ? "1 1 100%" : "0 0 auto" }}>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
               Examining Officer
             </div>
@@ -537,26 +540,28 @@ export default function CourierExam() {
               placeholder="Officer name & licence #"
               style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                padding: "5px 8px", width: 240, border: "1px solid #fff4", borderRadius: 3,
+                padding: "5px 8px", width: isMobile ? "100%" : 240, boxSizing: "border-box",
+                border: "1px solid #fff4", borderRadius: 3,
                 background: "rgba(255,255,255,0.15)", color: "#fff", outline: "none",
               }} />
           </div>
-          <div style={{ marginLeft: "auto" }}>
+          <div style={{ marginLeft: isMobile ? 0 : "auto", width: isMobile ? "100%" : "auto" }}>
             <button onClick={save} disabled={saving} style={{
-              padding: "10px 24px", fontFamily: "'JetBrains Mono', monospace",
+              padding: "10px 24px", width: isMobile ? "100%" : "auto",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700,
               background: "#fff", color: C.amber,
               border: "1px solid #fff", borderRadius: 3,
               cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1,
             }}>
-              {saving ? "Saving…" : "Save Examination"}
+              {saving ? "Saving..." : "Save Examination"}
             </button>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "24px 28px" }}>
-        {/* Lines without corrections — quick-add buttons */}
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: isMobile ? "16px 16px" : "24px 28px" }}>
+        {/* Lines without corrections - quick-add buttons */}
         {linesWithoutCorrection.length > 0 && (
           <div style={{
             background: C.paper, border: `1px solid ${C.paperBorder}`,
@@ -567,7 +572,7 @@ export default function CourierExam() {
               letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
               fontWeight: 700, marginBottom: 10,
             }}>
-              Lines without corrections — click to add
+              Lines without corrections - click to add
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {linesWithoutCorrection.map(l => {
@@ -628,6 +633,7 @@ export default function CourierExam() {
             exchRate={manifest.exch_rate}
             onChange={(updated) => updateDraft(d.id, updated)}
             onRemove={() => removeDraft(d.id)}
+            isMobile={isMobile}
           />
         ))}
 

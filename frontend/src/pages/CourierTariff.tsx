@@ -1,5 +1,5 @@
 /**
- * CourierTariff — the T&T HS Tariff database / lookup tool.
+ * CourierTariff - the T&T HS Tariff database / lookup tool.
  *
  * Redesigned from a flat 5,800-row dump into a real working tool:
  *   - Browse-by-category (21 HS sections -> chapters) sidebar
@@ -179,15 +179,15 @@ export default function CourierTariff() {
 
       <div style={{
         background: C.voidMid, borderBottom: `1px solid ${C.voidBorder}`,
-        padding: "26px 0",
+        padding: isMobile ? "18px 0" : "26px 0",
       }}>
-        <div style={{ maxWidth: 1500, margin: "0 auto", padding: "0 28px" }}>
+        <div style={{ maxWidth: 1500, margin: "0 auto", padding: isMobile ? "0 16px" : "0 28px" }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
             letterSpacing: "0.16em", color: C.amber, textTransform: "uppercase",
             marginBottom: 8,
           }}>
-            Stallion · Courier Module
+            Stallion / Courier Module
           </div>
           <div style={{
             display: "flex", alignItems: "baseline", gap: 16, flexWrap: "wrap",
@@ -205,7 +205,7 @@ export default function CourierTariff() {
               {total.toLocaleString()} codes
               {totalOverrides > 0 && (
                 <span style={{ color: C.amber }}>
-                  {" · "}{totalOverrides} override{totalOverrides === 1 ? "" : "s"}
+                  {" / "}{totalOverrides} override{totalOverrides === 1 ? "" : "s"}
                 </span>
               )}
             </div>
@@ -225,10 +225,13 @@ export default function CourierTariff() {
       </div>
 
       <div style={{
-        maxWidth: 1500, margin: "0 auto", padding: "20px 28px",
-        display: "grid", gridTemplateColumns: "248px minmax(0,1fr)", gap: 20,
+        maxWidth: 1500, margin: "0 auto", padding: isMobile ? "16px 16px" : "20px 28px",
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "248px minmax(0,1fr)",
+        gap: isMobile ? 14 : 20,
       }}>
-        {/* Category browser */}
+        {/* Category browser - hidden on mobile (search-first) */}
+        {!isMobile && (
         <div style={{
           background: C.paper, border: `1px solid ${C.paperBorder}`,
           borderRadius: 6, padding: 14, height: "fit-content",
@@ -273,7 +276,7 @@ export default function CourierTariff() {
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
                     color: C.inkLight,
                   }}>
-                    {open ? "−" : "+"}
+                    {open ? "-" : "+"}
                   </span>
                 </button>
                 {open && (
@@ -310,7 +313,7 @@ export default function CourierTariff() {
                         }}>
                           {ch.count}
                           {ch.overrides > 0 && (
-                            <span style={{ color: C.amber }}> ·{ch.overrides}</span>
+                            <span style={{ color: C.amber }}> /{ch.overrides}</span>
                           )}
                         </span>
                       </button>
@@ -321,6 +324,7 @@ export default function CourierTariff() {
             );
           })}
         </div>
+        )}
 
         {/* Main column */}
         <div>
@@ -332,7 +336,7 @@ export default function CourierTariff() {
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search code or description — e.g. 6104, handbag, phone case"
+              placeholder="Search code or description - e.g. 6104, handbag, phone case"
               style={{
                 flex: "1 1 360px",
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
@@ -400,13 +404,13 @@ export default function CourierTariff() {
               fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               color: C.inkLight,
             }}>
-              {loading ? "Loading…"
+              {loading ? "Loading..."
                 : total === 0 ? "No matches"
-                : `${pageStart}–${pageEnd} of ${total.toLocaleString()}`}
+                : `${pageStart}-${pageEnd} of ${total.toLocaleString()}`}
               {chapter !== null && (
-                <span> · Chapter {String(chapter).padStart(2, "0")}</span>
+                <span> / Chapter {String(chapter).padStart(2, "0")}</span>
               )}
-              {query && <span> · search “{query}”</span>}
+              {query && <span> / search "{query}"</span>}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
               <button
@@ -414,22 +418,97 @@ export default function CourierTariff() {
                 onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
                 style={pagerStyle(offset === 0)}
               >
-                ← Prev
+                Prev
               </button>
               <button
                 disabled={pageEnd >= total || loading}
                 onClick={() => setOffset(offset + PAGE_SIZE)}
                 style={pagerStyle(pageEnd >= total)}
               >
-                Next →
+                Next
               </button>
             </div>
           </div>
 
           <div style={{
-            background: C.paper, border: `1px solid ${C.paperBorder}`,
+            background: isMobile ? "transparent" : C.paper,
+            border: isMobile ? "none" : `1px solid ${C.paperBorder}`,
             borderRadius: 6, overflow: "hidden",
           }}>
+            {isMobile ? (
+              entries.length === 0 && !loading ? (
+                <div style={{
+                  padding: 36, textAlign: "center", background: C.paper,
+                  border: `1px solid ${C.paperBorder}`, borderRadius: 6,
+                  fontFamily: "'Fraunces', serif", fontStyle: "italic", color: C.inkLight,
+                }}>
+                  Nothing matches. Try a broader term or clear filters.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {entries.map((e) => {
+                    const b = dutyBand(e);
+                    const st = BAND_STYLE[b];
+                    return (
+                      <div
+                        key={e.thn}
+                        onClick={() => { setSelected(e); setCifInput(""); }}
+                        style={{
+                          background: e.is_override ? "#FFF7E8" : C.paper,
+                          border: `1px solid ${C.paperBorder}`, borderRadius: 6,
+                          padding: "12px 13px", cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                          <span style={{
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
+                            fontWeight: 700, color: C.ink,
+                          }}>
+                            {e.thn}
+                          </span>
+                          <span style={{
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                            padding: "2px 7px", borderRadius: 3, background: st.bg, color: st.fg,
+                          }}>
+                            {st.label}
+                          </span>
+                          <span style={{
+                            marginLeft: "auto",
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                            fontWeight: 700, color: C.inkMid,
+                          }}>
+                            {e.isExempt ? "0" : e.dutyPct}%
+                          </span>
+                        </div>
+                        <div style={{
+                          fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkMid, lineHeight: 1.35,
+                        }}>
+                          {e.description || "-"}
+                        </div>
+                        <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                          {e.restriction && (
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, fontWeight: 700,
+                              padding: "2px 6px", borderRadius: 3, background: "#FBE2E0", color: "#C0392B",
+                            }}>
+                              RESTRICTED
+                            </span>
+                          )}
+                          {e.is_override && (
+                            <span style={{
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, fontWeight: 700,
+                              padding: "2px 6px", borderRadius: 3, background: C.amber, color: "#fff",
+                            }}>
+                              OVERRIDE
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{
                 width: "100%", borderCollapse: "collapse", minWidth: 720,
@@ -488,7 +567,7 @@ export default function CourierTariff() {
                             color: C.inkMid, maxWidth: 460,
                           }}>
                             {e.description || (
-                              <span style={{ color: C.inkLight }}>—</span>
+                              <span style={{ color: C.inkLight }}>-</span>
                             )}
                             {e.restriction && (
                               <span style={{
@@ -536,6 +615,7 @@ export default function CourierTariff() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -588,15 +668,15 @@ export default function CourierTariff() {
                     lineHeight: 1,
                   }}
                 >
-                  ×
+                  x
                 </button>
               </div>
               <div style={{
                 fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
                 color: C.ghost, marginTop: 12, lineHeight: 1.6,
               }}>
-                Ch {selected.thn.slice(0, 2)} › Heading{" "}
-                {selected.thn.slice(0, 4)} › Sub {selected.thn.slice(0, 6)} ›{" "}
+                Ch {selected.thn.slice(0, 2)} / Heading{" "}
+                {selected.thn.slice(0, 4)} / Sub {selected.thn.slice(0, 6)} /{" "}
                 <span style={{ color: C.amber }}>{selected.thn}</span>
               </div>
             </div>
@@ -709,7 +789,7 @@ export default function CourierTariff() {
                   color: C.inkMid, marginBottom: 10,
                 }}>
                   {selected.is_override
-                    ? "This entry has a broker override applied — it differs from the base CET and is used for all classification."
+                    ? "This entry has a broker override applied - it differs from the base CET and is used for all classification."
                     : "Base CET 2024 entry. Apply an override to change the duty rate or exemption for this code."}
                 </div>
                 <button

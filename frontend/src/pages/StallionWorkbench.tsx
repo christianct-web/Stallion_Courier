@@ -322,6 +322,8 @@ export default function StallionWorkbench() {
     exportCountryName: "United States",
     countryOfOriginName: "United States",
     invoice_value_foreign: 0,
+    inland_foreign: 0,
+    uplift_pct: 0,
     exchange_rate: 6.77,
     freight_foreign: 0,
     insurance_foreign: 0,
@@ -331,6 +333,8 @@ export default function StallionWorkbench() {
     surcharge_rate_pct: 15,
     vat_rate_pct: 0,
     extra_fees_local: 40,
+    ces_fee_1: 0,
+    ces_fee_2: 0,
     global_fee: 40,
   });
 
