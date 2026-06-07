@@ -1,5 +1,5 @@
 /**
- * CourierWorkbench — line entry & classification page.
+ * CourierWorkbench - line entry & classification page.
  *
  * Top: manifest header (editable: arrival_date, exch_rate, cargo_reporter)
  * Middle: line table with inline edit. Each line shows description, THN,
@@ -25,8 +25,9 @@ import {
 import { C, fmtTtd, fmtUsd, ratePillStyle } from "@/components/courier/tokens";
 import { ThnClassifyCell } from "@/components/courier/ThnClassifyCell";
 import { HazmatFormDialog } from "@/components/courier/HazmatFormDialog";
+import { ExportSheet } from "@/components/courier/ExportSheet";
 
-// ── Helpers ──────────────────────────────────────────────────────────────
+// Helpers
 
 function RatePill({ line }: { line: CourierLine }) {
   const s = ratePillStyle(line.exemption_class, line.duty_rate);
@@ -70,7 +71,7 @@ function HeaderField({
   );
 }
 
-// ── Add-line form with classify ──────────────────────────────────────────
+// Add-line form with classify
 
 function ClassifySuggestions({ suggestions, onPick }: {
   suggestions: ThnSuggestion[]; onPick: (s: ThnSuggestion) => void;
@@ -165,7 +166,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
         setSuggestions(res.suggestions || []);
         setShowSugg(true);
       } catch {
-        // silent — suggestions are an aid
+        // silent - suggestions are an aid
       } finally {
         setClassifying(false);
       }
@@ -233,7 +234,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
         <input style={inputStyle} placeholder="Shipper" value={shipper} onChange={e => setShipper(e.target.value)} />
         <input style={inputStyle} placeholder="Importer" value={importer} onChange={e => setImporter(e.target.value)} />
         <div style={{ position: "relative" }}>
-          <input style={inputStyle} placeholder="Description (auto-classifies)…"
+          <input style={inputStyle} placeholder="Description (auto-classifies)..."
             value={description}
             onChange={e => setDescription(e.target.value)}
             onFocus={() => suggestions.length && setShowSugg(true)}
@@ -243,7 +244,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
               position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
               fontSize: 10, color: C.inkLight, fontStyle: "italic", fontFamily: "'Fraunces', serif",
             }}>
-              classifying…
+              classifying...
             </span>
           )}
           {showSugg && suggestions.length > 0 && (
@@ -275,7 +276,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
             opacity: busy ? 0.6 : 1, fontWeight: 600, whiteSpace: "nowrap",
           }}
         >
-          {busy ? "…" : "Add"}
+          {busy ? "..." : "Add"}
         </button>
       </div>
 
@@ -297,7 +298,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
   );
 }
 
-// ── Editable line row ────────────────────────────────────────────────────
+// Editable line row
 
 function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
   manifestId: string; line: CourierLine;
@@ -448,7 +449,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
                 background: C.green, color: "#fff", border: "none", borderRadius: 4,
                 cursor: "pointer", fontWeight: 600,
               }}>
-                {busy ? "…" : "Save"}
+                {busy ? "..." : "Save"}
               </button>
               <button onClick={cancel} disabled={busy} style={{
                 padding: "9px 16px", fontFamily: "'JetBrains Mono', monospace",
@@ -493,7 +494,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
         {line.line_no}
       </td>
       <td style={{ ...cellStyle, fontSize: 11, color: C.inkLight, maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {line.hawb || "—"}
+        {line.hawb || "-"}
       </td>
       <td style={{ ...cellStyle, fontFamily: "'Fraunces', serif", fontSize: 12 }}>
         {editing ? (
@@ -551,7 +552,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
               background: C.green, color: "#fff", border: "none", borderRadius: 3,
               cursor: "pointer", fontWeight: 600,
             }}>
-              {busy ? "…" : "Save"}
+              {busy ? "..." : "Save"}
             </button>
             <button onClick={cancel} disabled={busy} style={{
               padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
@@ -559,7 +560,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
               background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`,
               borderRadius: 3, cursor: "pointer",
             }}>
-              ✕
+              x
             </button>
           </div>
         ) : (
@@ -577,7 +578,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
               fontSize: 10, color: C.critBorder, background: "transparent",
               border: `1px solid ${C.critBorder}33`, borderRadius: 3, cursor: "pointer",
             }}>
-              ✕
+              x
             </button>
           </div>
         )}
@@ -586,7 +587,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
   );
 }
 
-// ── Main page ────────────────────────────────────────────────────────────
+// Main page
 
 export default function CourierWorkbench() {
   const isMobile = useIsMobile();
@@ -599,6 +600,7 @@ export default function CourierWorkbench() {
   // workbench view). The modal collects courier-data fields then triggers a
   // server-side hazmat XLSX generation with those fields filled in.
   const [hazmatModalOpen, setHazmatModalOpen] = useState(false);
+  const [exportSheetOpen, setExportSheetOpen] = useState(false);
 
   // Header edit state
   const [arrivalDate, setArrivalDate] = useState("");
@@ -641,7 +643,7 @@ export default function CourierWorkbench() {
         exch_rate: rate,
         cargo_reporter: cargoReporter,
       });
-      toast.success("Header saved — lines recomputed");
+      toast.success("Header saved - lines recomputed");
       load();
     } catch (e: any) {
       toast.error(e.message || "Failed to save header");
@@ -664,7 +666,7 @@ export default function CourierWorkbench() {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
-          Loading manifest…
+          Loading manifest...
         </div>
       </div>
     );
@@ -674,7 +676,7 @@ export default function CourierWorkbench() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      {/* Manifest header strip — dark band like the navigation */}
+      {/* Manifest header strip - dark band like the navigation */}
       <div style={{
         background: C.voidMid, borderBottom: `1px solid ${C.voidBorder}`,
         padding: isMobile ? "14px 16px" : "16px 28px",
@@ -687,7 +689,7 @@ export default function CourierWorkbench() {
               letterSpacing: "0.08em", textTransform: "uppercase", color: C.ghostDim,
               marginBottom: 6, display: "block",
             }}>
-              ← Manifests
+              Manifests
             </button>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
@@ -697,8 +699,8 @@ export default function CourierWorkbench() {
               marginBottom: 4,
             }}>
               {manifest.officer_examination
-                ? "Uplifted Worksheet · Section 2 + 3"
-                : "Non Trade Worksheet · Section 2"}
+                ? "Uplifted Worksheet / Section 2 + 3"
+                : "Non Trade Worksheet / Section 2"}
             </div>
             <div style={{
               fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 600,
@@ -726,17 +728,31 @@ export default function CourierWorkbench() {
           >
             Save Header
           </button>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+          <div style={{ marginLeft: isMobile ? 0 : "auto", display: "flex", gap: 8, width: isMobile ? "100%" : "auto", flexWrap: "wrap" }}>
+            {isMobile ? (
+              <button
+                onClick={() => setExportSheetOpen(true)}
+                style={{
+                  flex: 1, padding: "10px 14px", fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                  color: C.paper, background: "transparent",
+                  border: `1px solid ${C.ghost}`, borderRadius: 3, cursor: "pointer", fontWeight: 600,
+                }}
+              >
+                Export
+              </button>
+            ) : (
+              <>
             <a href={worksheetDownloadUrl(manifest.id)} download style={{
               padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
               color: C.paper, textDecoration: "none",
               background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
             }}>
-              {manifest.officer_examination ? "⬇ Uplifted Worksheet" : "⬇ Worksheet XLSX"}
+              {manifest.officer_examination ? "Uplifted Worksheet" : "Worksheet XLSX"}
             </a>
             {/*
-              Hazmat is only generated AFTER officer examination — it summarises
+              Hazmat is only generated AFTER officer examination - it summarises
               additional taxes assessed at exam vs. originals declared on the
               worksheet. Before exam there's nothing additional to report, so
               the button is hidden on the pre-exam workbench.
@@ -752,19 +768,22 @@ export default function CourierWorkbench() {
                   cursor: "pointer",
                 }}
               >
-                ⬇ Hazmat XLSX
+                Hazmat XLSX
               </button>
+            )}
+              </>
             )}
             <button
               onClick={() => navigate(`/stallion/courier/${manifest.id}/exam`)}
               style={{
+                flex: isMobile ? 1 : "0 0 auto",
                 padding: "8px 16px", fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
                 background: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3,
                 color: "#fff", cursor: "pointer", fontWeight: 600,
               }}
             >
-              {manifest.officer_examination ? "Edit Examination" : "Officer Exam →"}
+              {manifest.officer_examination ? "Edit Examination" : "Officer Exam"}
             </button>
           </div>
         </div>
@@ -789,13 +808,13 @@ export default function CourierWorkbench() {
               letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
               fontWeight: 700,
             }}>
-              Section 2 — Declared Lines ({manifest.lines.length})
+              Section 2 - Declared Lines ({manifest.lines.length})
             </div>
             {isMobile ? (
               <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 10 }}>
                 {manifest.lines.length === 0 ? (
                   <div style={{ padding: 24, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight, fontStyle: "italic" }}>
-                    No lines yet — add your first line below.
+                    No lines yet - add your first line below.
                   </div>
                 ) : manifest.lines.map(line => (
                   <LineRow
@@ -830,7 +849,7 @@ export default function CourierWorkbench() {
                 <tbody>
                   {manifest.lines.length === 0 ? (
                     <tr><td colSpan={12} style={{ padding: 32, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight, fontStyle: "italic" }}>
-                      No lines yet — add your first line below.
+                      No lines yet - add your first line below.
                     </td></tr>
                   ) : manifest.lines.map(line => (
                     <LineRow
@@ -847,7 +866,7 @@ export default function CourierWorkbench() {
             )}
           </div>
 
-          {/* Section 3 — Officer corrections, only shown after examination */}
+          {/* Section 3 - Officer corrections, only shown after examination */}
           {manifest.officer_examination
             && manifest.officer_examination.corrections.length > 0 && (() => {
             // Cell style for Section 3 rows. Same Calibri/monospace look as
@@ -873,16 +892,16 @@ export default function CourierWorkbench() {
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <span>
-                  Section 3 — Officer Corrections ({manifest.officer_examination.corrections.length})
+                  Section 3 - Officer Corrections ({manifest.officer_examination.corrections.length})
                 </span>
                 <span style={{
                   fontFamily: "'Fraunces', serif", fontStyle: "italic",
                   fontSize: 11, color: "#6B6560", letterSpacing: "normal",
                   textTransform: "none", fontWeight: 400,
                 }}>
-                  Examined by {manifest.officer_examination.examining_officer || "—"}
+                  Examined by {manifest.officer_examination.examining_officer || "-"}
                   {manifest.officer_examination.examined_at
-                    ? ` · ${manifest.officer_examination.examined_at}` : ""}
+                    ? ` / ${manifest.officer_examination.examined_at}` : ""}
                 </span>
               </div>
               <div style={{ overflowX: "auto" }}>
@@ -946,23 +965,23 @@ export default function CourierWorkbench() {
                                       textDecoration: "line-through",
                                       color: C.inkLight, fontSize: 11,
                                     }}>
-                                      {orig || "—"}
+                                      {orig || "-"}
                                     </span>
                                     <span style={{
                                       display: "block", fontWeight: 600,
                                       color: "#C65911",
                                     }}>
-                                      → {nu}
+                                      {"->"} {nu}
                                     </span>
                                   </span>
                                 );
                               }
                               return nu || orig
-                                || (isNewLine ? "(officer-discovered)" : "—");
+                                || (isNewLine ? "(officer-discovered)" : "-");
                             })()}
                           </td>
                           <td style={cellStyleS3}>
-                            {corr.officer_thn || "—"}
+                            {corr.officer_thn || "-"}
                           </td>
                           <td style={{
                             ...cellStyleS3, fontSize: 10,
@@ -996,7 +1015,7 @@ export default function CourierWorkbench() {
                                   + (corr.add_vat || 0)))}
                           </td>
                           <td style={{ ...cellStyleS3, fontSize: 10 }}>
-                            {flags.length ? flags.join(" · ") : "—"}
+                            {flags.length ? flags.join(" / ") : "-"}
                           </td>
                         </tr>
                       );
@@ -1069,7 +1088,7 @@ export default function CourierWorkbench() {
                   letterSpacing: "0.1em", color: "#7CE38B",
                   textTransform: "uppercase", fontWeight: 700, marginBottom: 8,
                 }}>
-                  Section 3 · Additional Taxes
+                  Section 3 / Additional Taxes
                 </div>
                 {[
                   ["Add. Duty", addDuty],
@@ -1153,6 +1172,14 @@ export default function CourierWorkbench() {
           arrivalDate={manifest.arrival_date}
           declarantVatNo={manifest.declarant_vat_no}
           onClose={() => setHazmatModalOpen(false)}
+        />
+      )}
+
+      {exportSheetOpen && (
+        <ExportSheet
+          manifest={manifest}
+          onClose={() => setExportSheetOpen(false)}
+          onOpenHazmatForm={() => setHazmatModalOpen(true)}
         />
       )}
     </div>
