@@ -38,6 +38,7 @@ const C = {
   ghost: "#B8C0CE", ghostDim: "#8A93A3",
   gold: "#B8860B", amber: "#FFF4D6", amberText: "#8A6D00", amberAction: "#C65911",
   approved: "#1A5E3A", warn: "#FEF3DC", warnBorder: "#D4A020",
+  critBorder: "#B02020",
 };
 const MONO = "'JetBrains Mono','SFMono-Regular',monospace";
 const SERIF = "'Fraunces',Georgia,serif";
