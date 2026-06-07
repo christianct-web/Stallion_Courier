@@ -1,5 +1,5 @@
 /**
- * UploadTemplateDialog — modal for uploading a TTPOST express-consignment
+ * UploadTemplateDialog - modal for uploading an express-consignment
  * Excel and creating a manifest with auto-classified lines.
  *
  * Used on the CourierManifests page.
@@ -77,13 +77,13 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
           fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 22,
           color: C.ink, margin: 0, marginBottom: 4,
         }}>
-          Upload TTPOST Worksheet
+          Upload Express Worksheet
         </h2>
         <p style={{
           fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkLight,
           margin: 0, marginBottom: 20,
         }}>
-          Upload the express-consignment Excel from TTPOST. We'll parse the lines and
+          Upload the express-consignment Excel. We'll parse the lines and
           auto-classify each item against the T&T CET.
         </p>
 
@@ -125,7 +125,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
                 fontFamily: "'Fraunces', serif", fontSize: 12,
                 color: C.inkLight, fontStyle: "italic",
               }}>
-                {(file.size / 1024).toFixed(1)} KB · click to change
+                {(file.size / 1024).toFixed(1)} KB / click to change
               </div>
             </>
           ) : (
@@ -198,7 +198,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
           color: C.inkLight, fontStyle: "italic", margin: "14px 0 0 0",
         }}>
           The master waybill number is read from the file's header. Lines are
-          color-coded by classification confidence — click any THN to review
+          color-coded by classification confidence - click any THN to review
           alternatives or set manually.
         </p>
 
@@ -226,7 +226,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
               opacity: busy || !file ? 0.6 : 1, fontWeight: 600,
             }}
           >
-            {busy ? "Uploading…" : "Upload & Classify"}
+            {busy ? "Uploading..." : "Upload & Classify"}
           </button>
         </div>
       </div>

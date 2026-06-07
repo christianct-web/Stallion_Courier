@@ -9,7 +9,6 @@
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { TopNav } from "@/components/TopNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import {
@@ -134,8 +133,8 @@ function ClassifySuggestions({ suggestions, onPick }: {
   );
 }
 
-function AddLineRow({ manifestId, onAdded }: {
-  manifestId: string; onAdded: () => void;
+function AddLineRow({ manifestId, onAdded, isMobile }: {
+  manifestId: string; onAdded: () => void; isMobile?: boolean;
 }) {
   const [hawb, setHawb] = useState("");
   const [shipper, setShipper] = useState("");
@@ -229,7 +228,7 @@ function AddLineRow({ manifestId, onAdded }: {
         + Add Line
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "100px 140px 140px 1fr 100px 75px 75px 80px auto", gap: 8, alignItems: "end" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "100px 140px 140px 1fr 100px 75px 75px 80px auto", gap: 8, alignItems: "end" }}>
         <input style={inputStyle} placeholder="HAWB" value={hawb} onChange={e => setHawb(e.target.value)} />
         <input style={inputStyle} placeholder="Shipper" value={shipper} onChange={e => setShipper(e.target.value)} />
         <input style={inputStyle} placeholder="Importer" value={importer} onChange={e => setImporter(e.target.value)} />
@@ -300,9 +299,10 @@ function AddLineRow({ manifestId, onAdded }: {
 
 // ── Editable line row ────────────────────────────────────────────────────
 
-function LineRow({ manifestId, line, onChanged, onDelete }: {
+function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
   manifestId: string; line: CourierLine;
   onChanged: () => void; onDelete: (line: CourierLine) => void;
+  isMobile?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({
@@ -355,6 +355,134 @@ function LineRow({ manifestId, line, onChanged, onDelete }: {
     background: "#fff", color: C.ink, outline: "none",
     width: "100%", boxSizing: "border-box",
   };
+
+  if (isMobile) {
+    return (
+      <div style={{
+        background: editing ? "#FFFAEC" : C.paper,
+        border: `1px solid ${C.paperBorder}`, borderRadius: 6,
+        padding: "12px 12px 10px",
+      }}>
+        {/* Header: line no + description + rate */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
+          <span style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
+            color: C.inkLight, background: C.paperAlt, borderRadius: 3,
+            padding: "2px 7px", flexShrink: 0,
+          }}>
+            #{line.line_no}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {editing ? (
+              <input style={inputStyle} value={draft.description}
+                onChange={e => setDraft({ ...draft, description: e.target.value })} />
+            ) : (
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 14, color: C.ink, lineHeight: 1.3 }}>
+                {line.description}
+              </div>
+            )}
+            {line.hawb && (
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, marginTop: 2 }}>
+                HAWB {line.hawb}
+              </div>
+            )}
+          </div>
+          <div style={{ flexShrink: 0 }}><RatePill line={line} /></div>
+        </div>
+
+        {/* THN */}
+        <div style={{ marginBottom: 10 }}>
+          {editing ? (
+            <input style={inputStyle} value={draft.thn}
+              onChange={e => setDraft({ ...draft, thn: e.target.value })} placeholder="THN" />
+          ) : (
+            <ThnClassifyCell
+              line={line}
+              onUpdate={async (patch) => { await updateLine(manifestId, line.line_no, patch); onChanged(); }}
+              onReload={async () => { await recomputeManifest(manifestId); onChanged(); }}
+            />
+          )}
+        </div>
+
+        {/* Figures grid */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+          gap: "6px 10px", padding: "10px 0", borderTop: `1px solid ${C.paperBorder}`,
+        }}>
+          {([
+            ["Cost", editing ? null : `$${fmtUsd(line.cost_usd)}`],
+            ["CIF", fmtTtd(line.cif_ttd)],
+            ["Duty", fmtTtd(line.duty)],
+            ["OPT", fmtTtd(line.opt)],
+            ["VAT", fmtTtd(line.vat)],
+            ["Total", fmtTtd(line.total_taxes)],
+          ] as [string, string | null][]).map(([lbl, val], i) => (
+            <div key={lbl}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: C.inkLight }}>
+                {lbl}
+              </div>
+              {lbl === "Cost" && editing ? (
+                <input style={{ ...inputStyle, padding: "3px 5px" }} type="number"
+                  value={draft.cost_usd as any}
+                  onChange={e => setDraft({ ...draft, cost_usd: e.target.value as any })} />
+              ) : (
+                <div style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                  fontWeight: lbl === "Total" ? 700 : 500,
+                  color: lbl === "Total" || lbl === "CIF" ? C.ink : C.inkMid,
+                }}>
+                  {val}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          {editing ? (
+            <>
+              <button onClick={save} disabled={busy} style={{
+                flex: 1, padding: "9px 10px", fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: C.green, color: "#fff", border: "none", borderRadius: 4,
+                cursor: "pointer", fontWeight: 600,
+              }}>
+                {busy ? "…" : "Save"}
+              </button>
+              <button onClick={cancel} disabled={busy} style={{
+                padding: "9px 16px", fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`,
+                borderRadius: 4, cursor: "pointer",
+              }}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setEditing(true)} style={{
+                flex: 1, padding: "9px 10px", fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                background: "transparent", color: C.amber,
+                border: `1px solid ${C.amber}55`, borderRadius: 4, cursor: "pointer", fontWeight: 600,
+              }}>
+                Edit
+              </button>
+              <button onClick={() => onDelete(line)} style={{
+                padding: "9px 16px", fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
+                color: C.critBorder, background: "transparent",
+                border: `1px solid ${C.critBorder}55`, borderRadius: 4, cursor: "pointer",
+              }}>
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <tr style={{
@@ -535,7 +663,6 @@ export default function CourierWorkbench() {
   if (loading || !manifest) {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-        {!isMobile && <TopNav />}
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
           Loading manifest…
         </div>
@@ -547,24 +674,21 @@ export default function CourierWorkbench() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      {!isMobile && <TopNav rightSlot={
-        <button onClick={() => navigate("/stallion/courier")} style={{
-          background: "transparent", border: `1px solid ${C.voidBorder}`,
-          color: C.ghost, padding: "5px 12px", borderRadius: 4,
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-          letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
-        }}>
-          ← Manifests
-        </button>
-      } />}
-
       {/* Manifest header strip — dark band like the navigation */}
       <div style={{
         background: C.voidMid, borderBottom: `1px solid ${C.voidBorder}`,
-        padding: "16px 28px",
+        padding: isMobile ? "14px 16px" : "16px 28px",
       }}>
-        <div style={{ maxWidth: 1480, margin: "0 auto", display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
+        <div style={{ maxWidth: 1480, margin: "0 auto", display: "flex", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 12 : 24, flexWrap: "wrap" }}>
           <div>
+            <button onClick={() => navigate("/stallion/courier")} style={{
+              background: "transparent", border: "none", padding: 0, cursor: "pointer",
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              letterSpacing: "0.08em", textTransform: "uppercase", color: C.ghostDim,
+              marginBottom: 6, display: "block",
+            }}>
+              ← Manifests
+            </button>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
               letterSpacing: "0.12em",
@@ -647,10 +771,10 @@ export default function CourierWorkbench() {
       </div>
 
       <div style={{
-        maxWidth: 1600, margin: "0 auto", padding: "24px 28px",
+        maxWidth: 1600, margin: "0 auto", padding: isMobile ? "16px 16px" : "24px 28px",
         display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) 260px",
-        gap: 20,
+        gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1fr) 260px",
+        gap: isMobile ? 16 : 20,
       }}>
         {/* Lines table + add form */}
         <div>
@@ -667,6 +791,24 @@ export default function CourierWorkbench() {
             }}>
               Section 2 — Declared Lines ({manifest.lines.length})
             </div>
+            {isMobile ? (
+              <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 10 }}>
+                {manifest.lines.length === 0 ? (
+                  <div style={{ padding: 24, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight, fontStyle: "italic" }}>
+                    No lines yet — add your first line below.
+                  </div>
+                ) : manifest.lines.map(line => (
+                  <LineRow
+                    key={line.id}
+                    manifestId={manifest.id}
+                    line={line}
+                    onChanged={load}
+                    onDelete={(l) => setConfirmDelete(l)}
+                    isMobile
+                  />
+                ))}
+              </div>
+            ) : (
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
                 <thead>
@@ -702,6 +844,7 @@ export default function CourierWorkbench() {
                 </tbody>
               </table>
             </div>
+            )}
           </div>
 
           {/* Section 3 — Officer corrections, only shown after examination */}
@@ -865,7 +1008,7 @@ export default function CourierWorkbench() {
             );
           })()}
 
-          <AddLineRow manifestId={manifest.id} onAdded={load} />
+          <AddLineRow manifestId={manifest.id} onAdded={load} isMobile={isMobile} />
         </div>
 
         {/* Totals panel */}

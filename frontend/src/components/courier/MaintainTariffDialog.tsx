@@ -1,5 +1,5 @@
 /**
- * MaintainTariffDialog — full tariff maintenance modal.
+ * MaintainTariffDialog - full tariff maintenance modal.
  *
  * Lets the broker edit a single THN's tariff entry: description, duty %,
  * exemption class. Saves go to /courier/tariff and /courier/rules/exemptions,
@@ -180,8 +180,8 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
       );
 
       // 2. If exemption class changed:
-      //    - full_exempt / duty_free_only → add exemption rule
-      //    - none → remove any existing exemption rule
+      //    - full_exempt / duty_free_only -> add exemption rule
+      //    - none -> remove any existing exemption rule
       if (exemptionClass !== state.exemptionClass) {
         if (exemptionClass === "none") {
           // Best-effort remove. The endpoint 404s if there was none, which we
@@ -189,7 +189,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
           try {
             await removeExemption(state.thn, comment.trim(), "broker");
           } catch {
-            // ignore — there wasn't one
+            // ignore - there wasn't one
           }
         } else {
           await addExemption(
@@ -239,7 +239,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
         },
         "broker",
       );
-      toast.success(`Mapped ${wrong} → ${state.thn}`);
+      toast.success(`Mapped ${wrong} -> ${state.thn}`);
       setCorrectionWrongThn("");
       setCorrectionReason("");
       await onSaved();
@@ -269,7 +269,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
           boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Header strip — same dark band as workbench top */}
+        {/* Header strip - same dark band as workbench top */}
         <div style={{
           background: C.voidMid, color: C.paper,
           padding: "18px 24px", borderRadius: "6px 6px 0 0",
@@ -287,14 +287,14 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
               fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 600,
               lineHeight: 1,
             }}>
-              {state.thn || "—"}
+              {state.thn || "-"}
             </div>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               color: C.ghost,
             }}>
               {state.chapter != null ? `Chapter ${state.chapter}` : ""}
-              {state.unit ? `  ·  unit: ${state.unit}` : ""}
+              {state.unit ? `  /  unit: ${state.unit}` : ""}
             </div>
             <span style={{
               marginLeft: "auto", padding: "3px 8px", borderRadius: 3,
@@ -354,7 +354,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
             padding: 40, textAlign: "center", fontFamily: "'Fraunces', serif",
             color: C.inkLight, fontStyle: "italic",
           }}>
-            Looking up {state.thn}…
+            Looking up {state.thn}...
           </div>
         ) : activeTab === "edit" ? (
           <div style={{ padding: 24 }}>
@@ -367,7 +367,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 style={{ ...inputStyle, fontFamily: "'Fraunces', serif", fontSize: 13, resize: "vertical" }}
-                placeholder="Cell phones; smartphones; …"
+                placeholder="Cell phones; smartphones; ..."
               />
             </div>
 
@@ -392,9 +392,9 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
                   onChange={(e) => setExemptionClass(e.target.value as ExemptionClass)}
                   style={inputStyle}
                 >
-                  <option value="none">None — pays duty/OPT/VAT</option>
-                  <option value="duty_free_only">Duty-free only — pays OPT+VAT</option>
-                  <option value="full_exempt">Full exempt — pays nothing</option>
+                  <option value="none">None - pays duty/OPT/VAT</option>
+                  <option value="duty_free_only">Duty-free only - pays OPT+VAT</option>
+                  <option value="full_exempt">Full exempt - pays nothing</option>
                 </select>
               </div>
             </div>
@@ -478,7 +478,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
                   opacity: saving ? 0.6 : 1, fontWeight: 600,
                 }}
               >
-                {saving ? "Saving…" : "Save Tariff Entry"}
+                {saving ? "Saving..." : "Save Tariff Entry"}
               </button>
             </div>
           </div>
@@ -489,7 +489,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
               fontFamily: "'Fraunces', serif", fontSize: 12,
               color: C.inkLight, marginBottom: 16,
             }}>
-              Sometimes TTPOST or shippers consistently type a THN that doesn't exist or
+              Sometimes shippers consistently type a THN that doesn't exist or
               is the wrong digit (e.g. <code>85171200</code> instead of{" "}
               <code>{state.thn}</code>). Add a correction here and the system will
               automatically remap that wrong code to <strong>{state.thn}</strong> on every
@@ -497,7 +497,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <Label>Wrong THN (the one shippers/TTPOST type)</Label>
+              <Label>Wrong THN (the one shippers type)</Label>
               <input
                 value={correctionWrongThn}
                 onChange={(e) => setCorrectionWrongThn(e.target.value)}
@@ -558,7 +558,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
                   opacity: saving ? 0.6 : 1, fontWeight: 600,
                 }}
               >
-                {saving ? "Saving…" : "Save Correction"}
+                {saving ? "Saving..." : "Save Correction"}
               </button>
             </div>
           </div>

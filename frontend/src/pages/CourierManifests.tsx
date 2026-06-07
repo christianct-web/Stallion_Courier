@@ -1,5 +1,5 @@
 /**
- * CourierManifests — landing page for the courier module.
+ * CourierManifests - landing page for the courier module.
  * Lists all manifests, lets the broker create a new one, shows totals,
  * and links into the workbench / exam screens.
  */
@@ -18,6 +18,7 @@ import {
 } from "@/services/courierApi";
 import { C, fmtTtd } from "@/components/courier/tokens";
 import { UploadTemplateDialog } from "@/components/courier/UploadTemplateDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { StatusPill } from "@/components/StatusPill";
 
 function Field({ label, value, onChange, placeholder, type = "text", required = false }: {
@@ -57,7 +58,7 @@ function NewManifestDialog({ onCreate, onClose }: {
   const [manifestNo, setManifestNo] = useState("");
   const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().slice(0, 10));
   const [exchRate, setExchRate] = useState("6.78");
-  const [cargoReporter, setCargoReporter] = useState("TTPOST");
+  const [cargoReporter, setCargoReporter] = useState("Courier");
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
@@ -102,7 +103,7 @@ function NewManifestDialog({ onCreate, onClose }: {
           fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkLight,
           margin: 0, marginBottom: 20,
         }}>
-          Start a new TTPOST express consignment worksheet.
+          Start a new non-trade express consignment worksheet.
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -133,7 +134,7 @@ function NewManifestDialog({ onCreate, onClose }: {
             color: C.paper, cursor: busy ? "not-allowed" : "pointer",
             opacity: busy ? 0.6 : 1, fontWeight: 600,
           }}>
-            {busy ? "Creating…" : "Create Manifest"}
+            {busy ? "Creating..." : "Create Manifest"}
           </button>
         </div>
       </div>
@@ -142,6 +143,7 @@ function NewManifestDialog({ onCreate, onClose }: {
 }
 
 export default function CourierManifests() {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [manifests, setManifests] = useState<CourierManifest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +178,7 @@ export default function CourierManifests() {
   return (
     <div style={{ minHeight: "100%", background: C.paperAlt }}>
       {/* Page header band (full-width, matches Clients/Log/Sheets) */}
-      <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
+      <div style={{ padding: isMobile ? "20px 16px 16px" : "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
           <div>
@@ -185,7 +187,7 @@ export default function CourierManifests() {
               letterSpacing: "0.14em", color: C.amber, textTransform: "uppercase",
               marginBottom: 8,
             }}>
-              Stallion · Courier Module
+              Stallion / Courier Module
             </div>
             <h1 style={{
               fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 30,
@@ -197,32 +199,35 @@ export default function CourierManifests() {
               fontFamily: "'JetBrains Mono', monospace", fontSize: 12, fontWeight: 600,
               color: C.inkMid, margin: "8px 0 0 0", maxWidth: 640, lineHeight: 1.5,
             }}>
-              Process express consignment worksheets — line classification,
+              Process express consignment worksheets - line classification,
               duty calculation, officer examination, and worksheet/hazmat export.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", width: isMobile ? "100%" : "auto" }}>
             <button onClick={() => navigate("/stallion/courier/tariff")} style={{
               padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
               background: "transparent", border: `1px solid ${C.paperMid}`,
               borderRadius: 4, color: C.inkMid, cursor: "pointer", fontWeight: 600,
+              flex: isMobile ? "1 1 100%" : "0 0 auto",
             }}>
-              ⊞ Tariff Database
+              + Tariff Database
             </button>
             <button onClick={() => setShowUpload(true)} style={{
               padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
               background: C.amber, border: `1px solid ${C.amber}`, borderRadius: 4,
               color: "#fff", cursor: "pointer", fontWeight: 600,
+              flex: isMobile ? "1 1 0" : "0 0 auto",
             }}>
-              ↑ Upload Manifest
+              Upload Manifest
             </button>
             <button onClick={() => setShowNew(true)} style={{
               padding: "10px 18px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase",
               background: C.ink, border: `1px solid ${C.ink}`, borderRadius: 4,
               color: C.paper, cursor: "pointer", fontWeight: 600,
+              flex: isMobile ? "1 1 0" : "0 0 auto",
             }}>
               + Manual Worksheet
             </button>
@@ -231,10 +236,10 @@ export default function CourierManifests() {
       </div>
 
       {/* Content */}
-      <div style={{ margin: "24px 40px 48px" }}>
+      <div style={{ margin: isMobile ? "16px 16px 32px" : "24px 40px 48px" }}>
 
         {/* Summary cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 12, marginBottom: isMobile ? 16 : 24 }}>
           {[
             { label: "Total", value: summary.total, color: C.ink },
             { label: "Draft", value: summary.draft, color: C.ghostDim },
@@ -262,23 +267,110 @@ export default function CourierManifests() {
           ))}
         </div>
 
-        {/* Manifest table */}
+        {/* Manifest list - cards on mobile, table on desktop */}
         <div style={{
-          background: C.paper, border: `1px solid ${C.paperBorder}`,
+          background: isMobile ? "transparent" : C.paper,
+          border: isMobile ? "none" : `1px solid ${C.paperBorder}`,
           borderRadius: 4, overflow: "hidden",
         }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
-              Loading…
+              Loading...
             </div>
           ) : manifests.length === 0 ? (
-            <div style={{ padding: 60, textAlign: "center" }}>
+            <div style={{ padding: 60, textAlign: "center", background: isMobile ? C.paper : "transparent", border: isMobile ? `1px solid ${C.paperBorder}` : "none", borderRadius: 4 }}>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 20, color: C.inkLight, marginBottom: 8 }}>
                 No manifests yet
               </div>
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkLight, fontStyle: "italic" }}>
                 Click "Manual Worksheet" to start your first non-trade worksheet.
               </div>
+            </div>
+          ) : isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {manifests.map((m) => (
+                <div key={m.id}
+                  onClick={() => navigate(`/stallion/courier/${m.id}`)}
+                  style={{
+                    background: C.paper, border: `1px solid ${C.paperBorder}`,
+                    borderRadius: 6, padding: "14px 14px 12px", cursor: "pointer",
+                  }}
+                >
+                  {/* Top row: manifest no + status */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 700, color: C.ink }}>
+                      {m.manifest_no}
+                    </div>
+                    <StatusPill status={m.status} />
+                  </div>
+
+                  {/* Meta row */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 16px", marginBottom: 10 }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
+                      {m.arrival_date}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
+                      {m.cargo_reporter}
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
+                      {m.lines?.length ?? 0} lines
+                    </span>
+                  </div>
+
+                  {/* Totals */}
+                  <div style={{
+                    display: "flex", alignItems: "baseline", justifyContent: "space-between",
+                    paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
+                  }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: C.inkLight }}>
+                      Total Taxes
+                    </span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 700, color: C.ink }}>
+                      TTD {fmtTtd(m.totals?.total_taxes)}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }} onClick={e => e.stopPropagation()}>
+                    <a href={worksheetDownloadUrl(m.id)} download
+                      style={{
+                        flex: 1, textAlign: "center",
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                        color: C.blue, textDecoration: "none",
+                        padding: "9px 8px", border: `1px solid ${C.blue}33`,
+                        borderRadius: 4, background: C.blueLight,
+                      }}
+                    >
+                      XLSX
+                    </a>
+                    <a href={hazmatDownloadUrl(m.id)} download
+                      style={{
+                        flex: 1, textAlign: "center",
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                        color: C.amber, textDecoration: "none",
+                        padding: "9px 8px", border: `1px solid ${C.amber}33`,
+                        borderRadius: 4, background: C.amberLight,
+                      }}
+                    >
+                      Hazmat
+                    </a>
+                    <button
+                      onClick={() => setConfirmDelete(m)}
+                      style={{
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                        letterSpacing: "0.06em", textTransform: "uppercase",
+                        color: C.critBorder, background: "transparent",
+                        padding: "9px 14px", border: `1px solid ${C.critBorder}33`,
+                        borderRadius: 4, cursor: "pointer",
+                      }}
+                    >
+                      Del
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>

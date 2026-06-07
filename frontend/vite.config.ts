@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/courier\//, /^\/api\//],
         runtimeCaching: [
           {
-            // Google Fonts stylesheets are safe to cache and speed up cold launch.
+            // Google Fonts stylesheets: safe to cache, speeds up cold launch.
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "StaleWhileRevalidate",
             options: { cacheName: "google-fonts-stylesheets" },
