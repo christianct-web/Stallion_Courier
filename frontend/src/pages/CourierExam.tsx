@@ -11,7 +11,6 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { TopNav } from "@/components/TopNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import {
@@ -478,7 +477,6 @@ export default function CourierExam() {
   if (loading || !manifest) {
     return (
       <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-        {!isMobile && <TopNav />}
         <div style={{ padding: 60, textAlign: "center", fontFamily: "'Fraunces', serif", color: C.inkLight }}>
           Loading…
         </div>
@@ -493,17 +491,6 @@ export default function CourierExam() {
 
   return (
     <div style={{ minHeight: "100vh", background: C.paperAlt }}>
-      {!isMobile && <TopNav rightSlot={
-        <button onClick={() => navigate(`/stallion/courier/${manifest.id}`)} style={{
-          background: "transparent", border: `1px solid ${C.voidBorder}`,
-          color: C.ghost, padding: "5px 12px", borderRadius: 4,
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-          letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer",
-        }}>
-          ← Workbench
-        </button>
-      } />}
-
       {/* Header strip */}
       <div style={{
         background: C.amber, borderBottom: `1px solid ${C.amber}88`,
@@ -511,6 +498,14 @@ export default function CourierExam() {
       }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" }}>
           <div>
+            <button onClick={() => navigate(`/stallion/courier/${manifest.id}`)} style={{
+              background: "transparent", border: "none", padding: 0, cursor: "pointer",
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff8",
+              marginBottom: 6, display: "block",
+            }}>
+              ← Workbench
+            </button>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
               letterSpacing: "0.12em", color: "#fff8", textTransform: "uppercase",

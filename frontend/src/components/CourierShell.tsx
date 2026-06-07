@@ -1,15 +1,29 @@
+/**
+ * CourierShell.tsx - courier-scoped app layout.
+ *
+ * Gives the Stallion Courier routes a standalone, installable feel:
+ *   - Mobile  -> slim top bar (Stallion mark + title) + fixed bottom nav.
+ *   - Desktop -> the existing shared <TopNav/> (unchanged Stallion chrome).
+ *
+ * Used as a layout route in App.tsx wrapping the /stallion/courier/* pages.
+ * Pages rendered inside this shell must NOT render their own TopNav.
+ *
+ * Note: client names are never named in installed/visible copy.
+ * The product label here is "Non-Trade Express Worksheets".
+ */
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { C } from "@/components/courier/tokens";
-import { ClipboardList, Home, Search, type LucideIcon } from "lucide-react";
+
+/* Bottom-nav destinations */
 
 type NavItem = {
   label: string;
   path: string;
   match: (pathname: string) => boolean;
-  icon: LucideIcon;
+  icon: (active: boolean) => JSX.Element;
 };
 
 const stroke = (active: boolean) => (active ? "#fff" : C.ghostDim);
@@ -19,21 +33,35 @@ const NAV: NavItem[] = [
     label: "Home",
     path: "/stallion/courier",
     match: (p) => p === "/stallion/courier",
-    icon: Home,
+    icon: (a) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
+      </svg>
+    ),
   },
   {
     label: "Manifests",
     path: "/stallion/courier",
     match: (p) => p.startsWith("/stallion/courier/") && !p.endsWith("/tariff"),
-    icon: ClipboardList,
+    icon: (a) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" />
+      </svg>
+    ),
   },
   {
     label: "Tariff",
     path: "/stallion/courier/tariff",
     match: (p) => p === "/stallion/courier/tariff",
-    icon: Search,
+    icon: (a) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+    ),
   },
 ];
+
+/* Install affordance (beforeinstallprompt) */
 
 function useInstallPrompt() {
   const [deferred, setDeferred] = useState<any>(null);
@@ -71,6 +99,8 @@ function useInstallPrompt() {
   return { canInstall: !!deferred && !installed, promptInstall };
 }
 
+/* Shell */
+
 const BOTTOM_NAV_H = 60;
 
 export default function CourierShell() {
@@ -79,6 +109,7 @@ export default function CourierShell() {
   const { pathname } = useLocation();
   const { canInstall, promptInstall } = useInstallPrompt();
 
+  /* Desktop / tablet: keep the established Stallion chrome untouched. */
   if (!isMobile) {
     return (
       <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -106,6 +137,7 @@ export default function CourierShell() {
     );
   }
 
+  /* Mobile: standalone-feeling shell with slim top bar + bottom nav. */
   return (
     <div
       style={{
@@ -115,6 +147,7 @@ export default function CourierShell() {
         background: C.paper,
       }}
     >
+      {/* Slim top bar */}
       <header
         style={{
           height: 48,
@@ -162,16 +195,19 @@ export default function CourierShell() {
         )}
       </header>
 
+      {/* Page body - pad the bottom so content clears the fixed nav. */}
       <main
         style={{
           flex: 1,
           minHeight: 0,
+          // iOS safe-area inset for the home bar.
           paddingBottom: `calc(${BOTTOM_NAV_H + 8}px + env(safe-area-inset-bottom))`,
         }}
       >
         <Outlet />
       </main>
 
+      {/* Fixed bottom nav */}
       <nav
         style={{
           position: "fixed",
@@ -189,7 +225,6 @@ export default function CourierShell() {
       >
         {NAV.map((item) => {
           const active = item.match(pathname);
-          const Icon = item.icon;
           return (
             <button
               key={item.label}
@@ -207,7 +242,7 @@ export default function CourierShell() {
                 padding: "6px 0",
               }}
             >
-              <Icon size={22} color={stroke(active)} strokeWidth={2} />
+              {item.icon(active)}
               <span
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
