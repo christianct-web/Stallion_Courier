@@ -17,7 +17,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .middleware_auth import ApiKeyMiddleware
+from .middleware_auth import ApiKeyMiddleware, assert_production_security, is_production
 from .cleanup import cleanup_generated_files
 from .routes.declarations import router as declarations_router
 from .routes.lookups import router as lookups_router
@@ -51,14 +51,28 @@ async def lifespan(app: FastAPI):
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
-app = FastAPI(title="Stallion API", version="0.3.0", lifespan=lifespan)
+# Fail-closed guard: production cannot boot without auth + explicit CORS.
+assert_production_security()
 
-# CORS — restrict in production via STALLION_CORS_ORIGINS env var
-cors_origins = os.environ.get("STALLION_CORS_ORIGINS", "*").split(",")
+app = FastAPI(
+    title="Stallion API",
+    version="0.3.1",
+    lifespan=lifespan,
+    # No interactive docs in production (they enumerate the whole API surface)
+    docs_url=None if is_production() else "/docs",
+    redoc_url=None if is_production() else "/redoc",
+    openapi_url=None if is_production() else "/openapi.json",
+)
+
+# CORS — production REQUIRES an explicit origin list (enforced above).
+# Credentials are only allowed alongside explicit origins; wildcard+credentials
+# is an invalid combination and is never emitted.
+cors_origins = [o.strip() for o in os.environ.get("STALLION_CORS_ORIGINS", "*").split(",") if o.strip()]
+_explicit_origins = cors_origins != ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in cors_origins],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=_explicit_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

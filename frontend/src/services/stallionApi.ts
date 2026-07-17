@@ -1,3 +1,47 @@
+// ── Auth (F2) ────────────────────────────────────────────────────────────────
+// Every request carries X-API-Key. Set VITE_STALLION_API_KEY in Netlify env
+// (and .env.local for dev). NOTE: a bundled key is a shared secret, not user
+// auth — Phase 3 replaces this with real per-user login.
+const API_KEY = (import.meta.env.VITE_STALLION_API_KEY as string | undefined)?.trim() || "";
+
+export function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    ...(API_KEY ? { "X-API-Key": API_KEY } : {}),
+    ...(extra || {}),
+  };
+}
+
+/** Authenticated fetch — use for ALL requests including file downloads,
+ * since plain <a href> links cannot attach the API key header. */
+export function authFetch(input: string, init?: RequestInit): Promise<Response> {
+  return fetch(input, {
+    ...init,
+    headers: authHeaders((init?.headers as Record<string, string>) || {}),
+  });
+}
+
+/** Append the API key to a download URL — for <a href>/window.open links
+ * that cannot attach headers. Server accepts this on GET download paths only. */
+export function withKey(url: string): string {
+  if (!API_KEY) return url;
+  return url + (url.includes("?") ? "&" : "?") + "api_key=" + encodeURIComponent(API_KEY);
+}
+
+/** Download a generated file through an authenticated request. */
+export async function authDownload(url: string, filename: string): Promise<void> {
+  const res = await authFetch(url);
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 const envBaseUrl = (import.meta.env.VITE_STALLION_API_URL as string | undefined)?.replace(/\/$/, "");
 const isNetlifyHost = window.location.hostname.endsWith(".netlify.app");
 const defaultBaseUrl = isNetlifyHost ? "/api" : `${window.location.protocol}//${window.location.hostname}:8022`;
@@ -30,22 +74,31 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const request = () =>
     fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
       ...init,
+      headers: authHeaders({
+        "Content-Type": "application/json",
+        ...((init?.headers as Record<string, string>) || {}),
+      }),
     });
+
+  // F4: only idempotent GETs may be retried. A timed-out POST/PATCH/DELETE
+  // may have been processed server-side; retrying it duplicates mutations
+  // (declarations, reviews, generated documents).
+  const method = (init?.method || "GET").toUpperCase();
+  const canRetry = method === "GET";
 
   let res: Response;
   try {
     res = await withTimeout(request(), REQUEST_TIMEOUT_MS);
   } catch (e) {
-    // one retry for transient network/process churn
+    if (!canRetry) throw e instanceof Error ? e : new Error(`${path} failed (network)`);
     res = await withTimeout(request(), REQUEST_TIMEOUT_MS).catch((retryErr) => {
       throw retryErr ?? e;
     });
   }
 
   if (!res.ok) {
-    if (RETRYABLE_STATUSES.has(res.status)) {
+    if (canRetry && RETRYABLE_STATUSES.has(res.status)) {
       const retryRes = await withTimeout(request(), REQUEST_TIMEOUT_MS);
       if (!retryRes.ok) throw new Error(`${path} failed (${retryRes.status})`);
       return (await retryRes.json()) as T;
@@ -217,6 +270,7 @@ export async function extractDocuments(files: File[], mode: "batch" | "separate"
 
   const res = await fetch(`${BASE_URL}/extract/documents`, {
     method: "POST",
+    headers: authHeaders(), // no Content-Type: browser sets multipart boundary
     body: form,
   });
 
@@ -272,7 +326,7 @@ export interface HsResult {
 
 
 export async function hsSearch(query: string): Promise<HsResult[]> {
-  const res = await fetch(`${BASE_URL}/hs/search`, {
+  const res = await authFetch(`${BASE_URL}/hs/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),

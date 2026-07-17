@@ -9,6 +9,7 @@ import {
   listClients,
   calculateWorksheet,
   STALLION_BASE_URL,
+  withKey,
   type Client,
 } from "@/services/stallionApi";
 import { TopNav } from "@/components/TopNav";
@@ -349,7 +350,7 @@ function ExportHistory({ events }: { events: any[] }) {
               {ev.at ? new Date(ev.at).toLocaleString() : "—"}
             </span>
             {ev.ref && (
-              <a href={`${STALLION_BASE_URL}/pack/file/${ev.ref}`} target="_blank" rel="noopener noreferrer"
+              <a href={withKey(`${STALLION_BASE_URL}/pack/file/${ev.ref}`)} target="_blank" rel="noopener noreferrer"
                 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.approved, textDecoration: "none" }}>
                 ↓ {ev.ref.slice(0, 16)}
               </a>
@@ -528,7 +529,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, marginTop: 2 }}>{generated.doc_id}</div>
           </div>
           <a
-            href={`${STALLION_BASE_URL}${generated.download_url}`}
+            href={withKey(`${STALLION_BASE_URL}${generated.download_url}`)}
             target="_blank" rel="noopener noreferrer"
             style={{ padding: "8px 18px", background: green, color: "#fff", borderRadius: 4, fontFamily: "'Fraunces', serif", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
           >
@@ -546,7 +547,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: inkM }}>{inv.docId}</div>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: inkL }}>{new Date(inv.generatedAt).toLocaleDateString()}</span>
-                <a href={`${STALLION_BASE_URL}/pack/file/${inv.docId}`} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green }}>↓ PDF</a>
+                <a href={withKey(`${STALLION_BASE_URL}/pack/file/${inv.docId}`)} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green }}>↓ PDF</a>
               </div>
             </div>
           ))}
@@ -695,7 +696,7 @@ function ReviewPanel({
     try {
       const { worksheetUrl } = await generatePackAndGetUrls();
       if (!worksheetUrl) return alert("Worksheet file not returned.");
-      window.open(worksheetUrl, "_blank", "noopener,noreferrer");
+      window.open(withKey(worksheetUrl), "_blank", "noopener,noreferrer");
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download worksheet");
     }
@@ -705,7 +706,7 @@ function ReviewPanel({
     try {
       const { xmlUrl } = await generatePackAndGetUrls();
       if (!xmlUrl) return alert("XML file not returned.");
-      window.open(xmlUrl, "_blank", "noopener,noreferrer");
+      window.open(withKey(xmlUrl), "_blank", "noopener,noreferrer");
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download XML");
     }
@@ -1187,7 +1188,7 @@ function ReviewPanel({
               </button>
               {costingDocId && (
                 <a
-                  href={`${STALLION_BASE_URL}/pack/file/${costingDocId}`}
+                  href={withKey(`${STALLION_BASE_URL}/pack/file/${costingDocId}`)}
                   target="_blank"
                   rel="noreferrer"
                   style={{

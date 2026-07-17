@@ -2,7 +2,7 @@
  * Courier API client — wraps /courier/* endpoints with the same
  * conventions used by stallionApi.ts (timeout, retry, envelope normalization).
  */
-import { STALLION_BASE_URL } from "./stallionApi";
+import { STALLION_BASE_URL, authHeaders, authFetch, withKey } from "./stallionApi";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
@@ -46,10 +46,10 @@ async function courierApi<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await withTimeout(
     fetch(`${STALLION_BASE_URL}${path}`, {
       ...init,
-      headers: {
+      headers: authHeaders({
         "Content-Type": "application/json",
         ...((init?.headers as Record<string, string>) || {}),
-      },
+      }),
     }),
     REQUEST_TIMEOUT_MS,
   );
@@ -239,7 +239,7 @@ export async function uploadTemplate(
   form.append("arrival_date", arrivalDate);
   form.append("exch_rate", String(exchRate));
 
-  const res = await fetch(`${STALLION_BASE_URL}/courier/manifests/from-template`, {
+  const res = await authFetch(`${STALLION_BASE_URL}/courier/manifests/from-template`, {
     method: "POST",
     body: form,
   });
@@ -493,11 +493,11 @@ export async function getAuditLog(
 // ── Exports ──────────────────────────────────────────────────────────────
 
 export function worksheetDownloadUrl(manifestId: string): string {
-  return `${STALLION_BASE_URL}/courier/manifests/${manifestId}/worksheet`;
+  return withKey(`${STALLION_BASE_URL}/courier/manifests/${manifestId}/worksheet`);
 }
 
 export function hazmatDownloadUrl(manifestId: string): string {
-  return `${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`;
+  return withKey(`${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`);
 }
 
 /**
@@ -535,8 +535,7 @@ export interface HazmatFormFields {
 export async function downloadHazmatWithFields(
   manifestId: string, fields: HazmatFormFields,
 ): Promise<void> {
-  const res = await fetch(
-    `${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`,
+  const res = await authFetch(`${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

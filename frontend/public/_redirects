@@ -1,2 +1,6 @@
-/api/* http://187.77.18.154:8030/:splat 200
-/* /index.html 200
+# F2: API traffic must go over HTTPS to the Caddy-fronted backend.
+# NEVER point this at a raw IP:port — the previous value exposed the VPS
+# address and sent customs data over plain HTTP.
+# Replace api.stallion.example.com with your real API hostname.
+/api/*  https://api.stallion.example.com/:splat  200
+/*      /index.html                              200

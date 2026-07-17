@@ -292,11 +292,6 @@ def _write_lb01_worksheet_pdf(header: Dict[str, Any], worksheet: Dict[str, Any],
         for key in ("cpc","hs","desc","exw","inl","fob","cif","duty","other","vat","total"):
             vln(CX[key], y_top - height, y_top)
 
-    # — Column header row —
-    bx(ML, y-HDR_H, PW, HDR_H)
-    bg(ML, y-HDR_H, PW, HDR_H, grey=0.80)
-    draw_col_vlines(y, HDR_H)
-
     hdrs = [
         ("num",   "",               "left"),
         ("cpc",   "CPC",            "left"),
@@ -311,25 +306,46 @@ def _write_lb01_worksheet_pdf(header: Dict[str, Any], worksheet: Dict[str, Any],
         ("vat",   "VAT",            "right"),
         ("total", "TOTAL",          "right"),
     ]
-    for key, label, align in hdrs:
-        x_pos = CR[key] - 2 if align == "right" else CX[key] + 2
-        t(x_pos, y-10, label, "Helvetica-Bold", 6.5, align=align)
-    y -= HDR_H
-
-    # — Rate sub-header row —
-    bx(ML, y-RATE_H, PW, RATE_H)
-    bg(ML, y-RATE_H, PW, RATE_H, grey=0.92)
-    draw_col_vlines(y, RATE_H)
     rate_duty  = f"{duty_pct:.0f}%"  if duty_pct  else ""
     rate_surge = f"{surcharge_pct:.0f}%" if surcharge_pct else ""
     rate_vat   = f"{vat_pct:.0f}%"   if vat_pct   else ""
-    t(CR["duty"]-2,  y-7, rate_duty,  "Helvetica-Bold", 7, align="right")
-    t(CR["other"]-2, y-7, rate_surge, "Helvetica-Bold", 7, align="right")
-    t(CR["vat"]-2,   y-7, rate_vat,   "Helvetica-Bold", 7, align="right")
-    y -= RATE_H
 
-    # — Item rows —
-    for idx, item in enumerate(items[:10], start=1):
+    def draw_table_header(y_top: float) -> float:
+        """Draw column-header + rate rows starting at y_top; return new y.
+        Reused on continuation pages (F8: PDF must show ALL items)."""
+        yy = y_top
+        bx(ML, yy-HDR_H, PW, HDR_H)
+        bg(ML, yy-HDR_H, PW, HDR_H, grey=0.80)
+        draw_col_vlines(yy, HDR_H)
+        for key, label, align in hdrs:
+            x_pos = CR[key] - 2 if align == "right" else CX[key] + 2
+            t(x_pos, yy-10, label, "Helvetica-Bold", 6.5, align=align)
+        yy -= HDR_H
+        bx(ML, yy-RATE_H, PW, RATE_H)
+        bg(ML, yy-RATE_H, PW, RATE_H, grey=0.92)
+        draw_col_vlines(yy, RATE_H)
+        t(CR["duty"]-2,  yy-7, rate_duty,  "Helvetica-Bold", 7, align="right")
+        t(CR["other"]-2, yy-7, rate_surge, "Helvetica-Bold", 7, align="right")
+        t(CR["vat"]-2,   yy-7, rate_vat,   "Helvetica-Bold", 7, align="right")
+        return yy - RATE_H
+
+    y = draw_table_header(y)
+
+    # — Item rows — ALL items render; the table paginates when the page fills.
+    # (F8: previously truncated at items[:10] and broke silently at y<200,
+    # so the review PDF could omit lines present in the exported XML.)
+    PAGE_BREAK_Y = 120   # start a new page when less than this remains
+    CONT_TOP_Y   = H - 40
+    rendered = 0
+    for idx, item in enumerate(items, start=1):
+        if y - ITEM_H < PAGE_BREAK_Y:
+            t(ML, y-9, f"Continued on next page … ({idx-1} of {len(items)} items shown so far)",
+              "Helvetica-Oblique", 7, grey=0.3)
+            c.showPage()
+            y = CONT_TOP_Y
+            t(ML, y, f"LB-01 WORKSHEET — ITEMS (continued)", "Helvetica-Bold", 9)
+            y -= 14
+            y = draw_table_header(y)
         bx(ML, y-ITEM_H, PW, ITEM_H)
         if idx % 2 == 0:
             bg(ML, y-ITEM_H, PW, ITEM_H, grey=0.96)
@@ -346,7 +362,9 @@ def _write_lb01_worksheet_pdf(header: Dict[str, Any], worksheet: Dict[str, Any],
         sub2 = y - 19
         hs_code   = str(item.get("hsCode") or item.get("tarification_hscode_commodity_code") or "")
         desc      = str(item.get("description") or "")
-        i_cpc     = str(item.get("cpc") or "4000")
+        # F6: no silent CPC default — preflight blocks export when missing;
+        # render blank so a gap is visible, never fabricated.
+        i_cpc     = str(item.get("cpc") or "")
         i_exw     = float(item.get("itemValue") or 0)
         i_inl     = float(item.get("inlandValue") or 0)
         i_fob     = i_exw + i_inl
@@ -371,9 +389,17 @@ def _write_lb01_worksheet_pdf(header: Dict[str, Any], worksheet: Dict[str, Any],
         t(CR["vat"]-2,   sub2, n(i_vat),       "Helvetica",      7.5, align="right")
         t(CR["total"]-2, sub2, n(i_total),     "Helvetica-Bold", 7.5, align="right")
         y -= ITEM_H
+        rendered += 1
 
-        if y < 200:
-            break
+    # If the totals + duty summary block won't fit, move it to a fresh page
+    # rather than colliding with the footer.
+    if y < 200:
+        c.showPage()
+        y = CONT_TOP_Y
+
+    # Reconciliation check line (F8): the PDF must account for every item.
+    t(ML, y-8, f"Items rendered: {rendered} of {len(items)}", "Helvetica-Oblique", 6.5, grey=0.35)
+    y -= 12
 
     # — WORKSHEET TOTALS row —
     TOT_H = 14
@@ -521,6 +547,16 @@ def preflight_workbench(header: Dict[str, Any], worksheet: Dict[str, Any], items
     if not items:
         errors.append({"path": "items", "message": "At least one item is required"})
 
+    # ── F6: regulatory fields must be explicit — never defaulted ─────────────
+    # Missing origin / export / destination country or CPC used to fall back
+    # silently to TT / US / 4000 downstream. Block export instead.
+    if is_export:
+        if not str(header.get("destinationCountry") or header.get("countryFirstDestination") or "").strip():
+            errors.append({"path": "header.destinationCountry", "message": "Destination country is required for exports (no default is applied)"})
+    else:
+        if not str(header.get("exportCountryCode") or "").strip():
+            errors.append({"path": "header.exportCountryCode", "message": "Export country is required (no default is applied)"})
+
     seen_hs_desc: Set[str] = set()
     for i, item in enumerate(items or []):
         hs = str(item.get("hsCode") or "").strip()
@@ -536,6 +572,10 @@ def preflight_workbench(header: Dict[str, Any], worksheet: Dict[str, Any], items
             errors.append({"path": f"items[{i}].hsCode", "message": "HS code must be numeric and at least 6 digits"})
         if not desc:
             errors.append({"path": f"items[{i}].description", "message": "Description is required"})
+        if not is_export and not str(item.get("countryOfOrigin") or "").strip():
+            errors.append({"path": f"items[{i}].countryOfOrigin", "message": "Country of origin is required (no default is applied)"})
+        if not str(item.get("cpc") or "").strip():
+            errors.append({"path": f"items[{i}].cpc", "message": "CPC is required (no default of 4000 is applied)"})
         if val <= 0:
             errors.append({"path": f"items[{i}].itemValue", "message": "Item value must be > 0"})
         if qty <= 0:

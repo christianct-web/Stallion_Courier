@@ -123,10 +123,13 @@ def pack_generate(req: Dict[str, Any]):
 
         row = all_items[row_idx]
         row_status = str(row.get("status", "")).lower()
-        if row_status not in {"approved", "pending_review"}:
+        # F7: only APPROVED declarations may generate an uploadable pack.
+        # pending_review previously slipped through and could produce a
+        # C82 XML without final broker sign-off.
+        if row_status != "approved":
             raise HTTPException(
                 status_code=409,
-                detail=f"Declaration must be approved or pending_review before export (current: {row_status})",
+                detail=f"Declaration must be approved by a broker before export (current: {row_status}). Complete the review first.",
             )
 
     if declaration_id and all_items is not None and row_idx is not None:
