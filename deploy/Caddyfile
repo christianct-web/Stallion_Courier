@@ -1,0 +1,18 @@
+# Stallion Courier — TLS termination on the VPS (F2)
+# Caddy auto-provisions Let's Encrypt certificates for this hostname.
+# Point DNS: api.stallion.<yourdomain> -> VPS IP, then:  systemctl reload caddy
+
+api.stallion.example.com {
+    encode gzip
+
+    # Basic hardening headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        -Server
+    }
+
+    # Backend listens on localhost ONLY (uvicorn --host 127.0.0.1 --port 8030)
+    reverse_proxy 127.0.0.1:8030
+}

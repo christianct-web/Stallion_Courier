@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -24,6 +25,23 @@ REVIEW_ACTIONS = {
     "approved", "needs_correction", "rejected",
     "pending_review", "submitted", "receipted",
 }
+
+# F9: enforced status lifecycle. Key = current status, value = allowed next.
+# Anything not listed (including unknown/blank statuses) may only move to
+# pending_review — i.e. everything funnels through broker review.
+STATUS_TRANSITIONS: Dict[str, set] = {
+    "draft":            {"pending_review"},
+    "needs_correction": {"pending_review"},
+    "rejected":         {"pending_review"},
+    "pending_review":   {"approved", "needs_correction", "rejected"},
+    "approved":         {"submitted", "needs_correction"},
+    "submitted":        {"receipted", "needs_correction"},
+    "receipted":        set(),  # terminal
+}
+
+# F11: once a declaration reaches these states, its content is locked.
+LOCKED_STATUSES = {"approved", "submitted", "receipted"}
+CONTENT_FIELDS = {"header", "worksheet", "items", "containers", "declaration_type", "client_id"}
 
 
 # ─── Templates ────────────────────────────────────────────────────────────────
@@ -139,9 +157,48 @@ def declarations_upsert(req: Dict[str, Any]):
 
     found = next((i for i, r in enumerate(items) if str(r.get("id")) == row_id), None)
     if found is None:
+        # New records may only be created in a pre-review state. A client
+        # sending status=approved/submitted/receipted would otherwise mint a
+        # declaration that skips the review lifecycle (and passes the
+        # approved-only pack gate) — clamp anything privileged to draft.
+        requested_status = str(req.get("status") or "").strip().lower()
+        req["status"] = requested_status if requested_status in {"draft", "pending_review"} else "draft"
+        req.pop("revise", None)
         items.append(req)
     else:
-        items[found] = {**items[found], **req}
+        existing = items[found]
+        current_status = str(existing.get("status", "")).lower()
+        wants_revise = bool(req.pop("revise", False))
+        touches_content = any(
+            k in req and req[k] != existing.get(k) for k in CONTENT_FIELDS
+        )
+
+        # F11: approved/submitted/receipted declarations are immutable.
+        # A material edit requires revise=true, which invalidates the approval
+        # and returns the record to draft for a fresh review cycle.
+        if current_status in LOCKED_STATUSES and touches_content:
+            if not wants_revise:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"Declaration is {current_status} and its content is locked. "
+                        "Send revise=true to edit — this will reset status to draft "
+                        "and clear the existing approval."
+                    ),
+                )
+            req = {
+                **req,
+                "status": "draft",
+                "reviewed_by": None,
+                "reviewed_at": None,
+                "revised_at": datetime.now(timezone.utc).isoformat(),
+                "revision_note": f"Content edited after status '{current_status}'; approval invalidated.",
+            }
+        else:
+            # Status changes must go through the review endpoint, not upsert.
+            req.pop("status", None)
+
+        items[found] = {**existing, **req}
     save_declarations(items)
     return {"ok": True, "id": row_id}
 
@@ -171,27 +228,48 @@ def declarations_review(declaration_id: str, req: Dict[str, Any]):
             detail=f"Invalid action '{action}'. Allowed: {sorted(REVIEW_ACTIONS)}",
         )
 
+    # F9: enforce the status lifecycle — no created→receipted jumps.
+    current = str(items[idx].get("status", "") or "draft").lower()
+    allowed = STATUS_TRANSITIONS.get(current, {"pending_review"})
+    if action != current and action not in allowed:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Invalid status transition '{current}' → '{action}'. "
+                f"Allowed from '{current}': {sorted(allowed) or ['(terminal)']}"
+            ),
+        )
+
+    # F10 (interim until real user auth):
+    #   - reviewed_at is ALWAYS stamped server-side; client values ignored.
+    #   - reviewed_by must match STALLION_BROKERS (comma-separated) when set.
+    reviewed_by = str(req.get("reviewed_by") or "").strip()
+    allowed_brokers = [
+        b.strip() for b in os.environ.get("STALLION_BROKERS", "").split(",") if b.strip()
+    ]
+    if action in {"approved", "rejected", "needs_correction", "submitted", "receipted"}:
+        if not reviewed_by:
+            raise HTTPException(status_code=400, detail="reviewed_by is required for this action")
+        if allowed_brokers and reviewed_by not in allowed_brokers:
+            raise HTTPException(
+                status_code=403,
+                detail="reviewed_by is not an authorised broker for this deployment",
+            )
+
     patch: Dict[str, Any] = {
         "status":       action,
         "review_notes": req.get("review_notes", items[idx].get("review_notes", "")),
-        "reviewed_by":  req.get("reviewed_by",  items[idx].get("reviewed_by")),
-        "reviewed_at":  req.get("reviewed_at",  items[idx].get("reviewed_at")),
+        "reviewed_by":  reviewed_by or items[idx].get("reviewed_by"),
+        "reviewed_at":  datetime.now(timezone.utc).isoformat(),
     }
 
     if action == "receipted" and req.get("receipt_number"):
         patch["receipt_number"] = req["receipt_number"]
 
-    if req.get("client_id") is not None:
-        patch["client_id"] = req["client_id"]
-    if req.get("declaration_type"):
-        patch["declaration_type"] = req["declaration_type"]
-
-    if "header" in req:
-        patch["header"] = req["header"]
-    if "worksheet" in req:
-        patch["worksheet"] = req["worksheet"]
-    if "items" in req:
-        patch["items"] = req["items"]
+    # F10/F11: the review endpoint no longer accepts content edits
+    # (header/worksheet/items/client_id/declaration_type). Reviewing and
+    # editing are separate acts; edits go through the upsert endpoint,
+    # which invalidates approvals on material change.
 
     items[idx] = {**items[idx], **patch}
     save_declarations(items)

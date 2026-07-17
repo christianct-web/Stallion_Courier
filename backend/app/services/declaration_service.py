@@ -264,6 +264,8 @@ def build_complete_declaration(
     # ── General information — destination/origin swap for exports ─────────────
     if is_export:
         gen_info = {
+# FIXME(F6): legacy regulatory default — unreachable for pack export (preflight blocks first)
+            # but must be DELETED in Phase 3 when the field model is consolidated. See FIXSPEC.md.
             "country_country_first_destination": header.get("destinationCountry") or header.get("countryFirstDestination", "US"),
             "country_trading_country": header.get("tradingCountry", "US"),
             "export_export_country_code": "TT",
@@ -282,6 +284,8 @@ def build_complete_declaration(
         }
     else:
         gen_info = {
+# FIXME(F6): legacy regulatory default — unreachable for pack export (preflight blocks first)
+            # but must be DELETED in Phase 3 when the field model is consolidated. See FIXSPEC.md.
             "country_country_first_destination": header.get("countryFirstDestination", "US"),
             "country_trading_country": header.get("tradingCountry", "US"),
             "export_export_country_code": header.get("exportCountryCode", "US"),

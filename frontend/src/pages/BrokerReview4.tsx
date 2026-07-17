@@ -3,12 +3,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   listDeclarations,
   reviewDeclaration,
+  upsertDeclaration,
   generateBrokerageInvoice,
   generateCostingFromDeclaration,
   generatePack,
   listClients,
   calculateWorksheet,
   STALLION_BASE_URL,
+  withKey,
   type Client,
 } from "@/services/stallionApi";
 import { TopNav } from "@/components/TopNav";
@@ -349,7 +351,7 @@ function ExportHistory({ events }: { events: any[] }) {
               {ev.at ? new Date(ev.at).toLocaleString() : "—"}
             </span>
             {ev.ref && (
-              <a href={`${STALLION_BASE_URL}/pack/file/${ev.ref}`} target="_blank" rel="noopener noreferrer"
+              <a href={withKey(`${STALLION_BASE_URL}/pack/file/${ev.ref}`)} target="_blank" rel="noopener noreferrer"
                 style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.approved, textDecoration: "none" }}>
                 ↓ {ev.ref.slice(0, 16)}
               </a>
@@ -528,7 +530,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, marginTop: 2 }}>{generated.doc_id}</div>
           </div>
           <a
-            href={`${STALLION_BASE_URL}${generated.download_url}`}
+            href={withKey(`${STALLION_BASE_URL}${generated.download_url}`)}
             target="_blank" rel="noopener noreferrer"
             style={{ padding: "8px 18px", background: green, color: "#fff", borderRadius: 4, fontFamily: "'Fraunces', serif", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
           >
@@ -546,7 +548,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: inkM }}>{inv.docId}</div>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: inkL }}>{new Date(inv.generatedAt).toLocaleDateString()}</span>
-                <a href={`${STALLION_BASE_URL}/pack/file/${inv.docId}`} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green }}>↓ PDF</a>
+                <a href={withKey(`${STALLION_BASE_URL}/pack/file/${inv.docId}`)} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green }}>↓ PDF</a>
               </div>
             </div>
           ))}
@@ -673,13 +675,10 @@ function ReviewPanel({
   const isDone      = isReceipted;
 
   const generatePackAndGetUrls = async () => {
-    const res = await generatePack({
-      declaration_id: decl.id,
-      header: decl.header || {},
-      worksheet: decl.worksheet || {},
-      items: localItems || [],
-      containers: (decl as any).containers || [],
-    });
+    // Server generates strictly from the stored approved snapshot — sending
+    // content here would be ignored (and previously allowed exporting
+    // unapproved edits). Unsaved local edits must go through review first.
+    const res = await generatePack({ declaration_id: decl.id });
     if (res.status !== "generated" || !res.documents?.length) {
       throw new Error("Pack generation blocked or no documents returned.");
     }
@@ -695,7 +694,7 @@ function ReviewPanel({
     try {
       const { worksheetUrl } = await generatePackAndGetUrls();
       if (!worksheetUrl) return alert("Worksheet file not returned.");
-      window.open(worksheetUrl, "_blank", "noopener,noreferrer");
+      window.open(withKey(worksheetUrl), "_blank", "noopener,noreferrer");
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download worksheet");
     }
@@ -705,7 +704,7 @@ function ReviewPanel({
     try {
       const { xmlUrl } = await generatePackAndGetUrls();
       if (!xmlUrl) return alert("XML file not returned.");
-      window.open(xmlUrl, "_blank", "noopener,noreferrer");
+      window.open(withKey(xmlUrl), "_blank", "noopener,noreferrer");
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download XML");
     }
@@ -1187,7 +1186,7 @@ function ReviewPanel({
               </button>
               {costingDocId && (
                 <a
-                  href={`${STALLION_BASE_URL}/pack/file/${costingDocId}`}
+                  href={withKey(`${STALLION_BASE_URL}/pack/file/${costingDocId}`)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1513,19 +1512,32 @@ export default function BrokerReview4() {
     id: string, status: string, notes: string, updated: any
   ) => {
     try {
+      // The review endpoint intentionally ignores content fields (F10/F11) —
+      // broker edits must be persisted via upsert BEFORE the status
+      // transition, or the approved record would not match what was reviewed.
+      const hasEdits =
+        updated?.header || updated?.worksheet || updated?.items || updated?.client_id;
+      if (hasEdits) {
+        await upsertDeclaration({
+          id,
+          ...(updated?.header    ? { header:    updated.header }    : {}),
+          ...(updated?.worksheet ? { worksheet: updated.worksheet } : {}),
+          ...(updated?.items     ? { items:     updated.items }     : {}),
+          ...(updated?.client_id ? { client_id: updated.client_id } : {}),
+          updated_at: new Date().toISOString(),
+        });
+      }
       await reviewDeclaration(id, {
         action:         status,
         review_notes:   notes,
         reviewed_by:    "Broker",
-        reviewed_at:    new Date().toISOString(),
         receipt_number: updated?.receipt_number,
-        header:         updated?.header,
-        worksheet:      updated?.worksheet,
-        items:          updated?.items,
-        client_id:      updated?.client_id,
       });
-    } catch {
-      // optimistic update regardless
+    } catch (e: any) {
+      // Do NOT pretend it worked — a failed save/transition here means the
+      // broker's decision or edits were not recorded.
+      alert(e?.message || "Failed to save review — the change was not recorded.");
+      return;
     }
 
     setBatch(b => b.map(d => d.id === id ? {

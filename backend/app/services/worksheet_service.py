@@ -32,11 +32,23 @@ def calculate_from_dict(worksheet: Dict[str, Any]) -> Dict[str, Any]:
     surcharge_pct = float(worksheet.get("surcharge_rate_pct") or 0)
     vat_pct       = float(worksheet.get("vat_rate_pct") or 0)
 
-    duty      = float(worksheet.get("duty") or cif_l * duty_pct / 100)
-    surcharge = float(worksheet.get("surcharge") or cif_l * surcharge_pct / 100)
-    vat       = float(worksheet.get("vat") or ((cif_l + duty + surcharge) * vat_pct / 100))
+    def _override_or(computed: float, *keys: str) -> float:
+        """Return the first explicitly-provided numeric value among *keys*,
+        honouring a deliberate 0. Falls back to *computed* only when every
+        key is absent, None, or blank. (Fix F5: `or` treated 0 as missing.)
+        """
+        for k in keys:
+            if k in worksheet and worksheet[k] is not None and str(worksheet[k]).strip() != "":
+                return float(worksheet[k])
+        return computed
 
-    cfu   = float(worksheet.get("customs_user_fee") or worksheet.get("extra_fees_local") or 80)
+    duty      = _override_or(cif_l * duty_pct / 100, "duty")
+    surcharge = _override_or(cif_l * surcharge_pct / 100, "surcharge")
+    vat       = _override_or((cif_l + duty + surcharge) * vat_pct / 100, "vat")
+
+    # Customs User Fee: default 80 only when the field is truly absent —
+    # an explicit 0 (e.g. exempt consignment) must survive.
+    cfu   = _override_or(80.0, "customs_user_fee", "extra_fees_local")
     ces1  = float(worksheet.get("ces_fee_1") or worksheet.get("ces_fees") or 0)
     ces2  = float(worksheet.get("ces_fee_2") or 0)
 

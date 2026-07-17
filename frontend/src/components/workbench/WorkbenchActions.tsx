@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { STALLION_BASE_URL, generateCostingFromWorksheet } from "@/services/stallionApi";
+import { STALLION_BASE_URL, generateCostingFromWorksheet, withKey } from "@/services/stallionApi";
 
 interface PreflightResult {
   status: "pass" | "fail";
@@ -177,7 +177,7 @@ function PackResult({ packResult }: { packResult: any }) {
         {links.map(d => (
           <a
             key={d.name}
-            href={`${STALLION_BASE_URL}${d.url}`}
+            href={withKey(`${STALLION_BASE_URL}${d.url}`)}
             target="_blank"
             rel="noopener noreferrer"
             className="wb-download-link"
@@ -293,7 +293,7 @@ export function WorkbenchActions({
 
           {costingDocId && (
             <a
-              href={`${STALLION_BASE_URL}/pack/file/${costingDocId}`}
+              href={withKey(`${STALLION_BASE_URL}/pack/file/${costingDocId}`)}
               target="_blank"
               rel="noreferrer"
               className="wb-download-link"
