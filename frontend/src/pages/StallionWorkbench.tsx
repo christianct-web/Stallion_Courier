@@ -7,6 +7,7 @@ import {
   generatePack,
   getLookup,
   getTemplates,
+  reviewDeclaration,
   upsertDeclaration,
   STALLION_BASE_URL,
 } from "@/services/stallionApi";
@@ -482,7 +483,9 @@ export default function StallionWorkbench() {
       const header    = buildHeader(form);
       const worksheet = buildWorksheet(form);
 
-      // Upsert as pending_review before generating so broker queue sees it
+      // Upsert as pending_review before generating so broker queue sees it.
+      // The stored worksheet includes the calc results because the server
+      // generates packs from the STORED snapshot only (body content ignored).
       await upsertDeclaration({
         id:         declarationId,
         status:     "pending_review",
@@ -490,22 +493,23 @@ export default function StallionWorkbench() {
         source:     { type: "WORKBENCH", filename: "manual-entry" },
         confidence: 100,
         header,
-        worksheet,
+        worksheet:  { ...worksheet, ...(calc ?? {}) },
         items,
         containers,
         review_notes: "",
       });
 
-      const result = await generatePack({
-        declaration_id: declarationId,
-        header,
-        worksheet: {
-          ...worksheet,
-          ...(calc ?? {}),
-        },
-        items,
-        containers,
-      });
+      // Upsert no longer carries status on existing records (F9) — move the
+      // record into the broker queue via the review lifecycle. Best-effort:
+      // already-pending records no-op, and locked/approved records keep their
+      // state (regenerating an approved pack must not reset its approval).
+      try {
+        await reviewDeclaration(declarationId, { action: "pending_review" });
+      } catch {
+        /* invalid transition (e.g. already approved) — leave status as-is */
+      }
+
+      const result = await generatePack({ declaration_id: declarationId });
 
       setPackResult(result);
       if (result.preflight) setPreflight(result.preflight);

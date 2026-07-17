@@ -295,6 +295,33 @@ def test_revise_resets_status_and_clears_approval(app_client):
     app_client.delete(f"/declarations/{did}")
 
 
+def test_create_with_privileged_status_is_clamped_to_draft(app_client):
+    # A brand-new record must not be creatable directly as approved/submitted —
+    # that would skip the review lifecycle and pass the approved-only pack gate.
+    for smuggled in ("approved", "submitted", "receipted", "APPROVED"):
+        did = f"test-{uuid.uuid4().hex[:8]}"
+        r = app_client.post("/declarations", json={
+            "id": did, "status": smuggled,
+            "header": _base_header(), "items": [_base_item()],
+        })
+        assert r.status_code == 200, r.text
+        row = app_client.get(f"/declarations/{did}").json()
+        assert row["status"] == "draft", f"created with '{smuggled}' → {row['status']}"
+        app_client.delete(f"/declarations/{did}")
+
+
+def test_create_with_pending_review_is_preserved(app_client):
+    # The workbench legitimately creates records straight into the broker queue.
+    did = f"test-{uuid.uuid4().hex[:8]}"
+    r = app_client.post("/declarations", json={
+        "id": did, "status": "pending_review",
+        "header": _base_header(), "items": [_base_item()],
+    })
+    assert r.status_code == 200, r.text
+    assert app_client.get(f"/declarations/{did}").json()["status"] == "pending_review"
+    app_client.delete(f"/declarations/{did}")
+
+
 def test_upsert_cannot_smuggle_status_change(app_client):
     did = _mk_decl(app_client)
     r = app_client.post("/declarations", json={"id": did, "status": "approved"})
@@ -313,4 +340,29 @@ def test_pending_review_cannot_generate_pack(app_client):
     r = app_client.post("/pack/generate", json={"declaration_id": did})
     assert r.status_code == 409
     assert "approved" in r.json()["detail"].lower()
+    app_client.delete(f"/declarations/{did}")
+
+
+def test_pack_generates_from_stored_snapshot_not_request_body(app_client):
+    # The approved-status gate certifies the STORED content; body content must
+    # be ignored, or a caller could export PDF/XML for data that was never
+    # approved by passing an approved id plus modified header/items.
+    did = _mk_decl(app_client)
+    for action in ("pending_review", "approved"):
+        r = app_client.patch(f"/declarations/{did}/review",
+                             json={"action": action, "reviewed_by": "Jason Maule"})
+        assert r.status_code == 200, r.text
+
+    # Tampered body: items missing origin/cpc would fail preflight if used.
+    r = app_client.post("/pack/generate", json={
+        "declaration_id": did,
+        "header": _base_header(exportCountryCode=""),
+        "items": [_base_item(countryOfOrigin="", cpc="", itemValue=999999)],
+    })
+    assert r.status_code == 200, r.text
+    preflight_errors = [e["path"] for e in r.json().get("preflight", {}).get("errors", [])]
+    # If the tampered body had been used, these preflight errors would appear.
+    assert "items[0].countryOfOrigin" not in preflight_errors
+    assert "items[0].cpc" not in preflight_errors
+    assert "header.exportCountryCode" not in preflight_errors
     app_client.delete(f"/declarations/{did}")

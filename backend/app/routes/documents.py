@@ -133,13 +133,19 @@ def pack_generate(req: Dict[str, Any]):
             )
 
     if declaration_id and all_items is not None and row_idx is not None:
+        # The approved-status gate above certifies the STORED snapshot, so the
+        # pack must be generated from it. Request-body content is ignored —
+        # otherwise a caller could pass an approved id with modified
+        # header/items and receive uploadable PDF/XML for data that was never
+        # approved. Edits go through the upsert endpoint (which invalidates
+        # approval), never through pack generation.
         row = all_items[row_idx]
         req = {
             **req,
-            "header": req.get("header") or row.get("header") or {},
-            "worksheet": req.get("worksheet") or row.get("worksheet") or {},
-            "items": req.get("items") or row.get("items") or [],
-            "containers": req.get("containers") or row.get("containers") or [],
+            "header": row.get("header") or {},
+            "worksheet": row.get("worksheet") or {},
+            "items": row.get("items") or [],
+            "containers": row.get("containers") or [],
         }
 
     result = generate_pack(req)

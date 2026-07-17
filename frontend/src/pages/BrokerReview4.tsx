@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   listDeclarations,
   reviewDeclaration,
+  upsertDeclaration,
   generateBrokerageInvoice,
   generateCostingFromDeclaration,
   generatePack,
@@ -674,13 +675,10 @@ function ReviewPanel({
   const isDone      = isReceipted;
 
   const generatePackAndGetUrls = async () => {
-    const res = await generatePack({
-      declaration_id: decl.id,
-      header: decl.header || {},
-      worksheet: decl.worksheet || {},
-      items: localItems || [],
-      containers: (decl as any).containers || [],
-    });
+    // Server generates strictly from the stored approved snapshot — sending
+    // content here would be ignored (and previously allowed exporting
+    // unapproved edits). Unsaved local edits must go through review first.
+    const res = await generatePack({ declaration_id: decl.id });
     if (res.status !== "generated" || !res.documents?.length) {
       throw new Error("Pack generation blocked or no documents returned.");
     }
@@ -1514,19 +1512,32 @@ export default function BrokerReview4() {
     id: string, status: string, notes: string, updated: any
   ) => {
     try {
+      // The review endpoint intentionally ignores content fields (F10/F11) —
+      // broker edits must be persisted via upsert BEFORE the status
+      // transition, or the approved record would not match what was reviewed.
+      const hasEdits =
+        updated?.header || updated?.worksheet || updated?.items || updated?.client_id;
+      if (hasEdits) {
+        await upsertDeclaration({
+          id,
+          ...(updated?.header    ? { header:    updated.header }    : {}),
+          ...(updated?.worksheet ? { worksheet: updated.worksheet } : {}),
+          ...(updated?.items     ? { items:     updated.items }     : {}),
+          ...(updated?.client_id ? { client_id: updated.client_id } : {}),
+          updated_at: new Date().toISOString(),
+        });
+      }
       await reviewDeclaration(id, {
         action:         status,
         review_notes:   notes,
         reviewed_by:    "Broker",
-        reviewed_at:    new Date().toISOString(),
         receipt_number: updated?.receipt_number,
-        header:         updated?.header,
-        worksheet:      updated?.worksheet,
-        items:          updated?.items,
-        client_id:      updated?.client_id,
       });
-    } catch {
-      // optimistic update regardless
+    } catch (e: any) {
+      // Do NOT pretend it worked — a failed save/transition here means the
+      // broker's decision or edits were not recorded.
+      alert(e?.message || "Failed to save review — the change was not recorded.");
+      return;
     }
 
     setBatch(b => b.map(d => d.id === id ? {

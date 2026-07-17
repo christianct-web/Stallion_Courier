@@ -157,7 +157,12 @@ def declarations_upsert(req: Dict[str, Any]):
 
     found = next((i for i, r in enumerate(items) if str(r.get("id")) == row_id), None)
     if found is None:
-        req.setdefault("status", "draft")
+        # New records may only be created in a pre-review state. A client
+        # sending status=approved/submitted/receipted would otherwise mint a
+        # declaration that skips the review lifecycle (and passes the
+        # approved-only pack gate) — clamp anything privileged to draft.
+        requested_status = str(req.get("status") or "").strip().lower()
+        req["status"] = requested_status if requested_status in {"draft", "pending_review"} else "draft"
         req.pop("revise", None)
         items.append(req)
     else:
