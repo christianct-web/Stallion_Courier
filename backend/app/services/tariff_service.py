@@ -136,6 +136,11 @@ def _score_match(entry: Dict[str, Any], keywords: List[str]) -> float:
     Higher = better match. Returns 0 if no keywords match.
     """
     desc = _normalize(entry.get("description", ""))
+    # Government wording from TTBizLink (see scripts/tariff/ttbizlink_merge.py)
+    # is searchable alongside the CET text.
+    official = _normalize(entry.get("officialDescription", "") or "")
+    if official and official != desc:
+        desc = f"{desc} {official}"
     notes = _normalize(entry.get("notes", ""))
     code = entry.get("code", "")
     combined = f"{desc} {notes}"
@@ -167,6 +172,12 @@ def _score_match(entry: Dict[str, Any], keywords: List[str]) -> float:
     # Bonus for shorter descriptions (more specific entries)
     if len(desc) < 40:
         score += 2.0
+
+    # Quarantined entries (OCR-suspect codes/rates/descriptions, see
+    # scripts/tariff/quarantine.py) still surface, but never above a clean
+    # entry with comparable relevance.
+    if entry.get("needsReview"):
+        score *= 0.5
 
     return score
 
