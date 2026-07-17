@@ -8,7 +8,7 @@ fixes). Item 5 (VAT zero-rating schedule + specific-duty support) is
 
 | Problem | Count | Example |
 |---|---|---|
-| Raw Tesseract TSV dumps as descriptions | 76 (two at 10,475 chars) | `09101200`, `09102000` |
+| Raw Tesseract TSV dumps as descriptions | 2 (10,475 chars each) | `09101200`, `09102000` |
 | Missing spice headings (OCR page failure) | 0906–0909 entirely absent | cinnamon, cloves, nutmeg |
 | Phantom codes (6-digit prefix not in HS 2022) | 42 (40 excl. national ch 98/99) | `77283000`, `30111000`, `20411000` |
 | Missing HS 2022 subheadings (no TT entry) | 710 | worst: ch84 (68), ch29 (49), ch85 (48) |
@@ -30,11 +30,15 @@ phantom entry — chapter 77 is reserved/empty in the HS.
    printed in the CET. All flagged `recovered_from_ocr_dump` + needsReview.
    `09101100` was deliberately NOT added — its rate OCR-reads "4%" where the
    chapter pattern is 40%: **broker to confirm from the CET PDF.**
-3. **Quarantine pass** (`scripts/tariff/quarantine.py`): replaced all 76
-   dump descriptions with official HS 2022 text, stripped junk characters,
-   flagged 43 nonstandard duty rates and 40 phantom codes with
-   `needsReview` — **no rate was altered**. Machine report:
-   `docs/tariff/quarantine_report.json`.
+3. **Quarantine pass** (`scripts/tariff/quarantine.py`): detects raw
+   Tesseract TSV signatures in descriptions (the 2 true dumps are repaired
+   by the salvage step; any future ones fall back to official HS 2022
+   text), strips junk characters, and flags 43 nonstandard duty rates and
+   40 phantom codes with `needsReview` — **no rate was altered**. Length
+   alone never triggers a rewrite: 74 long-but-genuine hierarchical
+   descriptions (e.g. 19059010 "Biscuits, unsweetened") are preserved
+   (initially misclassified; corrected after Codex review). Machine
+   report: `docs/tariff/quarantine_report.json`.
 4. **TTBizLink merge** (`scripts/tariff/ttbizlink_merge.py`): aggregated the
    earlier Claude-chat scrape artifacts (363 unique 8-digit codes with
    official government wording, mojibake repaired). 275 entries gained an
@@ -47,8 +51,10 @@ phantom entry — chapter 77 is reserved/empty in the HS.
    TSV-signature detection, rate whitelist, phantom-code check, critical
    broker THNs, salvaged codes — so a bad rebuild can never ship silently.
 
-Result: **5,827 entries**, 0 corrupted descriptions, 175 flagged for broker
-review, full suite 157 passed.
+Result: **5,827 entries**, 0 corrupted descriptions, 101 flagged for broker
+review, full suite 160 passed. Quarantined entries are searchable but are
+never silently auto-assigned by the courier matcher — the line stays
+unclassified with suggestions attached until a broker picks one.
 
 ## Open work (in priority order)
 

@@ -75,8 +75,11 @@ def main() -> int:
         thn = e["thn"]
         desc = e.get("description") or ""
 
-        # 1. TSV dump / oversized OCR noise → official HS 2022 text fallback
-        if is_dump(desc) or len(desc) > 300:
+        # 1. TSV dump → official HS 2022 text fallback. Only the Tesseract
+        # TSV signature marks corruption — length alone must NOT: genuine
+        # CET wording can run long (e.g. 03055400's species enumeration),
+        # and rewriting it would destroy real matcher vocabulary.
+        if is_dump(desc):
             official = hs6.get(thn[:6])
             e["description"] = official or "[OCR-corrupted description — needs review]"
             flag(e, "ocr_dump_description")

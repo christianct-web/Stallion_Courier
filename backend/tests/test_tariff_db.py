@@ -119,6 +119,40 @@ def test_critical_broker_thns_present(entries):
     assert not missing, f"critical broker THNs missing: {missing}"
 
 
+def test_legit_long_descriptions_survive_quarantine(entries):
+    # Codex review P1: length alone must not trigger description rewrites.
+    # 19059010's 300+ char hierarchical wording is genuine CET text and the
+    # matcher depends on its leaf term.
+    e = next(x for x in entries if x["thn"] == "19059010")
+    assert e["description"].endswith("Biscuits, unsweetened")
+    assert "ocr_dump_description" not in (e.get("flags") or [])
+
+
+def test_quarantined_suggestions_flagged_for_review():
+    # Codex review P1: OCR-recovered entries may be suggested but must carry
+    # tariff_needs_review so they are never silently auto-assigned.
+    from app.services import courier_matcher
+    m = courier_matcher.suggest_thns("cinnamon", limit=5)
+    best = m.get("best_match") or {}
+    assert best.get("thn") == "09061100"
+    assert best.get("tariff_needs_review") is True
+
+
+def test_auto_thn_refuses_quarantined_best_match(monkeypatch):
+    # add_line_with_auto_thn must leave the line unclassified (suggestions
+    # attached) when the best match is backed by a quarantined tariff entry.
+    from app.services import courier_service
+    captured: dict = {}
+    monkeypatch.setattr(
+        courier_service, "add_line",
+        lambda mid, payload: captured.update(payload) or dict(payload),
+    )
+    courier_service.add_line_with_auto_thn("m-test", {"description": "cinnamon"})
+    assert not (captured.get("thn") or "").strip()
+    assert captured.get("thn_needs_review") is True
+    assert captured.get("thn_suggestions")
+
+
 def test_vat_values_sane(entries):
     # Until the zero-rating schedule lands (broker sign-off pending), VAT is
     # uniformly 12.5 — but never null/negative/other.
