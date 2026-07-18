@@ -364,7 +364,7 @@ def _build_suggestion(
         else "(operational classification — verify against CET)"
     )
 
-    return {
+    suggestion = {
         "thn": thn,
         "code": code,
         "description": description,
@@ -375,6 +375,13 @@ def _build_suggestion(
         "match_reason": match_reason,
         "is_unknown": cls.is_unknown,
     }
+    # Quarantined DB entries (OCR-recovered/suspect codes or rates, see
+    # scripts/tariff/quarantine.py) may be SUGGESTED but never silently
+    # auto-assigned — their rates aren't broker-confirmed yet.
+    if entry and entry.get("needsReview"):
+        suggestion["tariff_needs_review"] = True
+        suggestion["needs_review"] = True
+    return suggestion
 
 
 # ── Suppression rules ────────────────────────────────────────────────────

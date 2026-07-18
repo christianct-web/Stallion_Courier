@@ -100,13 +100,12 @@ def main() -> int:
         if e.get("officialDescription") != official:
             e["officialDescription"] = official
             enriched += 1
-        # Replace quarantined descriptions only when the official wording is
-        # actually more informative than the current fallback — TTBizLink
-        # returns bare "Other" for some leaves, which must not overwrite the
-        # HS 2022 parent-context text quarantine put there.
+        # For quarantined descriptions, the government's leaf-level wording
+        # beats the generic HS 2022 6-digit fallback quarantine put there
+        # (e.g. "Biscuits, unsweetened" vs the whole 1905 heading text) —
+        # except bare "Other", which is less informative than the fallback.
         if "ocr_dump_description" in (e.get("flags") or []):
-            current = e.get("description") or ""
-            if official.lower().strip(" -") != "other" and len(official) >= len(current):
+            if official.lower().strip(" -") != "other":
                 e["description"] = official
                 replaced += 1
 
