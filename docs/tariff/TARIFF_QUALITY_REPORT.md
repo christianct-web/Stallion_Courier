@@ -40,21 +40,28 @@ phantom entry — chapter 77 is reserved/empty in the HS.
    (initially misclassified; corrected after Codex review). Machine
    report: `docs/tariff/quarantine_report.json`.
 4. **TTBizLink merge** (`scripts/tariff/ttbizlink_merge.py`): aggregated the
-   earlier Claude-chat scrape artifacts (363 unique 8-digit codes with
-   official government wording, mojibake repaired). 275 entries gained an
-   `officialDescription` (search now indexes it); 88 confirmed-real missing
-   codes recorded in `docs/tariff/ttbizlink_missing_codes.json` — not
+   earlier Claude-chat scrape artifacts plus the scaled SmartHS harvest
+   (`ttbizlink_raw.jsonl`). The scaled pass attempted 4,515 new vocabulary
+   terms and succeeded on 4,512; only `tall`, `effects`, and `sulphonyl`
+   returned 400. A reachability probe also confirmed `ginger` succeeds while
+   `nutmeg` returns 400. The merge now sees 2,852 unique 8-digit codes with
+   official government wording. 2,281 entries now carry an
+   `officialDescription` (search indexes it); 571 confirmed-real missing
+   codes are recorded in `docs/tariff/ttbizlink_missing_codes.json` — not
    inserted, because TTBizLink returns no duty rates.
 5. **Search hardening** (`tariff_service.py`): quarantined entries score at
    half weight; official descriptions are searchable.
 6. **CI gate** (`backend/tests/test_tariff_db.py`): 13 integrity tests —
    TSV-signature detection, rate whitelist, phantom-code check, critical
    broker THNs, salvaged codes — so a bad rebuild can never ship silently.
+   `backend/tests/test_ttbizlink_merge.py` also locks the double-encoded
+   SmartHS JSONL parser used by the scaled harvester.
 
 Result: **5,827 entries**, 0 corrupted descriptions, 101 flagged for broker
-review, full suite 160 passed. Quarantined entries are searchable but are
-never silently auto-assigned by the courier matcher — the line stays
-unclassified with suggestions attached until a broker picks one.
+review. Quarantined entries are searchable but are never silently
+auto-assigned by the courier matcher — the line stays unclassified with
+suggestions attached until a broker picks one. Rebased verification:
+backend suite 163 passed; frontend typecheck and production build passed.
 
 ## Open work (in priority order)
 
@@ -63,17 +70,12 @@ unclassified with suggestions attached until a broker picks one.
    - The 43 flagged nonstandard rates — ch22/24 are specific duties ($/L)
      that the schema cannot yet represent (blocked on item 5 sign-off).
    - The 40 phantom codes: delete or correct each against the PDF.
-2. **Rate lookup for the 88 TTBizLink-confirmed missing codes**
+2. **Rate lookup for the 571 TTBizLink-confirmed missing codes**
    (`ttbizlink_missing_codes.json`) — descriptions are official; rates must
    come from the CET PDF.
-3. **Run the scaled harvester locally** (`scripts/tariff/ttbizlink_harvest.py`)
-   — the government API is not reachable from the cloud sandbox (proxy 403).
-   Run from an office machine, commit the JSONL, re-run the merge. The
-   vocabulary derives from the DB's own descriptions, so coverage grows
-   with each pass.
-4. **Remaining 710 missing HS 2022 subheadings** — many are simply not in
+3. **Remaining HS 2022 subheading gaps** — many are simply not in
    T&T's CET as separate national lines (legitimate), but ch84/85/29 gaps
    overlap with what brokers actually import. Cross-check against the PDF
-   page ranges for those chapters, or wait for harvest coverage.
-5. **Item 5 (after sign-off)**: VAT Schedule 2 zero-rating layer +
+   page ranges for those chapters.
+4. **Item 5 (after sign-off)**: VAT Schedule 2 zero-rating layer +
    `specificDuty` field for ch22/24, honoured by `courier_duty.py`.
