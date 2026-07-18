@@ -65,6 +65,18 @@ def _walk(node, out: dict) -> None:
             _walk(v, out)
 
 
+def load_nested_json(value):
+    """Decode SmartHS responses saved as JSON, or as JSON inside a JSON string."""
+    for _ in range(3):
+        if not isinstance(value, str):
+            return value
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            return value
+    return value
+
+
 def collect() -> dict:
     codes: dict = {}
     for pattern in RAW_GLOBS:
@@ -77,8 +89,7 @@ def collect() -> dict:
         for line in open(RAW_JSONL):
             try:
                 rec = json.loads(line)
-                resp = rec.get("response")
-                _walk(json.loads(resp) if isinstance(resp, str) else resp, codes)
+                _walk(load_nested_json(rec.get("response")), codes)
             except (json.JSONDecodeError, TypeError):
                 continue
     return codes
