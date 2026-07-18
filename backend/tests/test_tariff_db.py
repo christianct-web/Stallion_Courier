@@ -153,6 +153,34 @@ def test_auto_thn_refuses_quarantined_best_match(monkeypatch):
     assert captured.get("thn_suggestions")
 
 
+def test_no_mojibake_in_text_fields(entries):
+    # Codex review P2: utf-8-as-latin-1 artifacts (â€™ etc.) must not reach
+    # broker-visible wording.
+    bad = [e["thn"] for e in entries
+           if "â" in (e.get("description") or "")
+           or "Ã" in (e.get("description") or "")
+           or "â" in (e.get("officialDescription") or "")]
+    assert not bad, f"mojibake in text fields: {bad[:10]}"
+
+
+def test_add_line_persists_thn_needs_review(monkeypatch):
+    # Codex review P2: the deliberate-block marker must survive add_line's
+    # field whitelist so clients can distinguish "blocked pending broker
+    # review" from "no match".
+    from app.services import courier_service
+    store = [{"id": "m-test", "lines": [], "exch_rate": 6.75, "totals": {}}]
+    monkeypatch.setattr(courier_service, "load_manifests", lambda: store)
+    monkeypatch.setattr(courier_service, "save_manifests", lambda items: None)
+    line = courier_service.add_line("m-test", {
+        "description": "cinnamon", "cost_usd": 10, "thn_needs_review": True,
+    })
+    assert line["thn_needs_review"] is True
+    plain = courier_service.add_line("m-test", {
+        "description": "smartphone", "thn": "85171300", "cost_usd": 10,
+    })
+    assert plain["thn_needs_review"] is False
+
+
 def test_vat_values_sane(entries):
     # Until the zero-rating schedule lands (broker sign-off pending), VAT is
     # uniformly 12.5 — but never null/negative/other.

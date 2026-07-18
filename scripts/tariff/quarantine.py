@@ -54,6 +54,17 @@ def is_dump(desc: str) -> bool:
     return len(desc) > 300 and bool(TSV_SIGNATURE.search(desc))
 
 
+def demojibake(s: str) -> str:
+    """Repair utf-8 text decoded as latin-1 (â€™ → ’). The v3 extraction
+    carried this into ~17 descriptions; same helper as ttbizlink_merge.py."""
+    if "â" in s or "Ã" in s:
+        try:
+            return s.encode("latin-1").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            return s
+    return s
+
+
 def flag(e: dict, name: str) -> None:
     e.setdefault("flags", [])
     if name not in e["flags"]:
@@ -87,8 +98,8 @@ def main() -> int:
             detail["ocr_dump_description"].append(thn)
             desc = e["description"]
 
-        # 2. leading junk characters
-        cleaned = LEADING_JUNK.sub("", desc)
+        # 2. leading junk characters + mojibake repair
+        cleaned = demojibake(LEADING_JUNK.sub("", desc))
         if cleaned != desc:
             e["description"] = cleaned
             stats["junk_cleaned"] += 1

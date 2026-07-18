@@ -284,6 +284,10 @@ def add_line(manifest_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, An
         "thn_suggestions": payload.get("thn_suggestions") or payload.get("_thn_suggestions") or [],
         "thn_confidence": payload.get("thn_confidence"),
         "thn_match_source": payload.get("thn_match_source") or payload.get("_thn_match_source") or "",
+        # True when auto-classification deliberately withheld a quarantined
+        # THN (unconfirmed OCR rate) — distinguishes "blocked pending broker
+        # review" from "no match found" for API/UI clients.
+        "thn_needs_review": bool(payload.get("thn_needs_review")),
     }
 
     _compute_line(line, _ensure_float(manifest.get("exch_rate")))
