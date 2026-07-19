@@ -5,14 +5,14 @@ from __future__ import annotations
 
 import csv
 import io
-import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
+from ..auth import request_user
 from ..models import DeclarationReq, ExportReq, TemplateIn, TemplateOut, WorksheetInput
 from ..services.declaration_service import export_xml, validate_decl
 from ..services.worksheet_service import calculate_worksheet
@@ -215,7 +215,7 @@ def declarations_delete(declaration_id: str):
 
 # ─── Review / status transition ───────────────────────────────────────────────
 @router.patch("/declarations/{declaration_id}/review")
-def declarations_review(declaration_id: str, req: Dict[str, Any]):
+def declarations_review(declaration_id: str, req: Dict[str, Any], request: Request):
     items = load_declarations()
     idx = next((i for i, r in enumerate(items) if str(r.get("id")) == declaration_id), None)
     if idx is None:
@@ -240,21 +240,16 @@ def declarations_review(declaration_id: str, req: Dict[str, Any]):
             ),
         )
 
-    # F10 (interim until real user auth):
-    #   - reviewed_at is ALWAYS stamped server-side; client values ignored.
-    #   - reviewed_by must match STALLION_BROKERS (comma-separated) when set.
-    reviewed_by = str(req.get("reviewed_by") or "").strip()
-    allowed_brokers = [
-        b.strip() for b in os.environ.get("STALLION_BROKERS", "").split(",") if b.strip()
-    ]
-    if action in {"approved", "rejected", "needs_correction", "submitted", "receipted"}:
-        if not reviewed_by:
-            raise HTTPException(status_code=400, detail="reviewed_by is required for this action")
-        if allowed_brokers and reviewed_by not in allowed_brokers:
-            raise HTTPException(
-                status_code=403,
-                detail="reviewed_by is not an authorised broker for this deployment",
-            )
+    # Phase 3: review identity and authority come only from the verified session.
+    # Caller-supplied reviewed_by/reviewed_at fields are ignored.
+    user = request_user(request)
+    broker_actions = {"approved", "rejected", "needs_correction", "submitted", "receipted"}
+    if action in broker_actions and user.role not in {"broker", "admin"}:
+        raise HTTPException(
+            status_code=403,
+            detail="Broker or administrator role required for this status transition",
+        )
+    reviewed_by = user.name
 
     patch: Dict[str, Any] = {
         "status":       action,
