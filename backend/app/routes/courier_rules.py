@@ -4,9 +4,8 @@ Stallion Courier — Rules & Tariff Management Routes
 Admin endpoints for editing the operational rules that drive the duty
 engine. Mounted at /courier/rules and /courier/tariff.
 
-Caller identity is taken from the optional `X-User-Id` request header
-and recorded in the audit trail. In production this should be replaced
-with the real auth middleware once Stallion has user accounts.
+Caller identity is taken from the verified session context. Legacy
+X-User-Id headers may still be sent by older clients but are ignored.
 """
 from __future__ import annotations
 
@@ -15,6 +14,7 @@ from typing import Any, Dict, Literal, Optional
 from fastapi import APIRouter, Body, Header, HTTPException, Query
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from ..auth import current_user_name
 from ..services import courier_rules
 
 router = APIRouter(prefix="/courier", tags=["courier-rules"])
@@ -83,8 +83,9 @@ class TariffAddRequest(BaseModel):
         return raw
 
 
-def _user(x_user_id: Optional[str]) -> str:
-    return (x_user_id or "anonymous").strip() or "anonymous"
+def _user(_legacy_x_user_id: Optional[str] = None) -> str:
+    """Return the verified session identity; never trust caller headers."""
+    return current_user_name()
 
 
 # ── Rules: list / inspect ────────────────────────────────────────────────────
