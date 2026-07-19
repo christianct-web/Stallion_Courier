@@ -84,6 +84,10 @@ def _session_client(monkeypatch):
     def tariff_write():
         return {"ok": True}
 
+    @app.post("/courier/rules/exemptions")
+    def exemption_write():
+        return {"ok": True}
+
     app.add_middleware(SessionAuthMiddleware)
     admin_token = issue_token(AuthUser("admin", "Test Administrator", "admin"))
     clerk_token = issue_token(AuthUser("clerk", "Test Clerk", "clerk"))
@@ -102,11 +106,32 @@ def test_bearer_session_accepted(monkeypatch):
     assert response.status_code == 200
 
 
-def test_download_accepts_short_lived_session_query_token(monkeypatch):
-    client, token, _ = _session_client(monkeypatch)
+def test_download_accepts_only_path_scoped_short_lived_grant(monkeypatch):
+    from app.auth import AuthUser, issue_download_token
+
+    client, _, _ = _session_client(monkeypatch)
+    user = AuthUser("admin", "Test Administrator", "admin")
+    grant = issue_download_token(user, "/pack/file/abc123", ttl_seconds=90)
+
     assert client.get("/pack/file/abc123").status_code == 401
-    assert client.get("/pack/file/abc123?access_token=" + token).status_code == 200
-    assert client.get("/declarations?access_token=" + token).status_code == 401
+    assert client.get("/pack/file/abc123?download_grant=" + grant).status_code == 200
+    assert client.get("/pack/file/different?download_grant=" + grant).status_code == 401
+    assert client.get("/declarations?download_grant=" + grant).status_code == 401
+
+
+def test_session_rejects_bad_signature_and_expiry(monkeypatch):
+    from fastapi import HTTPException
+    from app.auth import AuthUser, decode_token, issue_token
+
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "s" * 64)
+    user = AuthUser("broker", "Test Broker", "broker")
+    token = issue_token(user, now=100, ttl_seconds=10)
+
+    assert decode_token(token, now=109).name == "Test Broker"
+    with pytest.raises(HTTPException, match="Invalid or expired session"):
+        decode_token(token, now=110)
+    with pytest.raises(HTTPException, match="Invalid or expired session"):
+        decode_token(token[:-1] + ("A" if token[-1] != "A" else "B"), now=101)
 
 
 def test_clerk_cannot_mutate_regulatory_rules(monkeypatch):
@@ -116,6 +141,18 @@ def test_clerk_cannot_mutate_regulatory_rules(monkeypatch):
         headers={"Authorization": "Bearer " + clerk_token},
     )
     assert response.status_code == 403
+    rules_response = client.post(
+        "/courier/rules/exemptions",
+        headers={"Authorization": "Bearer " + clerk_token},
+    )
+    assert rules_response.status_code == 403
+
+
+def test_admin_can_reach_regulatory_rule_mutations(monkeypatch):
+    client, admin_token, _ = _session_client(monkeypatch)
+    headers = {"Authorization": "Bearer " + admin_token}
+    assert client.post("/courier/tariff", headers=headers).status_code == 200
+    assert client.post("/courier/rules/exemptions", headers=headers).status_code == 200
 
 
 # ─── F5: zero is a value, not a gap ───────────────────────────────────────────
