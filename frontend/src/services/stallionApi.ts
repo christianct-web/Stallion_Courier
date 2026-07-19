@@ -1,4 +1,4 @@
-import { getAccessToken } from "./auth";
+import { AUTH_BASE_URL, getAccessToken } from "./auth";
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 export function authHeaders(extra?: Record<string, string>): Record<string, string> {
@@ -17,11 +17,35 @@ export function authFetch(input: string, init?: RequestInit): Promise<Response> 
   });
 }
 
-/** Add the short-lived session token to browser-native download links only. */
-export function withKey(url: string): string {
-  const token = getAccessToken();
-  if (!token) return url;
-  return url + (url.includes("?") ? "&" : "?") + "access_token=" + encodeURIComponent(token);
+/** Mint a 90-second, path-scoped grant for a browser-native download. */
+export async function createDownloadUrl(url: string): Promise<string> {
+  const parsed = new URL(url, window.location.origin);
+  const apiBase = new URL(AUTH_BASE_URL, window.location.origin).pathname.replace(/\/$/, "");
+  const backendPath =
+    apiBase && apiBase !== "/" && parsed.pathname.startsWith(apiBase + "/")
+      ? parsed.pathname.slice(apiBase.length)
+      : parsed.pathname;
+
+  const response = await authFetch(AUTH_BASE_URL + "/auth/download-grant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: backendPath }),
+  });
+  if (!response.ok) throw new Error("Unable to authorize download");
+  const body = (await response.json()) as { download_grant: string };
+  parsed.searchParams.set("download_grant", body.download_grant);
+  return parsed.toString();
+}
+
+export async function openAuthenticatedDownload(url: string): Promise<void> {
+  const grantedUrl = await createDownloadUrl(url);
+  const anchor = document.createElement("a");
+  anchor.href = grantedUrl;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }
 
 /** Download a generated file through an authenticated request. */
