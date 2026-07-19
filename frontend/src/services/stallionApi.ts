@@ -1,18 +1,15 @@
-// ── Auth (F2) ────────────────────────────────────────────────────────────────
-// Every request carries X-API-Key. Set VITE_STALLION_API_KEY in Netlify env
-// (and .env.local for dev). NOTE: a bundled key is a shared secret, not user
-// auth — Phase 3 replaces this with real per-user login.
-const API_KEY = (import.meta.env.VITE_STALLION_API_KEY as string | undefined)?.trim() || "";
+import { getAccessToken } from "./auth";
 
+// ── Auth ─────────────────────────────────────────────────────────────────────
 export function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const token = getAccessToken();
   return {
-    ...(API_KEY ? { "X-API-Key": API_KEY } : {}),
+    ...(token ? { Authorization: "Bearer " + token } : {}),
     ...(extra || {}),
   };
 }
 
-/** Authenticated fetch — use for ALL requests including file downloads,
- * since plain <a href> links cannot attach the API key header. */
+/** Authenticated fetch — use for API requests and blob downloads. */
 export function authFetch(input: string, init?: RequestInit): Promise<Response> {
   return fetch(input, {
     ...init,
@@ -20,11 +17,11 @@ export function authFetch(input: string, init?: RequestInit): Promise<Response> 
   });
 }
 
-/** Append the API key to a download URL — for <a href>/window.open links
- * that cannot attach headers. Server accepts this on GET download paths only. */
+/** Add the short-lived session token to browser-native download links only. */
 export function withKey(url: string): string {
-  if (!API_KEY) return url;
-  return url + (url.includes("?") ? "&" : "?") + "api_key=" + encodeURIComponent(API_KEY);
+  const token = getAccessToken();
+  if (!token) return url;
+  return url + (url.includes("?") ? "&" : "?") + "access_token=" + encodeURIComponent(token);
 }
 
 /** Download a generated file through an authenticated request. */
@@ -349,7 +346,7 @@ export async function downloadRegisterCsv(period?: string) {
   const q = period ? `?period=${encodeURIComponent(period)}` : "";
   const endpoint = `${BASE_URL}/register/export${q}`;
 
-  const tryFetch = async () => fetch(endpoint);
+  const tryFetch = async () => authFetch(endpoint);
   const res = await tryFetch();
 
   // Graceful fallback: if endpoint is not available yet, export current declarations list as CSV client-side.
