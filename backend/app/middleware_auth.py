@@ -10,6 +10,7 @@ from starlette.responses import JSONResponse
 
 from .auth import (
     AuthUser,
+    decode_download_token,
     decode_token,
     load_user_records,
     reset_current_user,
@@ -37,13 +38,13 @@ def _bearer_token(request: Request) -> str:
     authorization = (request.headers.get("Authorization") or "").strip()
     if authorization.lower().startswith("bearer "):
         return authorization[7:].strip()
-
-    # Browser-native download links cannot attach headers. A short-lived
-    # session token is accepted in the query string only for GET downloads.
-    if request.method == "GET" and any(request.url.path.startswith(p) for p in _DOWNLOAD_PREFIXES):
-        return (request.query_params.get("access_token") or "").strip()
     return ""
 
+
+def _download_grant(request: Request) -> str:
+    if request.method == "GET" and any(request.url.path.startswith(p) for p in _DOWNLOAD_PREFIXES):
+        return (request.query_params.get("download_grant") or "").strip()
+    return ""
 
 def _requires_admin(request: Request) -> bool:
     if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
@@ -63,11 +64,16 @@ class SessionAuthMiddleware(BaseHTTPMiddleware):
             # before the app starts and can never reach this branch.
             user = AuthUser("dev-admin", "Development Administrator", "admin")
         else:
+            grant = _download_grant(request)
             token = _bearer_token(request)
-            if not token:
+            if not grant and not token:
                 return JSONResponse(status_code=401, content={"detail": "Authentication required"})
             try:
-                user = decode_token(token)
+                user = (
+                    decode_download_token(grant, request.url.path)
+                    if grant
+                    else decode_token(token)
+                )
             except HTTPException as exc:
                 return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
