@@ -84,16 +84,17 @@ function LoginScreen({ onLogin }: { onLogin: (session: StallionSession) => void 
 }
 
 export default function AuthGate({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<StallionUser | null>(getSession()?.user || null);
-  const [checking, setChecking] = useState(Boolean(getSession()));
+  const [initialSession] = useState(() => getSession());
+  const [user, setUser] = useState<StallionUser | null>(initialSession?.user || null);
+  const [checking, setChecking] = useState(Boolean(initialSession));
 
   useEffect(() => {
-    if (!getSession()) return;
+    if (!initialSession) return;
     verifySession()
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setChecking(false));
-  }, []);
+  }, [initialSession]);
 
   if (checking) {
     return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>Checking session…</div>;
