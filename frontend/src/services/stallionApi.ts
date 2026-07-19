@@ -20,11 +20,11 @@ export function authFetch(input: string, init?: RequestInit): Promise<Response> 
 /** Mint a 90-second, path-scoped grant for a browser-native download. */
 export async function createDownloadUrl(url: string): Promise<string> {
   const parsed = new URL(url, window.location.origin);
-  const apiBase = new URL(AUTH_BASE_URL, window.location.origin).pathname.replace(/\/$/, "");
-  const backendPath =
-    apiBase && apiBase !== "/" && parsed.pathname.startsWith(apiBase + "/")
-      ? parsed.pathname.slice(apiBase.length)
-      : parsed.pathname;
+  const configuredBase = new URL(AUTH_BASE_URL, window.location.origin).pathname.replace(/\/$/, "");
+  const proxyBase = [configuredBase, "/api"].find(
+    (candidate) => candidate && candidate !== "/" && parsed.pathname.startsWith(candidate + "/"),
+  );
+  const backendPath = proxyBase ? parsed.pathname.slice(proxyBase.length) : parsed.pathname;
 
   const response = await authFetch(AUTH_BASE_URL + "/auth/download-grant", {
     method: "POST",
