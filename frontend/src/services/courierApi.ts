@@ -2,7 +2,7 @@
  * Courier API client — wraps /courier/* endpoints with the same
  * conventions used by stallionApi.ts (timeout, retry, envelope normalization).
  */
-import { STALLION_BASE_URL, authHeaders, authFetch, withKey } from "./stallionApi";
+import { STALLION_BASE_URL, authHeaders, authFetch } from "./stallionApi";
 
 const REQUEST_TIMEOUT_MS = 12000;
 
@@ -493,11 +493,11 @@ export async function getAuditLog(
 // ── Exports ──────────────────────────────────────────────────────────────
 
 export function worksheetDownloadUrl(manifestId: string): string {
-  return withKey(`${STALLION_BASE_URL}/courier/manifests/${manifestId}/worksheet`);
+  return `${STALLION_BASE_URL}/courier/manifests/${manifestId}/worksheet`;
 }
 
 export function hazmatDownloadUrl(manifestId: string): string {
-  return withKey(`${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`);
+  return `${STALLION_BASE_URL}/courier/manifests/${manifestId}/hazmat`;
 }
 
 /**
