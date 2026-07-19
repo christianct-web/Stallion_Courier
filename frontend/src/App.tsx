@@ -31,36 +31,36 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthGate>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<RouteFallback />}>
-          <Routes>
-            {/* Primary nav pages all share StallionShell (one TopNav, one layout). */}
-            <Route element={<StallionShell />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/stallion/sheets" element={<StallionSheetList />} />
-              <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
-              <Route path="/stallion/log" element={<ActivityLog />} />
-              <Route path="/stallion/clients" element={<ClientsPage />} />
-            </Route>
-            {/* Courier module: its own installable, mobile-first shell. */}
-            <Route element={<CourierShell />}>
-              <Route path="/stallion/courier" element={<CourierManifests />} />
-              <Route path="/stallion/courier/tariff" element={<CourierTariff />} />
-              <Route path="/stallion/courier/:manifestId" element={<CourierWorkbench />} />
-              <Route path="/stallion/courier/:manifestId/exam" element={<CourierExam />} />
-            </Route>
-            {/* Full declarations list (was the old landing page). */}
-            <Route path="/stallion/declarations" element={<DeclarationsList />} />
-            {/* Legacy: kept only so the existing declarations stay openable.
-                Off the nav. Remove once they have aged out / been migrated. */}
-            <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              {/* Primary nav pages all share StallionShell (one TopNav, one layout). */}
+              <Route element={<StallionShell />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/stallion/sheets" element={<StallionSheetList />} />
+                <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
+                <Route path="/stallion/log" element={<ActivityLog />} />
+                <Route path="/stallion/clients" element={<ClientsPage />} />
+              </Route>
+              {/* Courier module: its own installable, mobile-first shell. */}
+              <Route element={<CourierShell />}>
+                <Route path="/stallion/courier" element={<CourierManifests />} />
+                <Route path="/stallion/courier/tariff" element={<CourierTariff />} />
+                <Route path="/stallion/courier/:manifestId" element={<CourierWorkbench />} />
+                <Route path="/stallion/courier/:manifestId/exam" element={<CourierExam />} />
+              </Route>
+              {/* Full declarations list (was the old landing page). */}
+              <Route path="/stallion/declarations" element={<DeclarationsList />} />
+              {/* Legacy: kept only so the existing declarations stay openable.
+                  Off the nav. Remove once they have aged out / been migrated. */}
+              <Route path="/stallion/brokerreview4" element={<BrokerReview4 />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
       </AuthGate>
     </TooltipProvider>
   </QueryClientProvider>
