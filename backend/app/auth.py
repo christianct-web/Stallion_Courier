@@ -85,6 +85,14 @@ def verify_password(password: str, encoded: str) -> bool:
         return False
 
 
+# Unknown usernames still pay one full PBKDF2 verification, preventing a simple
+# valid-username timing oracle at the login endpoint.
+_DUMMY_PASSWORD_HASH = hash_password(
+    "stallion-invalid-user",
+    salt=b"stallion-auth-pad",
+)
+
+
 def load_user_records() -> list[dict[str, Any]]:
     raw = os.environ.get("STALLION_USERS_JSON", "").strip()
     if not raw:
@@ -121,11 +129,15 @@ def load_user_records() -> list[dict[str, Any]]:
 
 def authenticate(username: str, password: str) -> AuthUser | None:
     wanted = (username or "").strip().lower()
-    for record in load_user_records():
-        if hmac.compare_digest(record["username"], wanted) and verify_password(password, record["password_hash"]):
-            return AuthUser(record["username"], record["name"], record["role"])
+    record = next(
+        (item for item in load_user_records() if hmac.compare_digest(item["username"], wanted)),
+        None,
+    )
+    encoded = record["password_hash"] if record else _DUMMY_PASSWORD_HASH
+    password_ok = verify_password(password, encoded)
+    if record and password_ok:
+        return AuthUser(record["username"], record["name"], record["role"])
     return None
-
 
 def _session_secret() -> bytes:
     secret = os.environ.get("STALLION_SESSION_SECRET", "").strip()
@@ -171,6 +183,53 @@ def decode_token(token: str, *, now: int | None = None) -> AuthUser:
         )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
         raise HTTPException(status_code=401, detail="Invalid or expired session") from exc
+
+
+def issue_download_token(
+    user: AuthUser,
+    path: str,
+    *,
+    now: int | None = None,
+    ttl_seconds: int = 90,
+) -> str:
+    """Mint a path-scoped token that cannot authorize normal API requests."""
+    issued_at = int(now if now is not None else time.time())
+    payload = {
+        "typ": "download",
+        "sub": user.username,
+        "name": user.name,
+        "role": user.role,
+        "path": path,
+        "iat": issued_at,
+        "exp": issued_at + ttl_seconds,
+        "jti": secrets.token_urlsafe(12),
+    }
+    body = _b64_encode(json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8"))
+    signature = _b64_encode(hmac.new(_session_secret(), body.encode("ascii"), hashlib.sha256).digest())
+    return body + "." + signature
+
+
+def decode_download_token(token: str, path: str, *, now: int | None = None) -> AuthUser:
+    """Validate a download-only token for exactly one URL path."""
+    try:
+        body, supplied_signature = token.split(".", 1)
+        expected_signature = _b64_encode(
+            hmac.new(_session_secret(), body.encode("ascii"), hashlib.sha256).digest()
+        )
+        if not hmac.compare_digest(supplied_signature, expected_signature):
+            raise ValueError("bad signature")
+        payload = json.loads(_b64_decode(body))
+        current_time = int(now if now is not None else time.time())
+        if payload.get("typ") != "download" or payload.get("path") != path:
+            raise ValueError("wrong scope")
+        if int(payload.get("exp") or 0) <= current_time:
+            raise ValueError("expired")
+        role = str(payload.get("role") or "")
+        if role not in VALID_ROLES:
+            raise ValueError("invalid role")
+        return AuthUser(str(payload["sub"]), str(payload["name"]), role)
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=401, detail="Invalid or expired download grant") from exc
 
 
 def request_user(request: Request) -> AuthUser:
