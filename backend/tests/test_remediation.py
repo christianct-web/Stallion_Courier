@@ -57,6 +57,36 @@ def test_dev_without_auth_configuration_is_fine(monkeypatch):
     assert_production_security()
 
 
+def test_login_is_throttled_after_repeated_failures(monkeypatch):
+    from fastapi import FastAPI
+    from app.middleware_auth import SessionAuthMiddleware
+    from app.routes import auth as auth_routes
+
+    monkeypatch.delenv("STALLION_ENV", raising=False)
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "s" * 64)
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
+    auth_routes._attempts.clear()
+
+    app = FastAPI()
+    app.include_router(auth_routes.router)
+    app.add_middleware(SessionAuthMiddleware)
+    client = TestClient(app)
+
+    for _ in range(auth_routes._LOGIN_MAX_ATTEMPTS):
+        response = client.post(
+            "/auth/login",
+            json={"username": "admin", "password": "wrong-password"},
+        )
+        assert response.status_code == 401
+
+    blocked = client.post(
+        "/auth/login",
+        json={"username": "admin", "password": "wrong-password"},
+    )
+    assert blocked.status_code == 429
+    assert blocked.headers["Retry-After"] == str(auth_routes._LOGIN_WINDOW_SECONDS)
+
+
 def _session_client(monkeypatch):
     from fastapi import FastAPI
     from app.auth import AuthUser, issue_token
