@@ -10,13 +10,14 @@ import {
   listClients,
   calculateWorksheet,
   STALLION_BASE_URL,
-  withKey,
+  openAuthenticatedDownload,
   type Client,
 } from "@/services/stallionApi";
 import { TopNav } from "@/components/TopNav";
 import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 import { HsLookup } from "@/components/HsLookup";
 import { StatusPill } from "@/components/StatusPill";
+import { SecureDownloadLink } from "@/components/SecureDownloadLink";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -351,10 +352,10 @@ function ExportHistory({ events }: { events: any[] }) {
               {ev.at ? new Date(ev.at).toLocaleString() : "—"}
             </span>
             {ev.ref && (
-              <a href={withKey(`${STALLION_BASE_URL}/pack/file/${ev.ref}`)} target="_blank" rel="noopener noreferrer"
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.approved, textDecoration: "none" }}>
+              <SecureDownloadLink href={`${STALLION_BASE_URL}/pack/file/${ev.ref}`}
+                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.approved, textDecoration: "none", background: "transparent", padding: 0 }}>
                 ↓ {ev.ref.slice(0, 16)}
-              </a>
+              </SecureDownloadLink>
             )}
           </div>
         ))}
@@ -529,13 +530,12 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
             <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 13, color: green }}>Invoice generated</div>
             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, marginTop: 2 }}>{generated.doc_id}</div>
           </div>
-          <a
-            href={withKey(`${STALLION_BASE_URL}${generated.download_url}`)}
-            target="_blank" rel="noopener noreferrer"
+          <SecureDownloadLink
+            href={`${STALLION_BASE_URL}${generated.download_url}`}
             style={{ padding: "8px 18px", background: green, color: "#fff", borderRadius: 4, fontFamily: "'Fraunces', serif", fontSize: 13, fontWeight: 600, textDecoration: "none" }}
           >
             ↓ Download PDF
-          </a>
+          </SecureDownloadLink>
         </div>
       )}
 
@@ -548,7 +548,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: inkM }}>{inv.docId}</div>
               <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                 <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: inkL }}>{new Date(inv.generatedAt).toLocaleDateString()}</span>
-                <a href={withKey(`${STALLION_BASE_URL}/pack/file/${inv.docId}`)} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green }}>↓ PDF</a>
+                <SecureDownloadLink href={`${STALLION_BASE_URL}/pack/file/${inv.docId}`} style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: green, background: "transparent", padding: 0 }}>↓ PDF</SecureDownloadLink>
               </div>
             </div>
           ))}
@@ -694,7 +694,7 @@ function ReviewPanel({
     try {
       const { worksheetUrl } = await generatePackAndGetUrls();
       if (!worksheetUrl) return alert("Worksheet file not returned.");
-      window.open(withKey(worksheetUrl), "_blank", "noopener,noreferrer");
+      await openAuthenticatedDownload(worksheetUrl);
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download worksheet");
     }
@@ -704,7 +704,7 @@ function ReviewPanel({
     try {
       const { xmlUrl } = await generatePackAndGetUrls();
       if (!xmlUrl) return alert("XML file not returned.");
-      window.open(withKey(xmlUrl), "_blank", "noopener,noreferrer");
+      await openAuthenticatedDownload(xmlUrl);
     } catch (e: any) {
       alert(e?.message || "Failed to generate/download XML");
     }
@@ -1185,18 +1185,16 @@ function ReviewPanel({
                 {costingLoading ? "Generating…" : "📄 Generate Costing Estimate"}
               </button>
               {costingDocId && (
-                <a
-                  href={withKey(`${STALLION_BASE_URL}/pack/file/${costingDocId}`)}
-                  target="_blank"
-                  rel="noreferrer"
+                <SecureDownloadLink
+                  href={`${STALLION_BASE_URL}/pack/file/${costingDocId}`}
                   style={{
-                    display: "block", marginTop: 8,
+                    display: "block", marginTop: 8, background: "transparent", padding: 0,
                     fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     color: C.approved, textDecoration: "underline",
                   }}
                 >
                   ↓ Download Costing PDF
-                </a>
+                </SecureDownloadLink>
               )}
             </div>
           </div>

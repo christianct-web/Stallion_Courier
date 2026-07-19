@@ -1,18 +1,15 @@
-// ── Auth (F2) ────────────────────────────────────────────────────────────────
-// Every request carries X-API-Key. Set VITE_STALLION_API_KEY in Netlify env
-// (and .env.local for dev). NOTE: a bundled key is a shared secret, not user
-// auth — Phase 3 replaces this with real per-user login.
-const API_KEY = (import.meta.env.VITE_STALLION_API_KEY as string | undefined)?.trim() || "";
+import { AUTH_BASE_URL, getAccessToken } from "./auth";
 
+// ── Auth ─────────────────────────────────────────────────────────────────────
 export function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  const token = getAccessToken();
   return {
-    ...(API_KEY ? { "X-API-Key": API_KEY } : {}),
+    ...(token ? { Authorization: "Bearer " + token } : {}),
     ...(extra || {}),
   };
 }
 
-/** Authenticated fetch — use for ALL requests including file downloads,
- * since plain <a href> links cannot attach the API key header. */
+/** Authenticated fetch — use for API requests and blob downloads. */
 export function authFetch(input: string, init?: RequestInit): Promise<Response> {
   return fetch(input, {
     ...init,
@@ -20,11 +17,35 @@ export function authFetch(input: string, init?: RequestInit): Promise<Response> 
   });
 }
 
-/** Append the API key to a download URL — for <a href>/window.open links
- * that cannot attach headers. Server accepts this on GET download paths only. */
-export function withKey(url: string): string {
-  if (!API_KEY) return url;
-  return url + (url.includes("?") ? "&" : "?") + "api_key=" + encodeURIComponent(API_KEY);
+/** Mint a 90-second, path-scoped grant for a browser-native download. */
+export async function createDownloadUrl(url: string): Promise<string> {
+  const parsed = new URL(url, window.location.origin);
+  const configuredBase = new URL(AUTH_BASE_URL, window.location.origin).pathname.replace(/\/$/, "");
+  const proxyBase = [configuredBase, "/api"].find(
+    (candidate) => candidate && candidate !== "/" && parsed.pathname.startsWith(candidate + "/"),
+  );
+  const backendPath = proxyBase ? parsed.pathname.slice(proxyBase.length) : parsed.pathname;
+
+  const response = await authFetch(AUTH_BASE_URL + "/auth/download-grant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: backendPath }),
+  });
+  if (!response.ok) throw new Error("Unable to authorize download");
+  const body = (await response.json()) as { download_grant: string };
+  parsed.searchParams.set("download_grant", body.download_grant);
+  return parsed.toString();
+}
+
+export async function openAuthenticatedDownload(url: string): Promise<void> {
+  const grantedUrl = await createDownloadUrl(url);
+  const anchor = document.createElement("a");
+  anchor.href = grantedUrl;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }
 
 /** Download a generated file through an authenticated request. */
@@ -349,7 +370,7 @@ export async function downloadRegisterCsv(period?: string) {
   const q = period ? `?period=${encodeURIComponent(period)}` : "";
   const endpoint = `${BASE_URL}/register/export${q}`;
 
-  const tryFetch = async () => fetch(endpoint);
+  const tryFetch = async () => authFetch(endpoint);
   const res = await tryFetch();
 
   // Graceful fallback: if endpoint is not available yet, export current declarations list as CSV client-side.

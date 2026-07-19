@@ -41,10 +41,9 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Test
+        run: npm run test
       - name: Typecheck
         run: npx tsc --noEmit
       - name: Build
         run: npm run build
-      # NOTE: `npm run test` is intentionally not run — vitest exits nonzero
-      # when zero test files exist. Re-enable once the first frontend test
-      # lands, and treat it as a required check from then on.

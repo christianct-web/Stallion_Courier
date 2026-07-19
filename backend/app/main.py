@@ -17,7 +17,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .middleware_auth import ApiKeyMiddleware, assert_production_security, is_production
+from .middleware_auth import SessionAuthMiddleware, assert_production_security, is_production
 from .cleanup import cleanup_generated_files
 from .routes.declarations import router as declarations_router
 from .routes.lookups import router as lookups_router
@@ -27,6 +27,7 @@ from .routes.documents import router as documents_router
 from .routes.courier import router as courier_router
 from .routes.courier_rules import router as courier_rules_router
 from .routes.sheets import router as sheets_router
+from .routes.auth import router as auth_router
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -56,7 +57,7 @@ assert_production_security()
 
 app = FastAPI(
     title="Stallion API",
-    version="0.3.1",
+    version="0.4.0",
     lifespan=lifespan,
     # No interactive docs in production (they enumerate the whole API surface)
     docs_url=None if is_production() else "/docs",
@@ -77,17 +78,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# API key auth — active only when STALLION_API_KEY is set
-app.add_middleware(ApiKeyMiddleware)
+# Short-lived user sessions with clerk/broker/admin authorization.
+app.add_middleware(SessionAuthMiddleware)
 
 
 # ─── Health ───────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "stallion", "version": "0.3.0"}
+    return {"status": "ok", "service": "stallion", "version": "0.4.0"}
 
 
 # ─── Mount routers ────────────────────────────────────────────────────────────
+app.include_router(auth_router)
 app.include_router(lookups_router)
 app.include_router(declarations_router)
 app.include_router(extract_router)

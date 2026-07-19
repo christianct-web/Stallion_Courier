@@ -3,7 +3,7 @@
  * Drop into frontend/src/services/sheetApi.ts
  * Reuses STALLION_BASE_URL from the existing stallionApi.ts.
  */
-import { STALLION_BASE_URL, authHeaders, authFetch, withKey } from "./stallionApi";
+import { STALLION_BASE_URL, authHeaders, authFetch } from "./stallionApi";
 
 const BASE = `${STALLION_BASE_URL}/sheets`;
 const FALLBACK_BASE = `${window.location.protocol}//${window.location.hostname}:8022/sheets`;
@@ -145,8 +145,8 @@ export const deleteLine = (id: string, lineNo: number): Promise<Sheet> =>
 export const classify = (id: string, description: string): Promise<{ suggestions: any[] }> =>
   fetchWith404Fallback(`/${id}/classify`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description }) }).then(j);
 
-export const worksheetUrl = (id: string) => withKey(`${BASE}/${id}/worksheet?fmt=xlsx`);
-export const c84WorksheetUrl = (id: string) => withKey(`${BASE}/${id}/c84`);
+export const worksheetUrl = (id: string) => `${BASE}/${id}/worksheet?fmt=xlsx`;
+export const c84WorksheetUrl = (id: string) => `${BASE}/${id}/c84`;
 
 export const getWarnings = (id: string): Promise<{ warnings: string[] }> =>
   fetchWith404Fallback(`/${id}/warnings`).then(j);

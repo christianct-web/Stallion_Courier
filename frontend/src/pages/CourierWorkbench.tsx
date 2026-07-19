@@ -26,6 +26,7 @@ import { C, fmtTtd, fmtUsd, ratePillStyle } from "@/components/courier/tokens";
 import { ThnClassifyCell } from "@/components/courier/ThnClassifyCell";
 import { HazmatFormDialog } from "@/components/courier/HazmatFormDialog";
 import { ExportSheet } from "@/components/courier/ExportSheet";
+import { SecureDownloadLink } from "@/components/SecureDownloadLink";
 
 // Helpers
 
@@ -743,14 +744,14 @@ export default function CourierWorkbench() {
               </button>
             ) : (
               <>
-            <a href={worksheetDownloadUrl(manifest.id)} download style={{
+            <SecureDownloadLink href={worksheetDownloadUrl(manifest.id)} style={{
               padding: "8px 14px", fontFamily: "'JetBrains Mono', monospace",
               fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
               color: C.paper, textDecoration: "none",
               background: "transparent", border: `1px solid ${C.ghost}`, borderRadius: 3,
             }}>
               {manifest.officer_examination ? "Uplifted Worksheet" : "Worksheet XLSX"}
-            </a>
+            </SecureDownloadLink>
             {/*
               Hazmat is only generated AFTER officer examination - it summarises
               additional taxes assessed at exam vs. originals declared on the

@@ -29,6 +29,7 @@ import {
 import { HsClassifyCell } from "./HsClassifyCell";
 import { ChecklistModal } from "./ChecklistModal";
 import { presubmissionCheck, type ChecklistReport } from "@/services/sheetApi";
+import { SecureDownloadLink } from "@/components/SecureDownloadLink";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
 const C = {
@@ -859,14 +860,14 @@ export default function StallionSheet() {
             <input ref={fileRef} type="file" hidden accept=".pdf,.png,.jpg,.jpeg"
               onChange={e => e.target.files?.[0] && onUpload(e.target.files[0])} />
             <button onClick={() => fileRef.current?.click()} style={railBtn(C, "ghost")}>Upload documents</button>
-            <a href={worksheetUrl(sheetId)} style={{ ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none" }}>
-              Download worksheet</a>
+            <SecureDownloadLink href={worksheetUrl(sheetId)} style={{ ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none" }}>
+              Download worksheet</SecureDownloadLink>
             {(sheet.declaration_type === "c84" || sheet.concession?.active ||
               sheet.lines?.some(l => l.concession_code)) && (
-              <a href={c84WorksheetUrl(sheetId)} style={{
+              <SecureDownloadLink href={c84WorksheetUrl(sheetId)} style={{
                 ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none",
                 borderColor: "#2E7D52", color: "#5DCAA5",
-              }}>Download C84 claim</a>
+              }}>Download C84 claim</SecureDownloadLink>
             )}
             <button onClick={runPresubmission} disabled={checking} style={railBtn(C, "solid")}>
               {checking ? "Checking…" : "Generate C82 XML"}</button>

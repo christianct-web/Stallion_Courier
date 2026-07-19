@@ -8,45 +8,93 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-# ─── F1/F3: production fail-closed guards ─────────────────────────────────────
+# ─── Phase 3 auth: production guards and session middleware ───────────────────
 
-def test_production_without_key_refuses_to_start(monkeypatch):
+def _users_json():
+    import json
+    from app.auth import hash_password
+    return json.dumps([{
+        "username": "admin",
+        "name": "Test Administrator",
+        "role": "admin",
+        "password_hash": hash_password("correct horse battery staple", salt=b"0123456789abcdef"),
+    }])
+
+
+def test_production_without_session_secret_refuses_to_start(monkeypatch):
     from app.middleware_auth import assert_production_security
     monkeypatch.setenv("STALLION_ENV", "production")
-    monkeypatch.delenv("STALLION_API_KEY", raising=False)
-    with pytest.raises(RuntimeError, match="STALLION_API_KEY"):
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
+    monkeypatch.delenv("STALLION_SESSION_SECRET", raising=False)
+    with pytest.raises(RuntimeError, match="SESSION_SECRET"):
         assert_production_security()
 
 
 def test_production_with_wildcard_cors_refuses_to_start(monkeypatch):
     from app.middleware_auth import assert_production_security
     monkeypatch.setenv("STALLION_ENV", "production")
-    monkeypatch.setenv("STALLION_API_KEY", "x" * 32)
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "x" * 64)
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
     monkeypatch.setenv("STALLION_CORS_ORIGINS", "*")
     with pytest.raises(RuntimeError, match="CORS"):
         assert_production_security()
 
 
-def test_production_with_key_and_origins_starts(monkeypatch):
+def test_production_with_sessions_users_and_origins_starts(monkeypatch):
     from app.middleware_auth import assert_production_security
     monkeypatch.setenv("STALLION_ENV", "production")
-    monkeypatch.setenv("STALLION_API_KEY", "x" * 32)
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "x" * 64)
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
     monkeypatch.setenv("STALLION_CORS_ORIGINS", "https://stallion.netlify.app")
-    assert_production_security()  # no raise
+    assert_production_security()
 
 
-def test_dev_without_key_is_fine(monkeypatch):
+def test_dev_without_auth_configuration_is_fine(monkeypatch):
     from app.middleware_auth import assert_production_security
     monkeypatch.delenv("STALLION_ENV", raising=False)
-    monkeypatch.delenv("STALLION_API_KEY", raising=False)
-    assert_production_security()  # no raise
+    monkeypatch.delenv("STALLION_SESSION_SECRET", raising=False)
+    monkeypatch.delenv("STALLION_USERS_JSON", raising=False)
+    assert_production_security()
 
 
-# ─── F1: middleware enforcement + query-param download path ───────────────────
-
-def _client_with_key(key: str) -> TestClient:
+def test_login_is_throttled_after_repeated_failures(monkeypatch):
     from fastapi import FastAPI
-    from app.middleware_auth import ApiKeyMiddleware
+    from app.middleware_auth import SessionAuthMiddleware
+    from app.routes import auth as auth_routes
+
+    monkeypatch.delenv("STALLION_ENV", raising=False)
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "s" * 64)
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
+    auth_routes._attempts.clear()
+
+    app = FastAPI()
+    app.include_router(auth_routes.router)
+    app.add_middleware(SessionAuthMiddleware)
+    client = TestClient(app)
+
+    for _ in range(auth_routes._LOGIN_MAX_ATTEMPTS):
+        response = client.post(
+            "/auth/login",
+            json={"username": "admin", "password": "wrong-password"},
+        )
+        assert response.status_code == 401
+
+    blocked = client.post(
+        "/auth/login",
+        json={"username": "admin", "password": "wrong-password"},
+    )
+    assert blocked.status_code == 429
+    assert blocked.headers["Retry-After"] == str(auth_routes._LOGIN_WINDOW_SECONDS)
+
+
+def _session_client(monkeypatch):
+    from fastapi import FastAPI
+    from app.auth import AuthUser, issue_token
+    from app.middleware_auth import SessionAuthMiddleware
+
+    monkeypatch.delenv("STALLION_ENV", raising=False)
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "s" * 64)
+    monkeypatch.setenv("STALLION_USERS_JSON", _users_json())
 
     app = FastAPI()
 
@@ -62,28 +110,79 @@ def _client_with_key(key: str) -> TestClient:
     def pack_file():
         return {"file": True}
 
-    app.add_middleware(ApiKeyMiddleware, api_key=key)
-    return TestClient(app)
+    @app.post("/courier/tariff")
+    def tariff_write():
+        return {"ok": True}
+
+    @app.post("/courier/rules/exemptions")
+    def exemption_write():
+        return {"ok": True}
+
+    app.add_middleware(SessionAuthMiddleware)
+    admin_token = issue_token(AuthUser("admin", "Test Administrator", "admin"))
+    clerk_token = issue_token(AuthUser("clerk", "Test Clerk", "clerk"))
+    return TestClient(app), admin_token, clerk_token
 
 
-def test_missing_key_rejected():
-    c = _client_with_key("secret-key-123")
-    assert c.get("/declarations").status_code == 401
-    assert c.get("/health").status_code == 200  # health stays public
+def test_missing_session_rejected(monkeypatch):
+    client, _, _ = _session_client(monkeypatch)
+    assert client.get("/declarations").status_code == 401
+    assert client.get("/health").status_code == 200
 
 
-def test_correct_header_accepted():
-    c = _client_with_key("secret-key-123")
-    r = c.get("/declarations", headers={"X-API-Key": "secret-key-123"})
-    assert r.status_code == 200
+def test_bearer_session_accepted(monkeypatch):
+    client, token, _ = _session_client(monkeypatch)
+    response = client.get("/declarations", headers={"Authorization": "Bearer " + token})
+    assert response.status_code == 200
 
 
-def test_download_accepts_query_param_key():
-    c = _client_with_key("secret-key-123")
-    assert c.get("/pack/file/abc123").status_code == 401
-    assert c.get("/pack/file/abc123?api_key=secret-key-123").status_code == 200
-    # but query param is NOT accepted on non-download paths
-    assert c.get("/declarations?api_key=secret-key-123").status_code == 401
+def test_download_accepts_only_path_scoped_short_lived_grant(monkeypatch):
+    from app.auth import AuthUser, issue_download_token
+
+    client, _, _ = _session_client(monkeypatch)
+    user = AuthUser("admin", "Test Administrator", "admin")
+    grant = issue_download_token(user, "/pack/file/abc123", ttl_seconds=90)
+
+    assert client.get("/pack/file/abc123").status_code == 401
+    assert client.get("/pack/file/abc123?download_grant=" + grant).status_code == 200
+    assert client.get("/pack/file/different?download_grant=" + grant).status_code == 401
+    assert client.get("/declarations?download_grant=" + grant).status_code == 401
+
+
+def test_session_rejects_bad_signature_and_expiry(monkeypatch):
+    from fastapi import HTTPException
+    from app.auth import AuthUser, decode_token, issue_token
+
+    monkeypatch.setenv("STALLION_SESSION_SECRET", "s" * 64)
+    user = AuthUser("broker", "Test Broker", "broker")
+    token = issue_token(user, now=100, ttl_seconds=10)
+
+    assert decode_token(token, now=109).name == "Test Broker"
+    with pytest.raises(HTTPException, match="Invalid or expired session"):
+        decode_token(token, now=110)
+    with pytest.raises(HTTPException, match="Invalid or expired session"):
+        decode_token(token[:-1] + ("A" if token[-1] != "A" else "B"), now=101)
+
+
+def test_clerk_cannot_mutate_regulatory_rules(monkeypatch):
+    client, _, clerk_token = _session_client(monkeypatch)
+    response = client.post(
+        "/courier/tariff",
+        headers={"Authorization": "Bearer " + clerk_token},
+    )
+    assert response.status_code == 403
+    rules_response = client.post(
+        "/courier/rules/exemptions",
+        headers={"Authorization": "Bearer " + clerk_token},
+    )
+    assert rules_response.status_code == 403
+
+
+def test_admin_can_reach_regulatory_rule_mutations(monkeypatch):
+    client, admin_token, _ = _session_client(monkeypatch)
+    headers = {"Authorization": "Bearer " + admin_token}
+    assert client.post("/courier/tariff", headers=headers).status_code == 200
+    assert client.post("/courier/rules/exemptions", headers=headers).status_code == 200
 
 
 # ─── F5: zero is a value, not a gap ───────────────────────────────────────────
@@ -237,17 +336,14 @@ def test_reviewed_at_is_server_stamped(app_client):
     app_client.delete(f"/declarations/{did}")
 
 
-def test_unlisted_broker_rejected(app_client, monkeypatch):
-    monkeypatch.setenv("STALLION_BROKERS", "Jason Maule,Crystal Williams")
+def test_caller_cannot_spoof_review_identity(app_client):
     did = _mk_decl(app_client)
-    app_client.patch(f"/declarations/{did}/review",
-                     json={"action": "pending_review", "reviewed_by": "Crystal Williams"})
-    r = app_client.patch(f"/declarations/{did}/review",
-                         json={"action": "approved", "reviewed_by": "Impostor"})
-    assert r.status_code == 403
-    r = app_client.patch(f"/declarations/{did}/review",
-                         json={"action": "approved", "reviewed_by": "Jason Maule"})
-    assert r.status_code == 200
+    app_client.patch(
+        f"/declarations/{did}/review",
+        json={"action": "pending_review", "reviewed_by": "Impostor"},
+    )
+    row = app_client.get(f"/declarations/{did}").json()
+    assert row["reviewed_by"] == "Development Administrator"
     app_client.delete(f"/declarations/{did}")
 
 
