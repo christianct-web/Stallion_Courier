@@ -36,7 +36,9 @@ class DownloadGrantRequest(BaseModel):
 
 
 def _client_ip(request: Request) -> str:
-    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",", 1)[0].strip()
+    # Caddy appends the immediate client to the right of any caller-supplied
+    # values, so use the right-most address rather than a spoofable first hop.
+    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",")[-1].strip()
     return forwarded or (request.client.host if request.client else "unknown")
 
 
@@ -79,7 +81,8 @@ def me(user: AuthUser = Depends(request_user)):
 @router.post("/download-grant")
 def download_grant(req: DownloadGrantRequest, user: AuthUser = Depends(request_user)):
     path = req.path.strip()
-    if "?" in path or "#" in path or not any(path.startswith(prefix) for prefix in _DOWNLOAD_PREFIXES):
+    if ("?" in path or "#" in path or ".." in path.split("/")
+            or not any(path.startswith(prefix) for prefix in _DOWNLOAD_PREFIXES)):
         raise HTTPException(status_code=400, detail="Path is not an authorised download endpoint")
     ttl_seconds = 90
     return {
