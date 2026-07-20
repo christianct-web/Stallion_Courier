@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from ..store import _safe_read, _safe_write, DATA
+from ..store import DATA
 from . import concession_service
 
 SHEETS_FILE = DATA / "declaration_sheets.json"
@@ -369,11 +369,13 @@ def _migrate_sheet(sheet: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _load() -> List[Dict[str, Any]]:
-    return _safe_read(SHEETS_FILE)
+    from ..repository import sheets_repo
+    return sheets_repo.list()
 
 
 def _save(items: List[Dict[str, Any]]) -> None:
-    _safe_write(SHEETS_FILE, items)
+    from ..repository import sheets_repo
+    sheets_repo.replace_all(items)
 
 
 def list_sheets() -> List[Dict[str, Any]]:
@@ -381,11 +383,13 @@ def list_sheets() -> List[Dict[str, Any]]:
 
 
 def get_sheet(sheet_id: str) -> Optional[Dict[str, Any]]:
-    s = next((s for s in _load() if s["id"] == sheet_id), None)
+    from ..repository import sheets_repo
+    s = sheets_repo.get(sheet_id)
     return _migrate_sheet(s) if s else None
 
 
 def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    from ..repository import sheets_repo
     sheet = _blank_sheet()
     if payload:
         for k, v in payload.items():
@@ -397,30 +401,28 @@ def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
             sheet["lines"].append(row)
         _renumber(sheet["lines"])
     recompute(sheet)
-    items = _load()
-    items.append(sheet)
-    _save(items)
+    sheets_repo.insert(sheet)
     return sheet
 
 
 def update_header(sheet_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    items = _load()
-    sheet = next((s for s in items if s["id"] == sheet_id), None)
-    if not sheet:
-        return None
-    _migrate_sheet(sheet)
-    for k, v in patch.items():
-        if k in ("id", "lines", "totals", "created_at", "status",
-                 "status_history", "reviewed_at", "submitted_at"):
-            continue
-        # Deep-merge the concession block so partial updates don't wipe fields.
-        if k == "concession" and isinstance(v, dict):
-            sheet.setdefault("concession", {}).update(v)
-        elif k in sheet:
-            sheet[k] = v
-    recompute(sheet)
-    _save(items)
-    return sheet
+    from ..repository import sheets_repo
+
+    def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
+        _migrate_sheet(sheet)
+        for k, v in patch.items():
+            if k in ("id", "lines", "totals", "created_at", "status",
+                     "status_history", "reviewed_at", "submitted_at"):
+                continue
+            # Deep-merge the concession block so partial updates don't wipe fields.
+            if k == "concession" and isinstance(v, dict):
+                sheet.setdefault("concession", {}).update(v)
+            elif k in sheet:
+                sheet[k] = v
+        recompute(sheet)
+        return sheet
+
+    return sheets_repo.update(sheet_id, _mutate)
 
 
 # Allowed lifecycle transitions. draft -> pending -> approved -> submitted -> receipted,
@@ -438,81 +440,82 @@ _TRANSITIONS = {
 def set_status(sheet_id: str, new_status: str, *, actor: str = "broker",
                notes: str = "", receipt_number: str = "") -> Optional[Dict[str, Any]]:
     """Move a sheet through its lifecycle, recording history + timestamps."""
-    items = _load()
-    sheet = next((s for s in items if s["id"] == sheet_id), None)
-    if not sheet:
-        return None
-    cur = sheet.get("status", "draft")
-    if new_status not in _TRANSITIONS.get(cur, set()):
-        raise ValueError(f"Illegal transition {cur} -> {new_status}")
+    from ..repository import sheets_repo
 
-    now = _utcnow()
-    sheet["status"] = new_status
-    sheet.setdefault("status_history", []).append({
-        "from": cur, "to": new_status, "at": now, "actor": actor, "notes": notes,
-    })
-    if new_status in ("approved", "correction", "pending"):
-        sheet["reviewed_at"] = now
-        sheet["reviewed_by"] = actor
-    if new_status == "submitted":
-        sheet["submitted_at"] = now
-    if new_status == "receipted" and receipt_number:
-        sheet["receipt_number"] = receipt_number
-    sheet["updated_at"] = now
-    _save(items)
-    return sheet
+    def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
+        cur = sheet.get("status", "draft")
+        if new_status not in _TRANSITIONS.get(cur, set()):
+            raise ValueError(f"Illegal transition {cur} -> {new_status}")
+        now = _utcnow()
+        sheet["status"] = new_status
+        sheet.setdefault("status_history", []).append({
+            "from": cur, "to": new_status, "at": now, "actor": actor, "notes": notes,
+        })
+        if new_status in ("approved", "correction", "pending"):
+            sheet["reviewed_at"] = now
+            sheet["reviewed_by"] = actor
+        if new_status == "submitted":
+            sheet["submitted_at"] = now
+        if new_status == "receipted" and receipt_number:
+            sheet["receipt_number"] = receipt_number
+        sheet["updated_at"] = now
+        return sheet
+
+    return sheets_repo.update(sheet_id, _mutate)
 
 
 def add_line(sheet_id: str, payload: Dict[str, Any] | None = None) -> Optional[Dict[str, Any]]:
-    items = _load()
-    sheet = next((s for s in items if s["id"] == sheet_id), None)
-    if not sheet:
-        return None
-    row = _blank_line()
-    if payload:
-        row.update({k: v for k, v in payload.items() if k in row})
-    sheet["lines"].append(row)
-    _renumber(sheet["lines"])
-    recompute(sheet)
-    _save(items)
-    return sheet
+    from ..repository import sheets_repo
+
+    def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
+        row = _blank_line()
+        if payload:
+            row.update({k: v for k, v in payload.items() if k in row})
+        sheet["lines"].append(row)
+        _renumber(sheet["lines"])
+        recompute(sheet)
+        return sheet
+
+    return sheets_repo.update(sheet_id, _mutate)
 
 
 def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    items = _load()
-    sheet = next((s for s in items if s["id"] == sheet_id), None)
-    if not sheet:
+    from ..repository import sheets_repo
+
+    class _NoLine(Exception):
+        pass
+
+    def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
+        line = next((l for l in sheet["lines"] if l["line_no"] == line_no), None)
+        if not line:
+            raise _NoLine
+        for k, v in patch.items():
+            if k in line and k not in ("id", "line_no"):
+                line[k] = v
+        recompute(sheet)
+        return sheet
+
+    try:
+        return sheets_repo.update(sheet_id, _mutate)
+    except _NoLine:
         return None
-    line = next((l for l in sheet["lines"] if l["line_no"] == line_no), None)
-    if not line:
-        return None
-    for k, v in patch.items():
-        if k in line and k not in ("id", "line_no"):
-            line[k] = v
-    recompute(sheet)
-    _save(items)
-    return sheet
 
 
 def delete_line(sheet_id: str, line_no: int) -> Optional[Dict[str, Any]]:
-    items = _load()
-    sheet = next((s for s in items if s["id"] == sheet_id), None)
-    if not sheet:
-        return None
-    sheet["lines"] = [l for l in sheet["lines"] if l["line_no"] != line_no]
-    _renumber(sheet["lines"])
-    recompute(sheet)
-    _save(items)
-    return sheet
+    from ..repository import sheets_repo
+
+    def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
+        sheet["lines"] = [l for l in sheet["lines"] if l["line_no"] != line_no]
+        _renumber(sheet["lines"])
+        recompute(sheet)
+        return sheet
+
+    return sheets_repo.update(sheet_id, _mutate)
 
 
 def delete_sheet(sheet_id: str) -> bool:
-    items = _load()
-    new = [s for s in items if s["id"] != sheet_id]
-    if len(new) == len(items):
-        return False
-    _save(new)
-    return True
+    from ..repository import sheets_repo
+    return sheets_repo.delete(sheet_id)
 
 
 # ── adapters to existing generators ──────────────────────────────────────────

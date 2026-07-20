@@ -18,7 +18,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .middleware_auth import SessionAuthMiddleware, assert_production_security, is_production
+from .backfill import run_backfill
 from .cleanup import cleanup_generated_files
+from .db import init_db
 from .routes.declarations import router as declarations_router
 from .routes.lookups import router as lookups_router
 from .routes.extract import router as extract_router
@@ -40,6 +42,17 @@ logger = logging.getLogger("stallion")
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: ensure the database schema exists and migrate any legacy JSON
+    # stores into it (idempotent — a no-op once migrated). Every migrated route
+    # depends on the database, so this must FAIL CLOSED: a schema or migration
+    # error aborts startup rather than serving an API that 500s or silently
+    # omits legacy data while /health still reports OK.
+    init_db()
+    imported = run_backfill()
+    migrated = sum(imported.values())
+    if migrated:
+        logger.info("Startup: migrated %d legacy JSON record(s) into the database", migrated)
+
     # Startup: clean up expired generated files
     try:
         result = cleanup_generated_files()

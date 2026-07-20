@@ -34,6 +34,7 @@ STALLION_SESSION_SECRET=$(openssl rand -hex 32)
 STALLION_SESSION_TTL_SECONDS=28800
 STALLION_CORS_ORIGINS=https://<your-site>.netlify.app
 STALLION_USERS_JSON=[{"username":"crystal","name":"Crystal Williams","role":"admin","password_hash":"<generated-hash>"},{"username":"jason","name":"Jason Maule","role":"broker","password_hash":"<generated-hash>"}]
+DATABASE_URL=postgresql+psycopg://stallion:<password>@localhost:5432/stallion
 ANTHROPIC_API_KEY=<secret>
 ```
 
@@ -46,6 +47,27 @@ Roles:
 Do not configure `VITE_STALLION_API_KEY`. Authentication is now performed by
 server-issued, short-lived sessions; no long-lived secret is bundled into the
 frontend.
+
+## 3a. Provision PostgreSQL and migrate
+
+Declarations, clients, courier manifests, and sheets are stored in a
+transactional database (Phase 3B) — this removes the lost-update race the old
+whole-file JSON store suffered once more than one user is active.
+
+1. Create the database and role, then set `DATABASE_URL` as above. If
+   `DATABASE_URL` is left unset the backend falls back to a local SQLite file
+   (`backend/data/stallion.db`) — acceptable for a single-box dev setup, not for
+   production.
+2. On first start the app creates its tables and imports any existing
+   `backend/data/*.json` records automatically (idempotent — it records a marker
+   under `data/.migrated/` and never re-imports). To run it explicitly instead:
+
+   ```bash
+   cd backend && DATABASE_URL=... python scripts/migrate_json_to_db.py
+   ```
+
+3. After confirming the data is in the database, the legacy `data/*.json` files
+   are no longer read and can be archived out of the deployment.
 
 ## 4. Netlify
 

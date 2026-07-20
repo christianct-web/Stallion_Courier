@@ -8,6 +8,12 @@ __pycache__/
 backend/data/generated/
 backend/data/.locks/
 
+# Local SQLite database + one-time JSON→DB migration markers (Phase 3B).
+# Production uses Postgres via DATABASE_URL; the dev DB is disposable.
+backend/data/stallion.db
+backend/data/stallion.db-*
+backend/data/.migrated/
+
 # Node
 frontend/node_modules/
 frontend/dist/

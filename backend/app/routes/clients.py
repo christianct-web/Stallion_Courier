@@ -8,7 +8,8 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 
-from ..store_clients import load_clients, save_clients
+from ..repository import clients_repo
+from ..store_clients import load_clients
 
 import uuid
 
@@ -42,8 +43,7 @@ def clients_create(req: Dict[str, Any]):
         "notes": (req.get("notes") or "").strip(),
         "createdAt": datetime.utcnow().isoformat() + "Z",
     }
-    items.append(client)
-    save_clients(items)
+    clients_repo.insert(client)
     return client
 
 
@@ -58,24 +58,18 @@ def clients_get(client_id: str):
 
 @router.patch("/clients/{client_id}")
 def clients_update(client_id: str, req: Dict[str, Any]):
-    items = load_clients()
-    idx = next((i for i, c in enumerate(items) if c.get("id") == client_id), None)
-    if idx is None:
-        raise HTTPException(status_code=404, detail="Client not found")
     allowed = {"name","consigneeCode","tin","address","contactName","contactEmail","contactPhone","defaultBrokerageFee","notes"}
     patch = {k: v for k, v in req.items() if k in allowed}
     if "consigneeCode" in patch:
         patch["consigneeCode"] = patch["consigneeCode"].strip().upper()
-    items[idx] = {**items[idx], **patch}
-    save_clients(items)
-    return items[idx]
+    updated = clients_repo.update(client_id, lambda c: {**c, **patch})
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return updated
 
 
 @router.delete("/clients/{client_id}")
 def clients_delete(client_id: str):
-    items = load_clients()
-    new_items = [c for c in items if c.get("id") != client_id]
-    if len(new_items) == len(items):
+    if not clients_repo.delete(client_id):
         raise HTTPException(status_code=404, detail="Client not found")
-    save_clients(new_items)
     return {"ok": True, "id": client_id}
