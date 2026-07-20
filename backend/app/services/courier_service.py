@@ -28,7 +28,8 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from . import courier_duty, courier_matcher
-from ..store_courier import load_manifests, save_manifests
+from ..repository import manifests_repo
+from ..store_courier import load_manifests
 
 logger = logging.getLogger("stallion.courier.service")
 
@@ -39,6 +40,14 @@ DEFAULT_CARGO_REPORTER = "TTPOST"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
+
+class _LineNotFound(Exception):
+    """Raised inside an atomic manifest mutation when the target line is absent.
+
+    Signals the repository transaction to roll back so the caller can return the
+    original not-found result without persisting a partial change.
+    """
 
 
 def _utcnow() -> str:
@@ -172,11 +181,9 @@ def create_manifest(payload: Dict[str, Any]) -> Dict[str, Any]:
         "updated_at": _utcnow(),
     }
 
-    items = load_manifests()
-    if any(m.get("manifest_no") == manifest_no for m in items):
+    if any(m.get("manifest_no") == manifest_no for m in load_manifests()):
         raise ValueError(f"Manifest with manifest_no '{manifest_no}' already exists")
-    items.append(manifest)
-    save_manifests(items)
+    manifests_repo.insert(manifest)
     return manifest
 
 
@@ -198,53 +205,39 @@ def recompute_manifest(manifest_id: str) -> Optional[Dict[str, Any]]:
     dialog) so duty / OPT / VAT pick up the new rate without requiring a
     manual line edit.
     """
-    items = load_manifests()
-    idx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if idx is None:
-        return None
-    manifest = items[idx]
-    _recompute_all_lines(manifest)
-    items[idx] = manifest
-    save_manifests(items)
-    return manifest
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        _recompute_all_lines(manifest)
+        return manifest
+
+    return manifests_repo.update(manifest_id, _mutate)
 
 
 def update_manifest_header(manifest_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Update manifest header fields. Recomputes lines if exch_rate changed."""
-    items = load_manifests()
-    idx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if idx is None:
-        return None
-
-    manifest = items[idx]
     allowed = {"manifest_no", "arrival_date", "exch_rate", "cargo_reporter", "notes", "status"}
-    new_exch = manifest.get("exch_rate")
 
-    for k, v in patch.items():
-        if k not in allowed:
-            continue
-        if k == "exch_rate":
-            v = _ensure_float(v)
-            if v <= 0:
-                raise ValueError("exch_rate must be > 0")
-            new_exch = v
-        manifest[k] = v
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        new_exch = manifest.get("exch_rate")
+        for k, v in patch.items():
+            if k not in allowed:
+                continue
+            if k == "exch_rate":
+                v = _ensure_float(v)
+                if v <= 0:
+                    raise ValueError("exch_rate must be > 0")
+                new_exch = v
+            manifest[k] = v
 
-    if new_exch != manifest.get("exch_rate"):
-        manifest["exch_rate"] = new_exch
-    _recompute_all_lines(manifest)
-    items[idx] = manifest
-    save_manifests(items)
-    return manifest
+        if new_exch != manifest.get("exch_rate"):
+            manifest["exch_rate"] = new_exch
+        _recompute_all_lines(manifest)
+        return manifest
+
+    return manifests_repo.update(manifest_id, _mutate)
 
 
 def delete_manifest(manifest_id: str) -> bool:
-    items = load_manifests()
-    new_items = [m for m in items if m.get("id") != manifest_id]
-    if len(new_items) == len(items):
-        return False
-    save_manifests(new_items)
-    return True
+    return manifests_repo.delete(manifest_id)
 
 
 # ── Line CRUD ────────────────────────────────────────────────────────────────
@@ -259,114 +252,111 @@ def add_line(manifest_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, An
               duty_rate_override, exemption_override,
               thn_suggestions, thn_confidence, thn_match_source
     """
-    items = load_manifests()
-    idx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if idx is None:
-        return None
+    created: Dict[str, Any] = {}
 
-    manifest = items[idx]
-    line = {
-        "id": _new_id(),
-        "line_no": len(manifest["lines"]) + 1,
-        "hawb": (payload.get("hawb") or "").strip(),
-        "shipper": (payload.get("shipper") or "").strip(),
-        "importer": (payload.get("importer") or "").strip(),
-        "description": (payload.get("description") or "").strip(),
-        "packages": int(_ensure_float(payload.get("packages"), default=1)),
-        "weight_kg": _ensure_float(payload.get("weight_kg")),
-        "thn": (payload.get("thn") or "").strip().replace(".", ""),
-        "cost_usd": _ensure_float(payload.get("cost_usd")),
-        "freight_usd": _ensure_float(payload.get("freight_usd")),
-        "duty_rate_override": payload.get("duty_rate_override"),
-        "exemption_override": payload.get("exemption_override"),
-        # Auto-classification metadata. Persisted so the UI can show
-        # confidence color and alternatives after page reload.
-        "thn_suggestions": payload.get("thn_suggestions") or payload.get("_thn_suggestions") or [],
-        "thn_confidence": payload.get("thn_confidence"),
-        "thn_match_source": payload.get("thn_match_source") or payload.get("_thn_match_source") or "",
-        # True when auto-classification deliberately withheld a quarantined
-        # THN (unconfirmed OCR rate) — distinguishes "blocked pending broker
-        # review" from "no match found" for API/UI clients.
-        "thn_needs_review": bool(payload.get("thn_needs_review")),
-    }
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        line = {
+            "id": _new_id(),
+            "line_no": len(manifest["lines"]) + 1,
+            "hawb": (payload.get("hawb") or "").strip(),
+            "shipper": (payload.get("shipper") or "").strip(),
+            "importer": (payload.get("importer") or "").strip(),
+            "description": (payload.get("description") or "").strip(),
+            "packages": int(_ensure_float(payload.get("packages"), default=1)),
+            "weight_kg": _ensure_float(payload.get("weight_kg")),
+            "thn": (payload.get("thn") or "").strip().replace(".", ""),
+            "cost_usd": _ensure_float(payload.get("cost_usd")),
+            "freight_usd": _ensure_float(payload.get("freight_usd")),
+            "duty_rate_override": payload.get("duty_rate_override"),
+            "exemption_override": payload.get("exemption_override"),
+            # Auto-classification metadata. Persisted so the UI can show
+            # confidence color and alternatives after page reload.
+            "thn_suggestions": payload.get("thn_suggestions") or payload.get("_thn_suggestions") or [],
+            "thn_confidence": payload.get("thn_confidence"),
+            "thn_match_source": payload.get("thn_match_source") or payload.get("_thn_match_source") or "",
+            # True when auto-classification deliberately withheld a quarantined
+            # THN (unconfirmed OCR rate) — distinguishes "blocked pending broker
+            # review" from "no match found" for API/UI clients.
+            "thn_needs_review": bool(payload.get("thn_needs_review")),
+        }
 
-    _compute_line(line, _ensure_float(manifest.get("exch_rate")))
-    manifest["lines"].append(line)
-    manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
-    manifest["updated_at"] = _utcnow()
-    items[idx] = manifest
-    save_manifests(items)
-    return line
+        _compute_line(line, _ensure_float(manifest.get("exch_rate")))
+        manifest["lines"].append(line)
+        manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
+        manifest["updated_at"] = _utcnow()
+        created["line"] = line
+        return manifest
+
+    updated = manifests_repo.update(manifest_id, _mutate)
+    return created["line"] if updated is not None else None
 
 
 def update_line(manifest_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Update a line by line_no. Recomputes its taxes."""
-    items = load_manifests()
-    midx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if midx is None:
-        return None
-
-    manifest = items[midx]
-    lidx = next((i for i, l in enumerate(manifest["lines"]) if l.get("line_no") == line_no), None)
-    if lidx is None:
-        return None
-
-    line = manifest["lines"][lidx]
     allowed = {
         "hawb", "shipper", "importer", "description", "packages", "weight_kg",
         "thn", "cost_usd", "freight_usd",
         "duty_rate_override", "exemption_override",
     }
-    thn_manually_set = False
-    for k, v in patch.items():
-        if k not in allowed:
-            continue
-        if k in ("packages",):
-            line[k] = int(_ensure_float(v, default=1))
-        elif k in ("weight_kg", "cost_usd", "freight_usd"):
-            line[k] = _ensure_float(v)
-        elif k == "thn":
-            new_thn = (v or "").strip().replace(".", "")
-            if new_thn != line.get("thn", ""):
-                thn_manually_set = True
-            line[k] = new_thn
-        else:
-            line[k] = v
+    result: Dict[str, Any] = {}
 
-    # If the broker explicitly changed the THN, this is now a confirmed
-    # human decision — clear the auto-classify confidence so the UI shows
-    # it as confirmed rather than as a suggestion. The full suggestion
-    # list is kept so the broker can still see alternatives.
-    if thn_manually_set:
-        line["thn_confidence"] = 1.0
-        line["thn_match_source"] = "manual"
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        line = next((l for l in manifest["lines"] if l.get("line_no") == line_no), None)
+        if line is None:
+            raise _LineNotFound
+        thn_manually_set = False
+        for k, v in patch.items():
+            if k not in allowed:
+                continue
+            if k in ("packages",):
+                line[k] = int(_ensure_float(v, default=1))
+            elif k in ("weight_kg", "cost_usd", "freight_usd"):
+                line[k] = _ensure_float(v)
+            elif k == "thn":
+                new_thn = (v or "").strip().replace(".", "")
+                if new_thn != line.get("thn", ""):
+                    thn_manually_set = True
+                line[k] = new_thn
+            else:
+                line[k] = v
 
-    _compute_line(line, _ensure_float(manifest.get("exch_rate")))
-    manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
-    manifest["updated_at"] = _utcnow()
-    items[midx] = manifest
-    save_manifests(items)
-    return line
+        # If the broker explicitly changed the THN, this is now a confirmed
+        # human decision — clear the auto-classify confidence so the UI shows
+        # it as confirmed rather than as a suggestion. The full suggestion
+        # list is kept so the broker can still see alternatives.
+        if thn_manually_set:
+            line["thn_confidence"] = 1.0
+            line["thn_match_source"] = "manual"
+
+        _compute_line(line, _ensure_float(manifest.get("exch_rate")))
+        manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
+        manifest["updated_at"] = _utcnow()
+        result["line"] = line
+        return manifest
+
+    try:
+        updated = manifests_repo.update(manifest_id, _mutate)
+    except _LineNotFound:
+        return None
+    return result["line"] if updated is not None else None
 
 
 def delete_line(manifest_id: str, line_no: int) -> bool:
-    items = load_manifests()
-    midx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if midx is None:
-        return False
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        new_lines = [l for l in manifest["lines"] if l.get("line_no") != line_no]
+        if len(new_lines) == len(manifest["lines"]):
+            raise _LineNotFound
+        _renumber_lines(new_lines)
+        manifest["lines"] = new_lines
+        manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
+        manifest["updated_at"] = _utcnow()
+        return manifest
 
-    manifest = items[midx]
-    new_lines = [l for l in manifest["lines"] if l.get("line_no") != line_no]
-    if len(new_lines) == len(manifest["lines"]):
+    try:
+        updated = manifests_repo.update(manifest_id, _mutate)
+    except _LineNotFound:
         return False
-
-    _renumber_lines(new_lines)
-    manifest["lines"] = new_lines
-    manifest["totals"] = courier_duty.calculate_manifest_totals(manifest["lines"])
-    manifest["updated_at"] = _utcnow()
-    items[midx] = manifest
-    save_manifests(items)
-    return True
+    return updated is not None
 
 
 def add_line_with_auto_thn(manifest_id: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -539,29 +529,24 @@ def record_examination(manifest_id: str, exam: Dict[str, Any]) -> Optional[Dict[
       ]
     }
     """
-    items = load_manifests()
-    midx = next((i for i, m in enumerate(items) if m.get("id") == manifest_id), None)
-    if midx is None:
-        return None
+    def _mutate(manifest: Dict[str, Any]) -> Dict[str, Any]:
+        rate = _ensure_float(manifest.get("exch_rate")) or 0.0
+        raw_corrections = exam.get("corrections") or []
+        # Recompute every correction server-side so officer THN changes always
+        # produce correct duty/OPT/VAT, regardless of what the frontend sent.
+        corrections = [_recalc_correction(c, rate, manifest) for c in raw_corrections]
 
-    manifest = items[midx]
-    rate = _ensure_float(manifest.get("exch_rate")) or 0.0
-    raw_corrections = exam.get("corrections") or []
-    # Recompute every correction server-side so officer THN changes always
-    # produce correct duty/OPT/VAT, regardless of what the frontend sent.
-    corrections = [_recalc_correction(c, rate, manifest) for c in raw_corrections]
+        manifest["officer_examination"] = {
+            "examined_at": (exam.get("examined_at") or "").strip(),
+            "examining_officer": (exam.get("examining_officer") or "").strip(),
+            "corrections": corrections,
+            "recorded_at": _utcnow(),
+        }
+        manifest["status"] = "examined"
+        manifest["updated_at"] = _utcnow()
+        return manifest
 
-    manifest["officer_examination"] = {
-        "examined_at": (exam.get("examined_at") or "").strip(),
-        "examining_officer": (exam.get("examining_officer") or "").strip(),
-        "corrections": corrections,
-        "recorded_at": _utcnow(),
-    }
-    manifest["status"] = "examined"
-    manifest["updated_at"] = _utcnow()
-    items[midx] = manifest
-    save_manifests(items)
-    return manifest
+    return manifests_repo.update(manifest_id, _mutate)
 
 
 # ── Public surface ───────────────────────────────────────────────────────────

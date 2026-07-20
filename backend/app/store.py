@@ -237,17 +237,27 @@ LOOKUPS: Dict[str, List[Dict[str, Any]]] = {
 }
 
 
+# ── Declarations & templates now live in the transactional database ──────────
+# (Phase 3B). load_*/save_* keep their signatures for whole-list callers and the
+# JSON→DB backfill; per-record mutation endpoints use the repositories directly
+# so read-modify-write stays atomic and race-free. The FILE constants above are
+# retained only as the backfill source.
+
 def load_templates() -> List[Dict[str, Any]]:
-    return _safe_read(TEMPLATES_FILE)
+    from .repository import templates_repo
+    return templates_repo.list()
 
 
 def save_templates(items: List[Dict[str, Any]]) -> None:
-    _safe_write(TEMPLATES_FILE, items)
+    from .repository import templates_repo
+    templates_repo.replace_all(items)
 
 
 def load_declarations() -> List[Dict[str, Any]]:
-    return _safe_read(DECLARATIONS_FILE)
+    from .repository import declarations_repo
+    return declarations_repo.list()
 
 
 def save_declarations(items: List[Dict[str, Any]]) -> None:
-    _safe_write(DECLARATIONS_FILE, items)
+    from .repository import declarations_repo
+    declarations_repo.replace_all(items)

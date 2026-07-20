@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Tuple
 import anthropic
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
-from ..store import load_declarations, save_declarations
+from ..repository import declarations_repo
 from ..store_clients import load_clients
 
 router = APIRouter(tags=["extraction"])
@@ -676,9 +676,10 @@ async def extract_documents(files: list[UploadFile] = File(...), mode: str = For
                 _build_declaration_record(ex, mode, [f.filename or "document"], now)
             )
 
-    existing = load_declarations()
-    existing.extend(declarations_payload)
-    save_declarations(existing)
+    # Each freshly-extracted record has a unique id; insert them individually so
+    # a concurrent write elsewhere can't clobber the batch (whole-list rewrite).
+    for record in declarations_payload:
+        declarations_repo.insert(record)
 
     return {
         "status": "ok",

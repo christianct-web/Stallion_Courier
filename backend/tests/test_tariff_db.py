@@ -163,19 +163,19 @@ def test_no_mojibake_in_text_fields(entries):
     assert not bad, f"mojibake in text fields: {bad[:10]}"
 
 
-def test_add_line_persists_thn_needs_review(monkeypatch):
+def test_add_line_persists_thn_needs_review():
     # Codex review P2: the deliberate-block marker must survive add_line's
     # field whitelist so clients can distinguish "blocked pending broker
     # review" from "no match".
     from app.services import courier_service
-    store = [{"id": "m-test", "lines": [], "exch_rate": 6.75, "totals": {}}]
-    monkeypatch.setattr(courier_service, "load_manifests", lambda: store)
-    monkeypatch.setattr(courier_service, "save_manifests", lambda items: None)
-    line = courier_service.add_line("m-test", {
+    m = courier_service.create_manifest({
+        "manifest_no": "THN-NEEDS-REVIEW", "arrival_date": "2026-05-06", "exch_rate": 6.75,
+    })
+    line = courier_service.add_line(m["id"], {
         "description": "cinnamon", "cost_usd": 10, "thn_needs_review": True,
     })
     assert line["thn_needs_review"] is True
-    plain = courier_service.add_line("m-test", {
+    plain = courier_service.add_line(m["id"], {
         "description": "smartphone", "thn": "85171300", "cost_usd": 10,
     })
     assert plain["thn_needs_review"] is False

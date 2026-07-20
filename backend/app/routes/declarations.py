@@ -16,7 +16,8 @@ from ..auth import request_user
 from ..models import DeclarationReq, ExportReq, TemplateIn, TemplateOut, WorksheetInput
 from ..services.declaration_service import export_xml, validate_decl
 from ..services.worksheet_service import calculate_worksheet
-from ..store import LOOKUPS, load_templates, save_templates, load_declarations, save_declarations
+from ..repository import declarations_repo
+from ..store import LOOKUPS, load_templates, load_declarations
 
 router = APIRouter(tags=["declarations"])
 
@@ -52,10 +53,9 @@ def templates_list():
 
 @router.post("/templates", response_model=TemplateOut)
 def templates_create(req: TemplateIn):
-    items = load_templates()
+    from ..repository import templates_repo
     row = {"id": str(uuid.uuid4()), **req.model_dump()}
-    items.append(row)
-    save_templates(items)
+    templates_repo.insert(row)
     return row
 
 
@@ -150,27 +150,27 @@ def declarations_get(declaration_id: str):
 
 @router.post("/declarations")
 def declarations_upsert(req: Dict[str, Any]):
-    items = load_declarations()
     row_id = str(req.get("id") or "").strip()
     if not row_id:
         raise HTTPException(status_code=400, detail="id is required")
 
-    found = next((i for i, r in enumerate(items) if str(r.get("id")) == row_id), None)
-    if found is None:
+    def _create() -> Dict[str, Any]:
         # New records may only be created in a pre-review state. A client
         # sending status=approved/submitted/receipted would otherwise mint a
         # declaration that skips the review lifecycle (and passes the
         # approved-only pack gate) — clamp anything privileged to draft.
-        requested_status = str(req.get("status") or "").strip().lower()
-        req["status"] = requested_status if requested_status in {"draft", "pending_review"} else "draft"
-        req.pop("revise", None)
-        items.append(req)
-    else:
-        existing = items[found]
+        new = dict(req)
+        requested_status = str(new.get("status") or "").strip().lower()
+        new["status"] = requested_status if requested_status in {"draft", "pending_review"} else "draft"
+        new.pop("revise", None)
+        return new
+
+    def _update(existing: Dict[str, Any]) -> Dict[str, Any]:
+        body = dict(req)
         current_status = str(existing.get("status", "")).lower()
-        wants_revise = bool(req.pop("revise", False))
+        wants_revise = bool(body.pop("revise", False))
         touches_content = any(
-            k in req and req[k] != existing.get(k) for k in CONTENT_FIELDS
+            k in body and body[k] != existing.get(k) for k in CONTENT_FIELDS
         )
 
         # F11: approved/submitted/receipted declarations are immutable.
@@ -186,8 +186,8 @@ def declarations_upsert(req: Dict[str, Any]):
                         "and clear the existing approval."
                     ),
                 )
-            req = {
-                **req,
+            body = {
+                **body,
                 "status": "draft",
                 "reviewed_by": None,
                 "reviewed_at": None,
@@ -196,79 +196,80 @@ def declarations_upsert(req: Dict[str, Any]):
             }
         else:
             # Status changes must go through the review endpoint, not upsert.
-            req.pop("status", None)
+            body.pop("status", None)
 
-        items[found] = {**existing, **req}
-    save_declarations(items)
+        return {**existing, **body}
+
+    # Atomic insert-or-update on a single row; concurrent writers to this id
+    # serialize instead of clobbering each other via a whole-list rewrite.
+    declarations_repo.upsert(row_id, _create, _update)
     return {"ok": True, "id": row_id}
 
 
 @router.delete("/declarations/{declaration_id}")
 def declarations_delete(declaration_id: str):
-    items = load_declarations()
-    new_items = [r for r in items if str(r.get("id")) != declaration_id]
-    if len(new_items) == len(items):
+    if not declarations_repo.delete(declaration_id):
         raise HTTPException(status_code=404, detail="Declaration not found")
-    save_declarations(new_items)
     return {"ok": True, "id": declaration_id}
 
 
 # ─── Review / status transition ───────────────────────────────────────────────
 @router.patch("/declarations/{declaration_id}/review")
 def declarations_review(declaration_id: str, req: Dict[str, Any], request: Request):
-    items = load_declarations()
-    idx = next((i for i, r in enumerate(items) if str(r.get("id")) == declaration_id), None)
-    if idx is None:
+    def _mutate(row: Dict[str, Any]) -> Dict[str, Any]:
+        action = str(req.get("action") or "").lower()
+        if action not in REVIEW_ACTIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid action '{action}'. Allowed: {sorted(REVIEW_ACTIONS)}",
+            )
+
+        # F9: enforce the status lifecycle — no created→receipted jumps.
+        current = str(row.get("status", "") or "draft").lower()
+        allowed = STATUS_TRANSITIONS.get(current, {"pending_review"})
+        if action != current and action not in allowed:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Invalid status transition '{current}' → '{action}'. "
+                    f"Allowed from '{current}': {sorted(allowed) or ['(terminal)']}"
+                ),
+            )
+
+        # Phase 3: review identity and authority come only from the verified
+        # session. Caller-supplied reviewed_by/reviewed_at fields are ignored.
+        user = request_user(request)
+        broker_actions = {"approved", "rejected", "needs_correction", "submitted", "receipted"}
+        if action in broker_actions and user.role not in {"broker", "admin"}:
+            raise HTTPException(
+                status_code=403,
+                detail="Broker or administrator role required for this status transition",
+            )
+        reviewed_by = user.name
+
+        patch: Dict[str, Any] = {
+            "status":       action,
+            "review_notes": req.get("review_notes", row.get("review_notes", "")),
+            "reviewed_by":  reviewed_by or row.get("reviewed_by"),
+            "reviewed_at":  datetime.now(timezone.utc).isoformat(),
+        }
+
+        if action == "receipted" and req.get("receipt_number"):
+            patch["receipt_number"] = req["receipt_number"]
+
+        # F10/F11: the review endpoint no longer accepts content edits
+        # (header/worksheet/items/client_id/declaration_type). Reviewing and
+        # editing are separate acts; edits go through the upsert endpoint,
+        # which invalidates approvals on material change.
+        return {**row, **patch}
+
+    # Read, authorise, and stamp the record inside one atomic transaction so a
+    # concurrent review cannot overwrite this one (the F5/Phase-3 lost-update
+    # race the JSON store suffered).
+    updated = declarations_repo.update(declaration_id, _mutate)
+    if updated is None:
         raise HTTPException(status_code=404, detail="Declaration not found")
-
-    action = str(req.get("action") or "").lower()
-    if action not in REVIEW_ACTIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid action '{action}'. Allowed: {sorted(REVIEW_ACTIONS)}",
-        )
-
-    # F9: enforce the status lifecycle — no created→receipted jumps.
-    current = str(items[idx].get("status", "") or "draft").lower()
-    allowed = STATUS_TRANSITIONS.get(current, {"pending_review"})
-    if action != current and action not in allowed:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"Invalid status transition '{current}' → '{action}'. "
-                f"Allowed from '{current}': {sorted(allowed) or ['(terminal)']}"
-            ),
-        )
-
-    # Phase 3: review identity and authority come only from the verified session.
-    # Caller-supplied reviewed_by/reviewed_at fields are ignored.
-    user = request_user(request)
-    broker_actions = {"approved", "rejected", "needs_correction", "submitted", "receipted"}
-    if action in broker_actions and user.role not in {"broker", "admin"}:
-        raise HTTPException(
-            status_code=403,
-            detail="Broker or administrator role required for this status transition",
-        )
-    reviewed_by = user.name
-
-    patch: Dict[str, Any] = {
-        "status":       action,
-        "review_notes": req.get("review_notes", items[idx].get("review_notes", "")),
-        "reviewed_by":  reviewed_by or items[idx].get("reviewed_by"),
-        "reviewed_at":  datetime.now(timezone.utc).isoformat(),
-    }
-
-    if action == "receipted" and req.get("receipt_number"):
-        patch["receipt_number"] = req["receipt_number"]
-
-    # F10/F11: the review endpoint no longer accepts content edits
-    # (header/worksheet/items/client_id/declaration_type). Reviewing and
-    # editing are separate acts; edits go through the upsert endpoint,
-    # which invalidates approvals on material change.
-
-    items[idx] = {**items[idx], **patch}
-    save_declarations(items)
-    return {"ok": True, "id": declaration_id, "status": action}
+    return {"ok": True, "id": declaration_id, "status": updated["status"]}
 
 
 # ─── Activity log ──────────────────────────────────────────────────────────────
