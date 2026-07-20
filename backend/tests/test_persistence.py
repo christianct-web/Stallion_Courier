@@ -8,7 +8,10 @@ not lose writes.
 """
 from __future__ import annotations
 
+import json
 import threading
+
+import pytest
 
 from app.repository import declarations_repo
 
@@ -49,6 +52,50 @@ def test_update_is_atomic_under_concurrency():
         t.join()
 
     assert declarations_repo.get("counter")["n"] == 200
+
+
+def test_upsert_creates_then_updates():
+    def create():
+        return {"id": "u1", "status": "draft", "hits": 1}
+
+    def bump(row):
+        return {**row, "hits": row["hits"] + 1}
+
+    first = declarations_repo.upsert("u1", create, bump)
+    assert first["hits"] == 1  # created
+    second = declarations_repo.upsert("u1", create, bump)
+    assert second["hits"] == 2  # updated in place
+    assert declarations_repo.get("u1")["hits"] == 2
+
+
+def test_upsert_same_new_id_converges_under_concurrency():
+    """Many threads upserting the SAME not-yet-existent id must all succeed.
+
+    On PostgreSQL the old SELECT ... FOR UPDATE upsert let two creators both see
+    None and one insert then raised IntegrityError. The retry-based upsert must
+    converge: exactly one create, the rest updates, and no error surfaces.
+    (On SQLite writers serialize, so this also passes — a portable guard.)
+    """
+    errors = []
+
+    def worker(i):
+        try:
+            declarations_repo.upsert(
+                "shared",
+                lambda: {"id": "shared", "hits": 1},
+                lambda r: {**r, "hits": r.get("hits", 0) + 1},
+            )
+        except Exception as exc:  # pragma: no cover - failure path
+            errors.append(repr(exc))
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(16)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, errors[:3]
+    assert declarations_repo.get("shared")["hits"] == 16  # 1 create + 15 updates
 
 
 def test_update_rollback_on_exception_leaves_record_unchanged():

@@ -45,43 +45,64 @@ def _marker(name: str) -> Path:
 
 
 def _read_json_list(path: Path) -> List[Dict[str, Any]]:
+    """Read a JSON array from ``path``.
+
+    A missing file is an empty collection (nothing to migrate). Anything else
+    that isn't a valid JSON array raises — the caller must NOT mark the
+    collection migrated, so fixing the file and restarting retries the import
+    instead of silently dropping the data.
+    """
     if not path.exists():
         return []
     try:
         data = json.loads(path.read_text(encoding="utf-8") or "[]")
-    except json.JSONDecodeError:
-        logger.warning("Skipping %s — not valid JSON", path)
-        return []
-    return data if isinstance(data, list) else []
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{path} is not valid JSON: {exc}") from exc
+    if not isinstance(data, list):
+        raise RuntimeError(f"{path} must contain a JSON array, got {type(data).__name__}")
+    return data
+
+
+def _write_marker(name: str, note: str) -> None:
+    _MARKER_DIR.mkdir(parents=True, exist_ok=True)
+    _marker(name).write_text(note + "\n", encoding="utf-8")
 
 
 def migrate_collection(repo: Repository, path: Path, name: str, *, force: bool = False) -> int:
     """Import one collection. Returns the number of records imported.
 
     Idempotent: skips if already migrated (marker present) or the table already
-    holds rows, unless ``force`` is set.
+    holds rows, unless ``force`` is set. Raises (without marking migrated) if the
+    source JSON is invalid or any record lacks an id, so no legacy data is
+    silently omitted.
     """
     if not force and _marker(name).exists():
         return 0
     if not force and repo.count() > 0:
         # Table already populated by a prior run; record the marker and move on.
-        _MARKER_DIR.mkdir(parents=True, exist_ok=True)
-        _marker(name).write_text("skipped: table already populated\n", encoding="utf-8")
+        _write_marker(name, "skipped: table already populated")
         return 0
 
     records = _read_json_list(path)
-    usable = [r for r in records if isinstance(r, dict) and str(r.get("id") or "").strip()]
-    skipped = len(records) - len(usable)
-    if skipped:
-        logger.warning("%s: skipped %d record(s) without an id", name, skipped)
+    missing_id = [
+        i for i, r in enumerate(records)
+        if not (isinstance(r, dict) and str(r.get("id") or "").strip())
+    ]
+    if missing_id:
+        # Fail loud rather than drop rows — the marker is not written, so the
+        # import retries once the source is fixed.
+        raise RuntimeError(
+            f"{name}: {len(missing_id)} record(s) in {path} are missing an id "
+            f"(indexes {missing_id[:10]}); refusing to migrate"
+        )
 
-    if usable:
-        repo.replace_all(usable)
+    if records:
+        repo.replace_all(records)
 
-    _MARKER_DIR.mkdir(parents=True, exist_ok=True)
-    _marker(name).write_text(f"migrated {len(usable)} record(s)\n", encoding="utf-8")
-    logger.info("Migrated %d %s record(s) into the database", len(usable), name)
-    return len(usable)
+    # Marker is written only after a verified import (or a legitimate skip).
+    _write_marker(name, f"migrated {len(records)} record(s)")
+    logger.info("Migrated %d %s record(s) into the database", len(records), name)
+    return len(records)
 
 
 def run_backfill(*, force: bool = False) -> Dict[str, int]:

@@ -17,6 +17,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List, Optional
 
 from sqlalchemy import Table, delete, func, insert, select, update as sql_update
+from sqlalchemy.exc import IntegrityError
 
 from .db import (
     clients_table,
@@ -25,7 +26,12 @@ from .db import (
     manifests_table,
     sheets_table,
     templates_table,
+    write_transaction,
 )
+
+# A concurrent create losing the insert race, or a row deleted between a
+# get() and the follow-up update(), is retried this many times before giving up.
+_UPSERT_RETRIES = 5
 
 Record = Dict[str, Any]
 Mutator = Callable[[Record], Record]
@@ -65,7 +71,7 @@ class Repository:
         record_id = str(record.get(self.id_field) or "").strip()
         if not record_id:
             raise ValueError(f"record is missing required field '{self.id_field}'")
-        with engine.begin() as conn:
+        with write_transaction() as conn:
             conn.execute(
                 insert(self.table).values(id=record_id, data=record, version=1)
             )
@@ -78,7 +84,7 @@ class Repository:
         locked for the duration of the transaction, so concurrent updates to the
         same id serialize and no update is lost.
         """
-        with engine.begin() as conn:
+        with write_transaction() as conn:
             stmt = select(self.table.c.data, self.table.c.version).where(
                 self.table.c.id == str(record_id)
             )
@@ -100,33 +106,38 @@ class Repository:
     def upsert(self, record_id: str, create: Callable[[], Record], mutate: Mutator) -> Record:
         """Insert the record if absent, otherwise atomically update it.
 
-        The check-and-write runs in one transaction so a concurrent creator of
-        the same id cannot slip in between (the second caller updates instead).
+        On PostgreSQL ``SELECT ... FOR UPDATE`` cannot lock a not-yet-existent
+        row, so two concurrent creators could both see ``None`` and one insert
+        would then raise a unique violation. Rather than hold a lock across the
+        gap, we try the insert and, if a concurrent creator won (IntegrityError)
+        — or the row is deleted between our get and update — retry, converging on
+        the surviving row via :meth:`update`.
         """
-        with engine.begin() as conn:
-            stmt = select(self.table.c.data, self.table.c.version).where(
-                self.table.c.id == str(record_id)
-            )
-            if engine.dialect.name != "sqlite":
-                stmt = stmt.with_for_update()
-            row = conn.execute(stmt).first()
-            if row is None:
+        record_id = str(record_id)
+        for _ in range(_UPSERT_RETRIES):
+            if self.get(record_id) is None:
                 new_record = create()
-                new_record[self.id_field] = str(record_id)
-                conn.execute(
-                    insert(self.table).values(id=str(record_id), data=new_record, version=1)
-                )
-                return new_record
-            new_record = mutate(dict(row[0]))
-            conn.execute(
-                sql_update(self.table)
-                .where(self.table.c.id == str(record_id))
-                .values(data=new_record, version=row[1] + 1)
-            )
-            return new_record
+                new_record[self.id_field] = record_id
+                try:
+                    with write_transaction() as conn:
+                        conn.execute(
+                            insert(self.table).values(id=record_id, data=new_record, version=1)
+                        )
+                    return new_record
+                except IntegrityError:
+                    # A concurrent creator inserted first — fall through and
+                    # apply our change as an update on the next iteration.
+                    continue
+            updated = self.update(record_id, mutate)
+            if updated is not None:
+                return updated
+            # Row vanished (deleted concurrently) between get and update; retry.
+        raise RuntimeError(
+            f"upsert for id={record_id!r} did not converge after {_UPSERT_RETRIES} attempts"
+        )
 
     def delete(self, record_id: str) -> bool:
-        with engine.begin() as conn:
+        with write_transaction() as conn:
             result = conn.execute(
                 delete(self.table).where(self.table.c.id == str(record_id))
             )
@@ -140,7 +151,7 @@ class Repository:
         rewrites everything and would reintroduce the lost-update race if used
         for single-record edits.
         """
-        with engine.begin() as conn:
+        with write_transaction() as conn:
             conn.execute(delete(self.table))
             for record in records:
                 record_id = str(record.get(self.id_field) or "").strip()

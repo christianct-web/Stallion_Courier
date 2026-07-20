@@ -43,15 +43,15 @@ logger = logging.getLogger("stallion")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: ensure the database schema exists and migrate any legacy JSON
-    # stores into it (idempotent — a no-op once migrated).
-    try:
-        init_db()
-        imported = run_backfill()
-        migrated = sum(imported.values())
-        if migrated:
-            logger.info("Startup: migrated %d legacy JSON record(s) into the database", migrated)
-    except Exception as exc:
-        logger.warning("Startup database init/backfill failed (non-fatal): %s", exc)
+    # stores into it (idempotent — a no-op once migrated). Every migrated route
+    # depends on the database, so this must FAIL CLOSED: a schema or migration
+    # error aborts startup rather than serving an API that 500s or silently
+    # omits legacy data while /health still reports OK.
+    init_db()
+    imported = run_backfill()
+    migrated = sum(imported.values())
+    if migrated:
+        logger.info("Startup: migrated %d legacy JSON record(s) into the database", migrated)
 
     # Startup: clean up expired generated files
     try:

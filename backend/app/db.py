@@ -17,6 +17,7 @@ plain JSON on SQLite and JSONB on PostgreSQL via a dialect variant.
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 from sqlalchemy import (
@@ -112,13 +113,13 @@ def _make_engine() -> Engine:
             dbapi_conn.isolation_level = None
 
         @event.listens_for(engine, "begin")
-        def _sqlite_begin_immediate(conn):  # pragma: no cover - trivial
-            # pysqlite otherwise defers the write lock until the first write,
-            # after the read in a read-modify-write has already happened — which
-            # reintroduces the lost-update race. BEGIN IMMEDIATE takes the write
-            # lock up front so update()'s SELECT+UPDATE is exclusive. Reads use
-            # engine.connect() (no begin) and stay lock-free.
-            conn.exec_driver_sql("BEGIN IMMEDIATE")
+        def _sqlite_begin(conn):  # pragma: no cover - trivial
+            # Only writers take the reserved lock up front (BEGIN IMMEDIATE), so
+            # a read-modify-write is exclusive and can't lose an update. Readers
+            # autobegin DEFERRED and, under WAL, neither block nor serialize
+            # against the writer. The write flag is set by write_transaction().
+            mode = "IMMEDIATE" if conn.info.get("_stallion_write") else "DEFERRED"
+            conn.exec_driver_sql(f"BEGIN {mode}")
 
         return engine
 
@@ -126,6 +127,23 @@ def _make_engine() -> Engine:
 
 
 engine = _make_engine()
+
+
+@contextmanager
+def write_transaction():
+    """A transaction for mutations.
+
+    On SQLite it opens ``BEGIN IMMEDIATE`` so writers serialize and no
+    read-modify-write is lost; reads (plain ``engine.connect()``) stay on
+    DEFERRED and don't take the write lock. On PostgreSQL it is an ordinary
+    transaction — row locking is handled by ``SELECT ... FOR UPDATE`` in the
+    repository.
+    """
+    with engine.connect() as conn:
+        if _IS_SQLITE:
+            conn.info["_stallion_write"] = True
+        with conn.begin():
+            yield conn
 
 
 def init_db() -> None:
