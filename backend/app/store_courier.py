@@ -1,42 +1,20 @@
 """
 Courier manifest persistence layer.
 
-Mirrors the pattern used by store_clients.py — a thin wrapper around the
-common atomic-write/file-locking helpers in store.py.
+Phase 3B: manifests now live in the transactional database (see db.py /
+repository.py). These functions delegate to ``manifests_repo`` so per-record
+mutations are atomic and the whole-file lost-update race is gone. The record
+shape is unchanged — a manifest dict with nested ``lines`` and
+``officer_examination`` — stored in a JSON/JSONB column rather than normalized
+tables, so no service or export code had to change.
 
-Note: As discussed in the Phase 1 plan, the JSON file store is fine for
-MVP but will need to migrate to SQLite once monthly volume passes ~100
-manifests. Schema design for that migration:
-
-    CREATE TABLE courier_manifests (
-        id            TEXT PRIMARY KEY,
-        manifest_no   TEXT UNIQUE NOT NULL,
-        arrival_date  TEXT NOT NULL,
-        exch_rate     REAL NOT NULL,
-        cargo_reporter TEXT,
-        notes         TEXT,
-        status        TEXT NOT NULL,
-        created_at    TEXT, updated_at TEXT
-    );
-    CREATE TABLE courier_lines (
-        id            TEXT PRIMARY KEY,
-        manifest_id   TEXT NOT NULL REFERENCES courier_manifests(id),
-        line_no       INTEGER NOT NULL,
-        hawb, shipper, importer, description, thn, ...
-    );
-    CREATE TABLE courier_corrections (
-        id            TEXT PRIMARY KEY,
-        manifest_id   TEXT NOT NULL REFERENCES courier_manifests(id),
-        line_no       INTEGER,
-        kind          TEXT,
-        ...
-    );
+``COURIER_FILE`` is retained only as the JSON→DB backfill source.
 """
 from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from .store import _safe_read, _safe_write, DATA
+from .store import DATA
 
 COURIER_FILE = DATA / "courier_manifests.json"
 if not COURIER_FILE.exists():
@@ -44,10 +22,12 @@ if not COURIER_FILE.exists():
 
 
 def load_manifests() -> List[Dict[str, Any]]:
-    """Load all courier manifests from the JSON store."""
-    return _safe_read(COURIER_FILE)
+    """Load all courier manifests from the transactional store."""
+    from .repository import manifests_repo
+    return manifests_repo.list()
 
 
 def save_manifests(items: List[Dict[str, Any]]) -> None:
-    """Persist all courier manifests to the JSON store."""
-    _safe_write(COURIER_FILE, items)
+    """Persist all courier manifests (whole-list; backfill/bulk callers only)."""
+    from .repository import manifests_repo
+    manifests_repo.replace_all(items)

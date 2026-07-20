@@ -41,3 +41,27 @@ _env = os.environ.get("ACE_BACKEND_PATH", "").strip()
 if not _env or not Path(_env).exists():
     _build_stub()
     os.environ["ACE_BACKEND_PATH"] = str(_STUB_ROOT)
+
+
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _isolate_database():
+    """Give every test empty transactional tables.
+
+    Phase 3B moved the JSON stores into a shared database, so tests can no
+    longer isolate themselves by swapping a per-test data file (the old
+    store_courier.COURIER_FILE / SHEETS_FILE seam). Truncating the tables before
+    each test restores that isolation for both the unittest-style courier tests
+    and the pytest-style declaration tests.
+    """
+    from sqlalchemy import delete
+
+    import app.repository  # noqa: F401 — ensures tables are created/imported
+    from app.db import engine, metadata
+
+    with engine.begin() as conn:
+        for table in reversed(metadata.sorted_tables):
+            conn.execute(delete(table))
+    yield

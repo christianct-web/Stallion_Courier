@@ -12,7 +12,8 @@ from fastapi.responses import FileResponse
 from ..services.pack_service import generate_pack, resolve_generated_file
 from ..services.costing_service import generate_costing_pdf
 from ..services.invoice_service import generate_brokerage_invoice
-from ..store import load_declarations, save_declarations
+from ..repository import declarations_repo
+from ..store import load_declarations
 from ..store_clients import load_clients
 from ..broker_profile import get_broker_profile
 
@@ -96,11 +97,13 @@ def brokerage_invoice_generate(declaration_id: str, req: Dict[str, Any]):
         notes=str(req.get("notes") or ""),
     )
     inv_rec = {"docId": doc_id, "brokerageFee": brokerage_fee, "generatedAt": datetime.utcnow().isoformat() + "Z"}
-    idx = next(i for i, d in enumerate(all_decls) if str(d.get("id")) == declaration_id)
-    existing = all_decls[idx].get("brokerage_invoices") or []
-    existing.append(inv_rec)
-    all_decls[idx] = {**all_decls[idx], "brokerage_invoices": existing}
-    save_declarations(all_decls)
+
+    def _add_invoice(row: Dict[str, Any]) -> Dict[str, Any]:
+        existing = row.get("brokerage_invoices") or []
+        existing.append(inv_rec)
+        return {**row, "brokerage_invoices": existing}
+
+    declarations_repo.update(declaration_id, _add_invoice)
     return {"ok": True, "doc_id": doc_id, "download_url": f"/pack/file/{doc_id}"}
 
 
@@ -160,18 +163,18 @@ def pack_generate(req: Dict[str, Any]):
             ),
             "preflight": result.get("preflight", {}).get("counts", {}),
         }
-        row    = all_items[row_idx]
-        events = row.get("export_events") or []
-        if not isinstance(events, list):
-            events = []
-        events.append(event)
+        def _add_export_event(row: Dict[str, Any]) -> Dict[str, Any]:
+            events = row.get("export_events") or []
+            if not isinstance(events, list):
+                events = []
+            events.append(event)
+            return {
+                **row,
+                "export_events": events[-10:],
+                "last_export":   event,
+            }
 
-        all_items[row_idx] = {
-            **row,
-            "export_events": events[-10:],
-            "last_export":   event,
-        }
-        save_declarations(all_items)
+        declarations_repo.update(str(declaration_id), _add_export_event)
 
     return result
 
