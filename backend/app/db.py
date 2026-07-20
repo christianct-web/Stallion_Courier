@@ -142,8 +142,16 @@ def write_transaction():
     with engine.connect() as conn:
         if _IS_SQLITE:
             conn.info["_stallion_write"] = True
-        with conn.begin():
-            yield conn
+        try:
+            with conn.begin():
+                yield conn
+        finally:
+            # ``conn.info`` lives on the pooled DBAPI connection and survives
+            # check-in. Clear the flag on every path (commit, rollback, error)
+            # so a later read reusing this connection begins DEFERRED rather
+            # than silently re-acquiring the write lock.
+            if _IS_SQLITE:
+                conn.info.pop("_stallion_write", None)
 
 
 def init_db() -> None:

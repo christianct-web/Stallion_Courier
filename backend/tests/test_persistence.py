@@ -54,6 +54,41 @@ def test_update_is_atomic_under_concurrency():
     assert declarations_repo.get("counter")["n"] == 200
 
 
+def test_write_flag_does_not_leak_to_pooled_reads():
+    """A read reusing a connection returned by a write must begin DEFERRED.
+
+    The SQLite write lock is opted into via a flag on ``Connection.info``, which
+    is backed by the pooled DBAPI connection and survives check-in. If the flag
+    isn't cleared, a later read reusing that connection would re-acquire the
+    write lock. This captures the BEGIN mode of a post-write read and asserts it
+    is DEFERRED, never IMMEDIATE.
+    """
+    from sqlalchemy import event, text
+
+    from app.db import _IS_SQLITE, engine
+
+    if not _IS_SQLITE:
+        import pytest
+        pytest.skip("BEGIN IMMEDIATE lock scoping is SQLite-specific")
+
+    modes = []
+
+    def _capture(conn):
+        modes.append("IMMEDIATE" if conn.info.get("_stallion_write") else "DEFERRED")
+
+    event.listen(engine, "begin", _capture)
+    try:
+        declarations_repo.insert({"id": "w1", "n": 1})  # a write: sets then clears the flag
+        modes.clear()
+        # A read that reuses the just-returned pooled connection.
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        assert modes, "read did not open a transaction"
+        assert all(m == "DEFERRED" for m in modes), f"read took the write lock: {modes}"
+    finally:
+        event.remove(engine, "begin", _capture)
+
+
 def test_upsert_creates_then_updates():
     def create():
         return {"id": "u1", "status": "draft", "hits": 1}
