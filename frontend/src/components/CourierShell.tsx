@@ -118,6 +118,14 @@ export default function CourierShell() {
   const { pathname } = useLocation();
   const { canInstall, promptInstall } = useInstallPrompt();
 
+  /* Flag the fixed bottom nav so the global session chip can clear it — see
+     `body[data-bottom-nav]` in index.css. */
+  useEffect(() => {
+    if (!isMobile) return;
+    document.body.dataset.bottomNav = "1";
+    return () => { delete document.body.dataset.bottomNav; };
+  }, [isMobile]);
+
   /* Desktop / tablet: keep the established Stallion chrome untouched. */
   if (!isMobile) {
     return (
@@ -192,6 +200,7 @@ export default function CourierShell() {
 
       {/* Page body - pad the bottom so content clears the fixed nav. */}
       <main
+        className="stallion-main"
         style={{
           flex: 1,
           minHeight: 0,

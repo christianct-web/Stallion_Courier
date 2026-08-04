@@ -17,7 +17,7 @@ export default function StallionShell() {
           the declaration they are working on. */}
       <a href="#main" className="skip-link">Skip to content</a>
       <TopNav />
-      <main id="main" style={{ flex: 1, minHeight: 0 }}>
+      <main id="main" className="stallion-main" style={{ flex: 1, minHeight: 0 }}>
         <Outlet />
       </main>
     </div>

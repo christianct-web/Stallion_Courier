@@ -307,6 +307,38 @@
   }
 }
 
+@layer components {
+  /* Page-fill.
+     Pages set `minHeight: 100%` on their root, which only resolves against a
+     parent with a definite height — inside a flex shell it silently collapsed
+     to the content height, leaving a colour seam between the end of the page
+     and the shell background. Making the shell a flex column and letting the
+     page grow into it removes the seam at any content length. */
+  .stallion-main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stallion-main > * {
+    flex: 1 0 auto;
+  }
+
+  /* The signed-in session chip is fixed to the bottom-right. On the courier
+     module's mobile layout a fixed bottom nav occupies that space, so the shell
+     flags its presence and the chip lifts above it — it was covering the third
+     tab outright.
+
+     `bottom` lives here rather than in the component's inline style: an inline
+     value would win over this rule and the chip would never lift. */
+  .stallion-session-chip {
+    bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+
+  body[data-bottom-nav] .stallion-session-chip {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+}
+
 @layer utilities {
   .kbd {
     @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono bg-muted border rounded;
