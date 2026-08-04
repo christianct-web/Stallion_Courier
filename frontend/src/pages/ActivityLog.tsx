@@ -2,17 +2,9 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { STALLION_BASE_URL } from "@/services/stallionApi";
+import { C } from "@/brand/stallion";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void_: "#111318", voidSurface: "#1F2430", voidBorder: "#2E3748",
-  ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  approved: "#1A5E3A", pending: "#96700A", correction: "#963A10",
-  rejected: "#7A1E1E", submitted: "#1E4A8C", receipted: "#1E4A8C",
-  extracted: "#1A5E3A",
-};
 
 type LogEvent = {
   event: string;
@@ -29,12 +21,12 @@ type LogEvent = {
 const EVENT_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   created:          { label: "CREATED",    color: C.inkMid,     bg: "#F0F0F0",      dot: C.inkMid },
   extracted:        { label: "EXTRACTED",  color: "#2BB673",    bg: "#E8F8F2",      dot: "#2BB673" },
-  pending_review:   { label: "PENDING",    color: C.pending,    bg: "#FEF3DC",      dot: C.pending },
-  approved:         { label: "APPROVED",   color: C.approved,   bg: "#EBF7F1",      dot: C.approved },
-  needs_correction: { label: "CORRECTION", color: C.correction, bg: "#FEF0E8",      dot: C.correction },
-  rejected:         { label: "REJECTED",   color: C.rejected,   bg: "#FEE8E8",      dot: C.rejected },
-  submitted:        { label: "SUBMITTED",  color: "#1E4A8C",    bg: "#EEF2FA",      dot: "#1E4A8C" },
-  receipted:        { label: "RECEIPTED",  color: "#1E4A8C",    bg: "#EEF2FA",      dot: "#1E4A8C" },
+  pending_review:   { label: "PENDING",    color: C.pending,    bg: "#FBF0D8",      dot: C.pending },
+  approved:         { label: "APPROVED",   color: C.approved,   bg: "#E6EFE8",      dot: C.approved },
+  needs_correction: { label: "CORRECTION", color: C.correction, bg: "#FBEDE1",      dot: C.correction },
+  rejected:         { label: "REJECTED",   color: C.rejected,   bg: "#FBE6E4",      dot: C.rejected },
+  submitted:        { label: "SUBMITTED",  color: "#1E4A8C",    bg: "#EBF0F8",      dot: "#1E4A8C" },
+  receipted:        { label: "RECEIPTED",  color: "#1E4A8C",    bg: "#EBF0F8",      dot: "#1E4A8C" },
 };
 
 function eventCfg(event: string) {
@@ -148,7 +140,7 @@ export default function ActivityLog() {
         {/* Page header */}
         <div style={{ borderBottom: `1px solid ${C.paperBorder}`, padding: "24px 32px 20px" }}>
           <div style={{ maxWidth: 1060, margin: "0 auto" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.16em", color: C.inkLight, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.16em", color: C.inkLight, marginBottom: 8 }}>
               ACTIVITY LOG
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
@@ -159,7 +151,7 @@ export default function ActivityLog() {
                 {[["TOTAL", events.length], ["TODAY", filtered.filter(e => isToday(new Date(e.timestamp))).length]].map(([l, v]) => (
                   <div key={l as string} style={{ textAlign: "right" }}>
                     <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 20, fontWeight: 700, color: C.inkMid, lineHeight: 1 }}>{v}</div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.inkLight, letterSpacing: "0.12em", marginTop: 4 }}>{l as string}</div>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.12em", marginTop: 4 }}>{l as string}</div>
                   </div>
                 ))}
               </div>
@@ -196,7 +188,7 @@ export default function ActivityLog() {
                       background: active ? C.inkMid : "transparent",
                       border: `1px solid ${active ? C.inkMid : C.paperBorder}`,
                       borderRadius: 3, cursor: "pointer",
-                      fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                       fontWeight: 700, letterSpacing: "0.1em",
                       color: active ? C.paper : C.inkLight,
                       transition: "all 0.12s",
@@ -218,7 +210,7 @@ export default function ActivityLog() {
                     background: active ? (cfg?.bg ?? C.paperAlt) : "transparent",
                     border: `1px solid ${active ? (cfg?.dot ?? C.inkMid) + "66" : C.paperBorder}`,
                     borderRadius: 3, cursor: "pointer",
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     fontWeight: 700, letterSpacing: "0.1em",
                     color: active ? (cfg?.color ?? C.inkMid) : C.inkLight,
                     transition: "all 0.12s",
@@ -258,7 +250,7 @@ export default function ActivityLog() {
             <div key={group.label} style={{ marginBottom: 32 }}>
               {/* Day header */}
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em",
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em",
                 color: C.inkLight, marginBottom: 10,
                 display: "flex", alignItems: "center", gap: 12,
               }}>
@@ -290,7 +282,7 @@ export default function ActivityLog() {
 
                       {/* Event badge */}
                       <span style={{
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
                         letterSpacing: "0.1em", color: cfg.color,
                         padding: "2px 7px", borderRadius: 2,
                         background: cfg.bg, border: `1px solid ${cfg.dot}33`,
@@ -309,11 +301,11 @@ export default function ActivityLog() {
                           {e.confidence != null && (() => {
                             const raw = e.confidence!;
                             const pct = Math.min(100, raw > 1 ? Math.round(raw) : Math.round(raw * 100));
-                            return <span style={{ marginLeft: 8, color: pct >= 90 ? "#1A5E3A" : pct >= 70 ? C.pending : "#963A10" }}>{pct}% conf.</span>;
+                            return <span style={{ marginLeft: 8, color: pct >= 90 ? "#1F5232" : pct >= 70 ? C.pending : "#963A10" }}>{pct}% conf.</span>;
                           })()}
                         </div>
                         {e.notes && (
-                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 10, color: C.inkLight, marginTop: 2, fontStyle: "italic" }}>
+                          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkLight, marginTop: 2, fontStyle: "italic" }}>
                             {e.notes}
                           </div>
                         )}
@@ -326,10 +318,10 @@ export default function ActivityLog() {
 
                       {/* Timestamp */}
                       <div style={{ textAlign: "right" }}>
-                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkMid }}>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkMid }}>
                           {format(new Date(e.timestamp), "HH:mm")}
                         </div>
-                        <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 10, color: C.inkLight, marginTop: 2 }}>
+                        <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: C.inkLight, marginTop: 2 }}>
                           {formatRelative(e.timestamp)}
                         </div>
                       </div>
@@ -341,7 +333,7 @@ export default function ActivityLog() {
           ))}
 
           {filtered.length > 0 && (
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em", marginTop: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em", marginTop: 8 }}>
               {filtered.length} event{filtered.length !== 1 ? "s" : ""}
               {(search || filter !== "all") && ` · filtered from ${events.length} total`}
             </div>

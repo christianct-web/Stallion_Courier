@@ -29,7 +29,7 @@ function Field({ label, value, onChange, placeholder, type = "text", required = 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <label style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
         letterSpacing: "0.08em", textTransform: "uppercase",
         color: empty ? C.critBorder : C.inkLight,
       }}>
@@ -251,7 +251,7 @@ export default function CourierManifests() {
               borderRadius: 4, padding: "14px 18px",
             }}>
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
                 marginBottom: 4,
               }}>
@@ -322,7 +322,7 @@ export default function CourierManifests() {
                     display: "flex", alignItems: "baseline", justifyContent: "space-between",
                     paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`,
                   }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", color: C.inkLight }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5, letterSpacing: "0.1em", textTransform: "uppercase", color: C.inkLight }}>
                       Total Taxes
                     </span>
                     <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 700, color: C.ink }}>
@@ -380,7 +380,7 @@ export default function CourierManifests() {
                     .map((h, i) => (
                       <th key={h} style={{
                         textAlign: i >= 3 && i <= 5 ? "right" : "left", padding: "11px 14px",
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 9.5,
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5,
                         letterSpacing: "0.1em", color: C.paperMid, fontWeight: 700,
                         textTransform: "uppercase", whiteSpace: "nowrap",
                         position: "sticky", top: 0,
@@ -430,7 +430,7 @@ export default function CourierManifests() {
                       <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
                         <a href={worksheetDownloadUrl(m.id)} download
                           style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                             letterSpacing: "0.06em", textTransform: "uppercase",
                             color: C.blue, textDecoration: "none",
                             padding: "4px 8px", border: `1px solid ${C.blue}33`,
@@ -443,7 +443,7 @@ export default function CourierManifests() {
                         </a>
                         <a href={hazmatDownloadUrl(m.id)} download
                           style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                             letterSpacing: "0.06em", textTransform: "uppercase",
                             color: C.amber, textDecoration: "none",
                             padding: "4px 8px", border: `1px solid ${C.amber}33`,
@@ -457,7 +457,7 @@ export default function CourierManifests() {
                         <button
                           onClick={() => setConfirmDelete(m)}
                           style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                             letterSpacing: "0.06em", textTransform: "uppercase",
                             color: C.critBorder, background: "transparent",
                             padding: "4px 8px", border: `1px solid ${C.critBorder}33`,

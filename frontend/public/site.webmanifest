@@ -7,8 +7,8 @@
   "scope": "/stallion/courier",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "theme_color": "#111318",
-  "background_color": "#111318",
+  "theme_color": "#14100E",
+  "background_color": "#14100E",
   "icons": [
     {
       "src": "/stallion-icon-192.png",

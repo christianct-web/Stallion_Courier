@@ -18,28 +18,19 @@ import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
 import { HsLookup } from "@/components/HsLookup";
 import { StatusPill } from "@/components/StatusPill";
 import { SecureDownloadLink } from "@/components/SecureDownloadLink";
+import { C } from "@/brand/stallion";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-  paper:      "#F6F3EE", paperAlt:  "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid:   "#CCC7BE", ink:       "#18150F", inkMid:      "#2C2820",
-  inkLight:   "#4A453D", void:      "#111318", voidMid:     "#191D26",
-  voidSurface:"#1F2430", voidBorder:"#2E3748", ghost:       "#B8C0CE",
-  ghostDim:   "#8A93A3", approved:  "#1A5E3A", pending:     "#96700A",
-  correction: "#963A10", warn:      "#FEF3DC", warnBorder:  "#D4A020",
-  warnText:   "#7A5000", critical:  "#FEE8E8", critBorder:  "#B02020",
-  submitted:  "#1E4A8C", receipted: "#1E4A8C",
-};
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
   draft:            { color: C.ghostDim,   bg: C.voidSurface, label: "DRAFT"       },
   pending_review:   { color: C.pending,    bg: C.warn,        label: "PENDING"     },
   pending:          { color: C.pending,    bg: C.warn,        label: "PENDING"     },
-  approved:         { color: C.approved,   bg: "#EBF7F1",     label: "APPROVED"    },
-  needs_correction: { color: C.correction, bg: "#FEF0E8",     label: "CORRECTION"  },
+  approved:         { color: C.approved,   bg: "#E6EFE8",     label: "APPROVED"    },
+  needs_correction: { color: C.correction, bg: "#FBEDE1",     label: "CORRECTION"  },
   rejected:         { color: C.critBorder, bg: C.critical,    label: "REJECTED"    },
-  submitted:        { color: C.submitted,  bg: "#EEF2FA",     label: "SUBMITTED"   },
-  receipted:        { color: C.receipted,  bg: "#EEF2FA",     label: "RECEIPTED"   },
+  submitted:        { color: C.submitted,  bg: "#EBF0F8",     label: "SUBMITTED"   },
+  receipted:        { color: C.receipted,  bg: "#EBF0F8",     label: "RECEIPTED"   },
 };
 
 function statusCfg(s: string) {
@@ -122,12 +113,12 @@ function BatchList({
     <div style={{ flex: 1, overflow: "auto", background: C.voidMid, display: "flex", flexDirection: "column" }}>
       {/* Sub-header */}
       <div style={{ padding: "12px 18px", borderBottom: `1px solid ${C.voidBorder}`, display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.ghostDim, letterSpacing: "0.1em" }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ghostDim, letterSpacing: "0.1em" }}>
           {batch.length} DECLARATION{batch.length !== 1 ? "S" : ""}
         </div>
         <button
           onClick={() => onSort(sort === "conf" ? "time" : "conf")}
-          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, padding: "2px 8px", background: "transparent", border: `1px solid ${C.voidBorder}`, borderRadius: 3, color: C.ghostDim, cursor: "pointer" }}
+          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "2px 8px", background: "transparent", border: `1px solid ${C.voidBorder}`, borderRadius: 3, color: C.ghostDim, cursor: "pointer" }}
         >
           {sort === "conf" ? "↑ CONF" : "RECENT"}
         </button>
@@ -155,7 +146,7 @@ function BatchList({
             {/* Pending group */}
             {sortedPending.length > 0 && (
               <>
-                <div style={{ padding: "8px 18px 4px", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.ghostDim }}>
+                <div style={{ padding: "8px 18px 4px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.ghostDim }}>
                   PENDING REVIEW · {sortedPending.length}
                 </div>
                 {sortedPending.map(d => <BatchRow key={d.id} d={d} onSelect={onSelect} />)}
@@ -164,7 +155,7 @@ function BatchList({
             {/* Other group */}
             {others.length > 0 && (
               <>
-                <div style={{ padding: "12px 18px 4px", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.ghostDim }}>
+                <div style={{ padding: "12px 18px 4px", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.ghostDim }}>
                   ALL · {others.length}
                 </div>
                 {others.map(d => <BatchRow key={d.id} d={d} onSelect={onSelect} />)}
@@ -176,7 +167,7 @@ function BatchList({
 
       {/* Keyboard shortcut strip */}
       <div style={{ padding: "8px 12px", borderTop: `1px solid ${C.voidBorder}`, background: C.voidMid, flexShrink: 0 }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.ghostDim, letterSpacing: "0.08em", display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ghostDim, letterSpacing: "0.08em", display: "flex", gap: 10, flexWrap: "wrap" }}>
           <span><kbd style={{ background: C.voidBorder, padding: "1px 4px", borderRadius: 2, color: C.ghost }}>←</kbd><kbd style={{ background: C.voidBorder, padding: "1px 4px", borderRadius: 2, color: C.ghost }}>→</kbd> navigate</span>
           <span><kbd style={{ background: C.voidBorder, padding: "1px 4px", borderRadius: 2, color: C.ghost }}>A</kbd> approve</span>
           <span><kbd style={{ background: C.voidBorder, padding: "1px 4px", borderRadius: 2, color: C.ghost }}>C</kbd> correct</span>
@@ -212,7 +203,7 @@ function BatchRow({ d, onSelect }: { d: ReviewDecl; onSelect: (id: string) => vo
         </div>
       )}
       {d.items && d.items.length > 0 && (
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.ghostDim, marginTop: 2 }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ghostDim, marginTop: 2 }}>
           {d.items.length} item{d.items.length !== 1 ? "s" : ""}
           {d.confidence != null && ` · ${d.confidence}% conf.`}
         </div>
@@ -233,7 +224,7 @@ function FieldRow({
   const displayVal = value == null || value === "" ? "—" : String(value);
   return (
     <div style={{ padding: "7px 0", borderBottom: `1px solid ${C.paperBorder}`, display: "flex", gap: 12 }}>
-      <div style={{ width: 160, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em", paddingTop: 2 }}>
+      <div style={{ width: 160, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em", paddingTop: 2 }}>
         {label}
       </div>
       {editable && onEdit ? (
@@ -242,7 +233,7 @@ function FieldRow({
           onChange={e => onEdit(e.target.value)}
           style={{
             flex: 1, fontFamily: mono ? "'JetBrains Mono', monospace" : "'Fraunces', serif",
-            fontSize: 13, color: C.ink, background: highlight ? "#FEF9EC" : "transparent",
+            fontSize: 13, color: C.ink, background: highlight ? "#FBF0D8" : "transparent",
             border: `1px solid ${highlight ? C.warnBorder : C.paperBorder}`,
             borderRadius: 3, padding: "3px 8px",
           }}
@@ -252,7 +243,7 @@ function FieldRow({
           flex: 1, fontFamily: mono ? "'JetBrains Mono', monospace" : "'Fraunces', serif",
           fontSize: 13, color: displayVal === "—" ? C.inkLight : C.ink,
           fontStyle: !mono && displayVal === "—" ? "italic" : "normal",
-          background: highlight ? "#FEF9EC" : "transparent",
+          background: highlight ? "#FBF0D8" : "transparent",
           borderRadius: 2, padding: highlight ? "2px 6px" : 0,
         }}>
           {displayVal}
@@ -284,8 +275,8 @@ function ReceiptPanel({
 
   if (decl.status === "receipted") {
     return (
-      <div style={{ padding: "14px 18px", background: "#EEF2FA", border: `1px solid #1E4A8C44`, borderRadius: 3, marginBottom: 16 }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: C.submitted, marginBottom: 6 }}>CUSTOMS RECEIPT</div>
+      <div style={{ padding: "14px 18px", background: "#EBF0F8", border: `1px solid #1E4A8C44`, borderRadius: 3, marginBottom: 16 }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: C.submitted, marginBottom: 6 }}>CUSTOMS RECEIPT</div>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 16, fontWeight: 700, color: C.submitted }}>
           {decl.receiptNumber || "—"}
         </div>
@@ -300,8 +291,8 @@ function ReceiptPanel({
   if (decl.status !== "submitted") return null;
 
   return (
-    <div style={{ padding: "14px 18px", background: "#EEF2FA", border: `1px solid #1E4A8C55`, borderRadius: 3, marginBottom: 16 }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: C.submitted, marginBottom: 10 }}>
+    <div style={{ padding: "14px 18px", background: "#EBF0F8", border: `1px solid #1E4A8C55`, borderRadius: 3, marginBottom: 16 }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: C.submitted, marginBottom: 10 }}>
         ENTER CUSTOMS RECEIPT NUMBER
       </div>
       <div style={{ display: "flex", gap: 8 }}>
@@ -339,21 +330,21 @@ function ExportHistory({ events }: { events: any[] }) {
   if (!events || events.length === 0) return null;
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 6 }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 6 }}>
         EXPORT HISTORY
       </div>
       <div style={{ border: `1px solid ${C.paperBorder}`, borderRadius: 3, overflow: "hidden" }}>
         {events.slice(-5).reverse().map((ev, i) => (
           <div key={i} style={{ padding: "7px 12px", borderBottom: i < Math.min(events.length, 5) - 1 ? `1px solid ${C.paperBorder}` : "none", display: "flex", gap: 12, alignItems: "center" }}>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: ev.status === "generated" ? C.approved : C.critBorder, fontWeight: 700 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: ev.status === "generated" ? C.approved : C.critBorder, fontWeight: 700 }}>
               {(ev.status ?? "—").toUpperCase()}
             </span>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, flex: 1 }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, flex: 1 }}>
               {ev.at ? new Date(ev.at).toLocaleString() : "—"}
             </span>
             {ev.ref && (
               <SecureDownloadLink href={`${STALLION_BASE_URL}/pack/file/${ev.ref}`}
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.approved, textDecoration: "none", background: "transparent", padding: 0 }}>
+                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.approved, textDecoration: "none", background: "transparent", padding: 0 }}>
                 ↓ {ev.ref.slice(0, 16)}
               </SecureDownloadLink>
             )}
@@ -375,8 +366,8 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
   const [pastInvoices, setPastInvoices] = useState<any[]>((decl as any).brokerage_invoices || []);
 
   // Colours
-  const green    = "#1A5C3A";
-  const greenL   = "#EBF5EE";
+  const green    = "#1F5232";
+  const greenL   = "#E6EFE8";
   const paper    = C.paper;
   const paperAlt = C.paperAlt;
   const paperB   = C.paperBorder;
@@ -434,13 +425,13 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Header */}
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: inkL }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: inkL }}>
         BROKERAGE INVOICE
       </div>
 
       {/* Client selector */}
       <div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>BILL TO</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>BILL TO</div>
         {clients.length === 0 ? (
           <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 13, color: inkL, background: paperAlt, border: `1px solid ${paperB}`, borderRadius: 4, padding: "10px 12px" }}>
             No clients in directory — <a href="/stallion/clients" style={{ color: green }}>add a client</a> to pre-fill billing details.
@@ -471,7 +462,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
 
       {/* Fee input */}
       <div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>BROKERAGE FEE (TTD)</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>BROKERAGE FEE (TTD)</div>
         <input
           type="number"
           value={brokerageFee}
@@ -486,7 +477,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
 
       {/* Notes */}
       <div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>SERVICE NOTES (optional)</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: inkL, marginBottom: 6 }}>SERVICE NOTES (optional)</div>
         <textarea
           value={invNotes}
           onChange={e => setInvNotes(e.target.value)}
@@ -498,7 +489,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
 
       {/* Summary */}
       <div style={{ background: paperAlt, border: `1px solid ${paperB}`, borderRadius: 6, padding: "14px 16px" }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: inkL, marginBottom: 10 }}>INVOICE SUMMARY</div>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: inkL, marginBottom: 10 }}>INVOICE SUMMARY</div>
         <div style={rowStyle}><span style={labelStyle}>CIF Value (TTD)</span><span style={valStyle}>{cifTTD ? `TT$ ${cifTTD.toLocaleString("en-TT", { minimumFractionDigits: 2 })}` : "—"}</span></div>
         <div style={rowStyle}><span style={labelStyle}>Duty + Surcharge + VAT</span><span style={valStyle}>{totalAssessed ? `TT$ ${totalAssessed.toLocaleString("en-TT", { minimumFractionDigits: 2 })}` : "—"}</span></div>
         <div style={rowStyle}><span style={labelStyle}>Customs User Fee</span><span style={valStyle}>TT$ {custUserFee.toFixed(2)}</span></div>
@@ -542,7 +533,7 @@ function InvoiceTab({ decl }: { decl: ReviewDecl }) {
       {/* Past invoices */}
       {pastInvoices.length > 0 && (
         <div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: inkL, marginBottom: 8 }}>PREVIOUS INVOICES</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: inkL, marginBottom: 8 }}>PREVIOUS INVOICES</div>
           {pastInvoices.map((inv: any, i: number) => (
             <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${paperB}` }}>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: inkM }}>{inv.docId}</div>
@@ -746,7 +737,7 @@ function ReviewPanel({
     <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", background: C.paper }}>
       {/* Panel top bar */}
       <div style={{ padding: "10px 18px", borderBottom: `1px solid ${C.paperBorder}`, display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
-        <button onClick={onBack} style={{ background: "transparent", border: `1px solid ${C.paperBorder}`, borderRadius: 3, color: C.inkLight, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: "4px 10px", cursor: "pointer" }}>
+        <button onClick={onBack} style={{ background: "transparent", border: `1px solid ${C.paperBorder}`, borderRadius: 3, color: C.inkLight, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "4px 10px", cursor: "pointer" }}>
           ← LIST
         </button>
         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, fontWeight: 700, color: C.ink, letterSpacing: "0.04em" }}>
@@ -754,12 +745,12 @@ function ReviewPanel({
         </div>
         <StatusPill status={decl.status} />
         {decl.declarationType === "export" && (
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", color: "#1E4A8C", background: "#EEF2FA", padding: "3px 8px", borderRadius: 3, border: "1px solid #1E4A8C44" }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#1E4A8C", background: "#EBF0F8", padding: "3px 8px", borderRadius: 3, border: "1px solid #1E4A8C44" }}>
             EXPORT
           </span>
         )}
         {decl.confidence != null && (
-          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight }}>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
             {decl.confidence}% conf.
           </span>
         )}
@@ -774,7 +765,7 @@ function ReviewPanel({
           <button key={t} onClick={() => setTab(t)} style={{
             padding: "9px 16px", background: "transparent", border: "none",
             borderBottom: tab === t ? `2px solid ${C.ink}` : "2px solid transparent",
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             letterSpacing: "0.1em", fontWeight: tab === t ? 700 : 400,
             color: tab === t ? C.ink : C.inkLight, cursor: "pointer",
           }}>{t}</button>
@@ -791,7 +782,7 @@ function ReviewPanel({
             <ExportHistory events={decl.export_events ?? []} />
 
             {/* Header fields */}
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
               HEADER
             </div>
 
@@ -806,14 +797,14 @@ function ReviewPanel({
                     <div style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: C.ghost }}>
                       {itms[0].description ?? ""}
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.ghostDim }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ghostDim }}>
                       {itms.length} line item{itms.length !== 1 ? "s" : ""}
                     </div>
                   </div>
                   <button
                     onClick={() => setHsSearchIdx(hsSearchIdx === 0 ? null : 0)}
                     style={{
-                      fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                       padding: "4px 10px", background: "transparent",
                       border: `1px solid ${C.voidBorder}`, borderRadius: 3,
                       color: C.ghost, cursor: "pointer", flexShrink: 0,
@@ -846,7 +837,7 @@ function ReviewPanel({
 
             {/* Client selector */}
             <div style={{ padding: "7px 0", borderBottom: `1px solid ${C.paperBorder}`, display: "flex", gap: 12, alignItems: "center" }}>
-              <div style={{ width: 160, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em", paddingTop: 2 }}>
+              <div style={{ width: 160, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em", paddingTop: 2 }}>
                 CLIENT
               </div>
               {clients.length === 0 ? (
@@ -908,7 +899,7 @@ function ReviewPanel({
         {tab === "ITEMS" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight }}>
                 LINE ITEMS · {itms.length}
               </div>
               <button
@@ -918,7 +909,7 @@ function ReviewPanel({
                   packageCount: 1, packageType: "CTN", qty: 1, unitCode: "NMB",
                   grossKg: 0, netKg: 0, itemValue: 0, cpc: "4000", dutyTaxCode: "",
                 }])}
-                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: "4px 12px", background: C.approved, border: "none", borderRadius: 3, color: "#fff", cursor: "pointer" }}
+                style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "4px 12px", background: C.approved, border: "none", borderRadius: 3, color: "#fff", cursor: "pointer" }}
               >
                 + Add Item
               </button>
@@ -947,7 +938,7 @@ function ReviewPanel({
 
               const row = (label: string, field: React.ReactNode) => (
                 <div key={label} style={{ padding: "5px 0", borderBottom: `1px solid ${C.paperBorder}`, display: "flex", gap: 10, alignItems: "center" }}>
-                  <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em" }}>
+                  <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em" }}>
                     {label}
                   </div>
                   {field}
@@ -962,19 +953,19 @@ function ReviewPanel({
                       {displayHs || "——"}
                     </span>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
                         LINE {i + 1}
                       </span>
                       <button
                         onClick={() => setHsSearchIdx(isHsOpen ? null : 100 + i)}
-                        style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: "3px 8px", background: "transparent", border: `1px solid ${C.paperBorder}`, borderRadius: 3, color: C.inkLight, cursor: "pointer" }}
+                        style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "3px 8px", background: "transparent", border: `1px solid ${C.paperBorder}`, borderRadius: 3, color: C.inkLight, cursor: "pointer" }}
                       >
                         {isHsOpen ? "Close ✕" : "Lookup HS"}
                       </button>
                       {itms.length > 1 && (
                         <button
                           onClick={() => setLocalItems(prev => prev.filter((_, idx) => idx !== i))}
-                          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, padding: "3px 8px", background: "transparent", border: `1px solid ${C.critBorder}44`, borderRadius: 3, color: C.critBorder, cursor: "pointer" }}
+                          style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, padding: "3px 8px", background: "transparent", border: `1px solid ${C.critBorder}44`, borderRadius: 3, color: C.critBorder, cursor: "pointer" }}
                         >
                           Remove
                         </button>
@@ -1014,7 +1005,7 @@ function ReviewPanel({
                     />
                   )}
                   <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${C.paperBorder}` }}>
-                    <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em" }}>PKGS / QTY / UNIT</div>
+                    <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em" }}>PKGS / QTY / UNIT</div>
                     <input
                       type="number"
                       value={item.packageCount ?? ""}
@@ -1045,7 +1036,7 @@ function ReviewPanel({
                     />
                   </div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "5px 0", borderBottom: `1px solid ${C.paperBorder}` }}>
-                    <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em" }}>GROSS / NET KG</div>
+                    <div style={{ width: 120, flexShrink: 0, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em" }}>GROSS / NET KG</div>
                     <input
                       type="number"
                       value={item.grossKg ?? ""}
@@ -1053,7 +1044,7 @@ function ReviewPanel({
                       placeholder="0"
                       style={{ width: 100, fontFamily: "'JetBrains Mono', monospace", fontSize: 13, color: C.ink, background: "transparent", border: `1px solid ${C.paperBorder}`, borderRadius: 3, padding: "3px 8px" }}
                     />
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight }}>/</span>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>/</span>
                     <input
                       type="number"
                       value={item.netKg ?? ""}
@@ -1109,7 +1100,7 @@ function ReviewPanel({
 
           return (
           <div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 10 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 10 }}>
               VALUATION
             </div>
             {wsCalcLoading && (
@@ -1136,7 +1127,7 @@ function ReviewPanel({
               ["VAT RATE %",       "vat_rate_pct"],
             ].map(([label, key]) => (
               <div key={key} style={{ display: "flex", alignItems: "center", padding: "7px 0", borderBottom: `1px solid ${C.paperBorder}`, gap: 8 }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, flex: 1 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, flex: 1 }}>
                   {label}
                 </div>
                 <input
@@ -1168,7 +1159,7 @@ function ReviewPanel({
 
             {/* ── Costing document ── */}
             <div style={{ marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.paperBorder}` }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
                 DOCUMENTS
               </div>
               <button
@@ -1211,7 +1202,7 @@ function ReviewPanel({
             )}
             {/* Lifecycle summary */}
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 8 }}>
                 LIFECYCLE
               </div>
               {[
@@ -1232,8 +1223,8 @@ function ReviewPanel({
               ))}
             </div>
             {decl.receiptNumber && (
-              <div style={{ marginTop: 14, padding: "10px 14px", background: "#EEF2FA", borderRadius: 3 }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.submitted, marginBottom: 4 }}>RECEIPT NUMBER</div>
+              <div style={{ marginTop: 14, padding: "10px 14px", background: "#EBF0F8", borderRadius: 3 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.submitted, marginBottom: 4 }}>RECEIPT NUMBER</div>
                 <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 15, fontWeight: 700, color: C.submitted }}>{decl.receiptNumber}</div>
               </div>
             )}
@@ -1277,7 +1268,7 @@ function ReviewPanel({
 
           return (
             <div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 12 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 12 }}>
                 BROKER NOTES · {thread.length} {thread.length === 1 ? "entry" : "entries"}
               </div>
 
@@ -1301,11 +1292,11 @@ function ReviewPanel({
                       borderLeft: `3px solid ${C.paperMid}`,
                     }}>
                       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, color: C.inkMid }}>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: C.inkMid }}>
                           {entry.author || "Broker"}
                         </span>
                         {dateStr && (
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.inkLight }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
                             {dateStr} {timeStr}
                           </span>
                         )}
@@ -1321,7 +1312,7 @@ function ReviewPanel({
               {/* Add new note */}
               {!isDone && (
                 <div style={{ borderTop: `1px solid ${C.paperBorder}`, paddingTop: 14 }}>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 6 }}>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 6 }}>
                     ADD NOTE
                   </div>
                   <textarea
@@ -1337,7 +1328,7 @@ function ReviewPanel({
                     }}
                   />
                   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginTop: 8 }}>
-                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: C.inkLight }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
                       Ctrl+Enter to save
                     </span>
                     <button
@@ -1580,14 +1571,14 @@ export default function BrokerReview4() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #2E3748; border-radius: 2px; }
+        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: #332A24; border-radius: 2px; }
         input:focus { background: #FDFAF5 !important; outline: none; } textarea:focus { outline: none; }
         button { transition: opacity 0.15s; } button:hover:not(:disabled) { opacity: 0.85; }
 
         /* ── Mobile / narrow layout ── */
         @media (max-width: 900px) {
           .review-body { flex-direction: column !important; }
-          .review-queue { width: 100% !important; max-height: 180px; border-right: none !important; border-bottom: 1px solid #2E3748; }
+          .review-queue { width: 100% !important; max-height: 180px; border-right: none !important; border-bottom: 1px solid #332A24; }
           .review-panel { min-height: 0; }
         }
       `}</style>
@@ -1596,10 +1587,10 @@ export default function BrokerReview4() {
 
         <TopNav rightSlot={
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 100, height: 2, background: "#2E3748", borderRadius: 1 }}>
-              <div style={{ height: "100%", borderRadius: 1, width: `${progress}%`, background: "#1A5E3A", transition: "width 0.4s" }} />
+            <div style={{ width: 100, height: 2, background: "#332A24", borderRadius: 1 }}>
+              <div style={{ height: "100%", borderRadius: 1, width: `${progress}%`, background: "#1F5232", transition: "width 0.4s" }} />
             </div>
-            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#B8C0CE" }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#E4DCD2" }}>
               {reviewed}/{batch.length}
             </span>
           </div>
@@ -1656,7 +1647,7 @@ export default function BrokerReview4() {
                         ["4. Check the exchange rate", "The CBTT rate is auto-fetched by shipped-on-board date. Confirm it matches your records."],
                         ["5. Approve or flag", "If all fields are correct, click Approve. If something needs fixing, click Flag Correction and add notes."],
                       ].map(([step, desc]) => (
-                        <div key={step} style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
+                        <div key={step} style={{ paddingLeft: 12, borderLeft: "2px solid #DCD5C8" }}>
                           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>{step}</div>
                           <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>{desc}</div>
                         </div>
@@ -1673,7 +1664,7 @@ export default function BrokerReview4() {
                         ["Receipt Number", "After ASYCUDA submission, enter the receipt number here to complete the lifecycle."],
                       ].map(([action, desc]) => (
                         <div key={action} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 120 }}>{action}</span>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1F5232", minWidth: 120 }}>{action}</span>
                           <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                         </div>
                       ))}

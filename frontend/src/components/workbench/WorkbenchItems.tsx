@@ -208,7 +208,7 @@ function ItemEditor({
       )}
       {appliedRate && (
         <div style={{
-          fontFamily: "var(--wb-font-mono)", fontSize: 10,
+          fontFamily: "var(--wb-font-mono)", fontSize: 11,
           color: "var(--wb-approved)", letterSpacing: "0.06em",
           padding: "4px 0 2px",
         }}>

@@ -33,7 +33,7 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.1em",
       color: C.amber,
       textTransform: "uppercase",
@@ -50,7 +50,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
   <label
     style={{
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10,
+      fontSize: 11,
       letterSpacing: "0.08em",
       color: C.inkLight,
       textTransform: "uppercase",
@@ -184,7 +184,7 @@ export function HazmatFormDialog({
           <div
             style={{
               fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10,
+              fontSize: 11,
               letterSpacing: "0.12em",
               color: C.amber,
               textTransform: "uppercase",

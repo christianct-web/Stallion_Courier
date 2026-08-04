@@ -36,10 +36,10 @@ function dutyBand(e: TariffEntry): Band {
 }
 
 const BAND_STYLE: Record<Band, { bg: string; fg: string; label: string }> = {
-  free: { bg: "#E3F2E8", fg: "#2E7D4F", label: "FREE" },
+  free: { bg: "#E6EFE8", fg: "#1F5232", label: "FREE" },
   low: { bg: "#FFF3DD", fg: "#B07A1B", label: "LOW" },
-  mid: { bg: "#FDEBD8", fg: "#C65911", label: "MID" },
-  high: { bg: "#FBE2E0", fg: "#C0392B", label: "HIGH" },
+  mid: { bg: "#FDEBD8", fg: "#C2571B", label: "MID" },
+  high: { bg: "#FBE6E4", fg: "#B02020", label: "HIGH" },
 };
 
 function pagerStyle(disabled: boolean): React.CSSProperties {
@@ -169,7 +169,7 @@ export default function CourierTariff() {
   }, [selected, cifInput]);
 
   const eyebrowStyle: React.CSSProperties = {
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
     letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
     fontWeight: 700,
   };
@@ -183,7 +183,7 @@ export default function CourierTariff() {
       }}>
         <div style={{ maxWidth: 1500, margin: "0 auto", padding: isMobile ? "0 16px" : "0 28px" }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             letterSpacing: "0.16em", color: C.amber, textTransform: "uppercase",
             marginBottom: 8,
           }}>
@@ -273,7 +273,7 @@ export default function CourierTariff() {
                     {sec.title}
                   </span>
                   <span style={{
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     color: C.inkLight,
                   }}>
                     {open ? "-" : "+"}
@@ -309,7 +309,7 @@ export default function CourierTariff() {
                         </span>
                         <span style={{
                           fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 9, color: C.inkLight, flexShrink: 0,
+                          fontSize: 11, color: C.inkLight, flexShrink: 0,
                         }}>
                           {ch.count}
                           {ch.overrides > 0 && (
@@ -354,7 +354,7 @@ export default function CourierTariff() {
                   onClick={() => setBand(active ? null : b)}
                   style={{
                     padding: "8px 12px",
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     letterSpacing: "0.06em", borderRadius: 5,
                     cursor: "pointer", fontWeight: 700,
                     background: active ? st.fg : st.bg,
@@ -370,7 +370,7 @@ export default function CourierTariff() {
               onClick={() => setOverridesOnly((v) => !v)}
               style={{
                 padding: "8px 14px",
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 letterSpacing: "0.06em", borderRadius: 5, cursor: "pointer",
                 fontWeight: 700,
                 background: overridesOnly ? C.amber : "transparent",
@@ -385,7 +385,7 @@ export default function CourierTariff() {
                 onClick={clearFilters}
                 style={{
                   padding: "8px 12px",
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   letterSpacing: "0.06em", borderRadius: 5, cursor: "pointer",
                   background: "transparent", color: C.inkLight,
                   border: `1px solid ${C.paperBorder}`,
@@ -454,7 +454,7 @@ export default function CourierTariff() {
                         key={e.thn}
                         onClick={() => { setSelected(e); setCifInput(""); }}
                         style={{
-                          background: e.is_override ? "#FFF7E8" : C.paper,
+                          background: e.is_override ? "#FBF0D8" : C.paper,
                           border: `1px solid ${C.paperBorder}`, borderRadius: 6,
                           padding: "12px 13px", cursor: "pointer",
                         }}
@@ -467,7 +467,7 @@ export default function CourierTariff() {
                             {e.thn}
                           </span>
                           <span style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
                             padding: "2px 7px", borderRadius: 3, background: st.bg, color: st.fg,
                           }}>
                             {st.label}
@@ -488,15 +488,15 @@ export default function CourierTariff() {
                         <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                           {e.restriction && (
                             <span style={{
-                              fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, fontWeight: 700,
-                              padding: "2px 6px", borderRadius: 3, background: "#FBE2E0", color: "#C0392B",
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5, fontWeight: 700,
+                              padding: "2px 6px", borderRadius: 3, background: "#FBE6E4", color: "#B02020",
                             }}>
                               RESTRICTED
                             </span>
                           )}
                           {e.is_override && (
                             <span style={{
-                              fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, fontWeight: 700,
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5, fontWeight: 700,
                               padding: "2px 6px", borderRadius: 3, background: C.amber, color: "#fff",
                             }}>
                               OVERRIDE
@@ -521,7 +521,7 @@ export default function CourierTariff() {
                           textAlign: h === "Duty" ? "right" : "left",
                           padding: "9px 12px",
                           fontFamily: "'JetBrains Mono', monospace",
-                          fontSize: 9, letterSpacing: "0.08em",
+                          fontSize: 11, letterSpacing: "0.08em",
                           color: C.inkLight, fontWeight: 700,
                           textTransform: "uppercase",
                           borderBottom: `1px solid ${C.paperBorder}`,
@@ -555,7 +555,7 @@ export default function CourierTariff() {
                           style={{
                             cursor: "pointer",
                             background: isSel ? C.amberLight
-                              : e.is_override ? "#FFF7E8" : "transparent",
+                              : e.is_override ? "#FBF0D8" : "transparent",
                             borderBottom: `1px solid ${C.paperBorder}`,
                           }}
                         >
@@ -573,9 +573,9 @@ export default function CourierTariff() {
                               <span style={{
                                 marginLeft: 8,
                                 fontFamily: "'JetBrains Mono', monospace",
-                                fontSize: 8.5, fontWeight: 700,
+                                fontSize: 11.5, fontWeight: 700,
                                 padding: "1px 5px", borderRadius: 3,
-                                background: "#FBE2E0", color: "#C0392B",
+                                background: "#FBE6E4", color: "#B02020",
                               }}>
                                 RESTRICTED
                               </span>
@@ -589,7 +589,7 @@ export default function CourierTariff() {
                           <td style={{ padding: "9px 12px" }}>
                             <span style={{
                               fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: 9, fontWeight: 700,
+                              fontSize: 11, fontWeight: 700,
                               padding: "2px 7px", borderRadius: 3,
                               background: st.bg, color: st.fg,
                             }}>
@@ -600,7 +600,7 @@ export default function CourierTariff() {
                             {e.is_override && (
                               <span style={{
                                 fontFamily: "'JetBrains Mono', monospace",
-                                fontSize: 8.5, fontWeight: 700,
+                                fontSize: 11.5, fontWeight: 700,
                                 padding: "2px 6px", borderRadius: 3,
                                 background: C.amber, color: "#fff",
                               }}>
@@ -647,7 +647,7 @@ export default function CourierTariff() {
               }}>
                 <div>
                   <div style={{
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     letterSpacing: "0.12em", color: C.amber,
                     textTransform: "uppercase", marginBottom: 6,
                   }}>
@@ -672,7 +672,7 @@ export default function CourierTariff() {
                 </button>
               </div>
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 color: C.ghost, marginTop: 12, lineHeight: 1.6,
               }}>
                 Ch {selected.thn.slice(0, 2)} / Heading{" "}
@@ -700,7 +700,7 @@ export default function CourierTariff() {
                     background: C.paperAlt, borderRadius: 5, padding: "10px 12px",
                   }}>
                     <div style={{
-                      fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                       letterSpacing: "0.08em", color: C.inkLight,
                       textTransform: "uppercase", marginBottom: 3,
                     }}>
@@ -718,7 +718,7 @@ export default function CourierTariff() {
 
               {selected.restriction && (
                 <div style={{
-                  background: "#FBE2E0", border: "1px solid #E8B5B0",
+                  background: "#FBE6E4", border: "1px solid #E8B5B0",
                   borderRadius: 5, padding: "10px 12px", marginBottom: 18,
                   fontFamily: "'Fraunces', serif", fontSize: 12,
                   color: "#A03224",
@@ -780,7 +780,7 @@ export default function CourierTariff() {
               </div>
 
               <div style={{
-                background: selected.is_override ? "#FFF7E8" : "transparent",
+                background: selected.is_override ? "#FBF0D8" : "transparent",
                 border: `1px solid ${selected.is_override ? C.amber : C.paperBorder}`,
                 borderRadius: 5, padding: "12px 14px", marginBottom: 16,
               }}>

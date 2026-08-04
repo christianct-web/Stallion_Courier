@@ -1,10 +1,6 @@
 import { useState, ReactNode } from "react";
+import { C } from "@/brand/stallion";
 
-const C = {
-  paperBorder: "#E2DDD6", paperAlt: "#EFECE6", inkLight: "#6B6560",
-  inkMid: "#3D3830", ink: "#18150F", warnBorder: "#D4A020",
-  voidBorder: "#2E3748", ghostDim: "#6B7585", ghost: "#A0AABB",
-};
 
 type HelpBoxProps = {
   title: string;
@@ -18,10 +14,10 @@ export function HelpBox({ title, children, defaultOpen = false, dark = false, va
   const [open, setOpen] = useState(defaultOpen);
 
   const borderColor = variant === "warn" ? C.warnBorder + "55" : (dark ? C.voidBorder : C.paperBorder);
-  const bg          = variant === "warn" ? "#FEF9EC" : (dark ? "#161d28" : C.paperAlt);
+  const bg          = variant === "warn" ? "#FBF0D8" : (dark ? "#161d28" : C.paperAlt);
   const titleColor  = dark ? C.ghost : C.inkMid;
   const bodyBg      = variant === "warn" ? "#FEFCF5" : (dark ? "#111823" : "#FDFAF5");
-  const iconColor   = variant === "warn" ? "#96700A" : (dark ? C.ghostDim : C.inkLight);
+  const iconColor   = variant === "warn" ? "#7A5600" : (dark ? C.ghostDim : C.inkLight);
 
   return (
     <div style={{
@@ -45,7 +41,7 @@ export function HelpBox({ title, children, defaultOpen = false, dark = false, va
         }}>
           {title}
         </span>
-        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: iconColor, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(180deg)" : "none" }}>
+        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: iconColor, transition: "transform 0.2s", display: "inline-block", transform: open ? "rotate(180deg)" : "none" }}>
           ▾
         </span>
       </button>
@@ -67,9 +63,9 @@ export function HelpBox({ title, children, defaultOpen = false, dark = false, va
 // Convenience: a styled tip/note line within HelpBox content
 export function HelpTip({ children }: { children: ReactNode }) {
   return (
-    <div style={{ display: "flex", gap: 8, marginTop: 8, paddingTop: 8, borderTop: "1px solid #E2DDD644" }}>
-      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#96700A", flexShrink: 0 }}>→</span>
-      <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#6B6560" }}>{children}</span>
+    <div style={{ display: "flex", gap: 8, marginTop: 8, paddingTop: 8, borderTop: "1px solid #DCD5C844" }}>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#7A5600", flexShrink: 0 }}>→</span>
+      <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>{children}</span>
     </div>
   );
 }
@@ -78,8 +74,8 @@ export function HelpTip({ children }: { children: ReactNode }) {
 export function HelpHeading({ children }: { children: ReactNode }) {
   return (
     <div style={{
-      fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
-      letterSpacing: "0.12em", color: "#96700A", marginTop: 12, marginBottom: 4,
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
+      letterSpacing: "0.12em", color: "#7A5600", marginTop: 12, marginBottom: 4,
     }}>
       {children}
     </div>

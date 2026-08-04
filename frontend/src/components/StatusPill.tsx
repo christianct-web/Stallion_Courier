@@ -25,7 +25,9 @@ const STATUS_STYLE: Record<string, PillStyle> = {
   rejected:         { fg: "#7A1E1E",    bg: C.critical,    border: "#7A1E1E55",        label: "REJECTED" },
   approved:         { fg: C.green,      bg: C.greenLight,  border: C.green + "55",     label: "APPROVED" },
   ready:            { fg: C.green,      bg: C.greenLight,  border: C.green + "55",     label: "READY" },
-  examined:         { fg: C.amber,      bg: C.amberLight,  border: C.amber + "55",     label: "EXAMINED" },
+  // amberText, not the brand accent: this is 11px uppercase on a light wash,
+  // where the brand hex only reaches 4.06:1.
+  examined:         { fg: C.amberText,  bg: C.amberLight,  border: C.amber + "55",     label: "EXAMINED" },
   finalised:        { fg: C.green,      bg: C.greenLight,  border: C.green + "55",     label: "FINALISED" },
   submitted:        { fg: C.blue,       bg: C.blueLight,   border: C.blue + "55",      label: "SUBMITTED" },
   exported:         { fg: C.blue,       bg: C.blueLight,   border: C.blue + "55",      label: "SUBMITTED" },
@@ -41,7 +43,7 @@ export function StatusPill({ status, style }: { status: string; style?: CSSPrope
   const s = statusStyle(status);
   return (
     <span style={{
-      fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
       letterSpacing: "0.08em", color: s.fg, background: s.bg,
       border: `1px solid ${s.border}`, padding: "3px 8px", borderRadius: 3,
       display: "inline-block", whiteSpace: "nowrap", ...style,

@@ -226,7 +226,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
       >
         <span>{line.hs_code || "— HS —"}</span>
         <span style={{
-          fontSize: 9, letterSpacing: "0.08em", background: "rgba(0,0,0,0.06)",
+          fontSize: 11, letterSpacing: "0.08em", background: "rgba(0,0,0,0.06)",
           padding: "1px 4px", borderRadius: 2, fontWeight: 600,
         }}>{style.label}</span>
       </button>
@@ -247,7 +247,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
           {/* header */}
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 3 }}>
-              <div style={{ fontFamily: lbl, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: C.inkLight, fontWeight: 700 }}>
+              <div style={{ fontFamily: lbl, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: C.inkLight, fontWeight: 700 }}>
                 Line {line.line_no}
               </div>
               {line.hs_code && (
@@ -255,7 +255,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                   onClick={() => { setMaintainOpen(true); setOpen(false); }}
                   title="Edit this code's description, duty %, or exemption class"
                   style={{
-                    padding: "4px 10px", fontFamily: lbl, fontSize: 9, letterSpacing: "0.08em",
+                    padding: "4px 10px", fontFamily: lbl, fontSize: 11, letterSpacing: "0.08em",
                     textTransform: "uppercase", fontWeight: 700, background: C.amber, color: "#fff",
                     border: `1px solid ${C.amber}`, borderRadius: 3, cursor: "pointer",
                   }}
@@ -270,7 +270,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
           {/* suggestions */}
           {suggestions.length > 0 && (
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontFamily: lbl, fontSize: 9, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", marginBottom: 6, fontWeight: 600 }}>
+              <div style={{ fontFamily: lbl, fontSize: 11, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", marginBottom: 6, fontWeight: 600 }}>
                 Suggestions
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto" }}>
@@ -295,12 +295,12 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                         <span style={{ fontFamily: lbl, fontSize: 13, fontWeight: 700, color: C.ink }}>{s.thn || s.code}</span>
-                        <span style={{ fontFamily: lbl, fontSize: 9, fontWeight: 700, color: pill.color, background: pill.bg, padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em" }}>{pill.label}</span>
-                        <span style={{ fontFamily: lbl, fontSize: 9, color: conf.fg, background: conf.bg, padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em", fontWeight: 600 }}>{Math.round((s.confidence ?? 0) * 100)}%</span>
-                        {isCurrent && <span style={{ fontFamily: lbl, fontSize: 9, color: C.green, letterSpacing: "0.08em", marginLeft: "auto", fontWeight: 700 }}>CURRENT</span>}
+                        <span style={{ fontFamily: lbl, fontSize: 11, fontWeight: 700, color: pill.color, background: pill.bg, padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em" }}>{pill.label}</span>
+                        <span style={{ fontFamily: lbl, fontSize: 11, color: conf.fg, background: conf.bg, padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em", fontWeight: 600 }}>{Math.round((s.confidence ?? 0) * 100)}%</span>
+                        {isCurrent && <span style={{ fontFamily: lbl, fontSize: 11, color: C.green, letterSpacing: "0.08em", marginLeft: "auto", fontWeight: 700 }}>CURRENT</span>}
                       </div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid, marginBottom: 1, lineHeight: 1.3 }}>{s.description}</div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 10, color: C.inkLight, fontStyle: "italic" }}>{s.match_reason}</div>
+                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkLight, fontStyle: "italic" }}>{s.match_reason}</div>
                     </button>
                   );
                 })}
@@ -310,7 +310,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
 
           {/* search by description */}
           <div style={{ paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontFamily: lbl, fontSize: 9, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", fontWeight: 600 }}>Search by description</div>
+            <div style={{ fontFamily: lbl, fontSize: 11, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", fontWeight: 600 }}>Search by description</div>
             <div style={{ display: "flex", gap: 6 }}>
               <input
                 value={descQuery}
@@ -322,7 +322,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
               <button
                 onClick={searchByDescription}
                 disabled={descSearching || !descQuery.trim()}
-                style={{ padding: "6px 14px", fontFamily: lbl, fontSize: 10, background: C.ink, color: C.paper, border: `1px solid ${C.ink}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase", opacity: descSearching || !descQuery.trim() ? 0.5 : 1 }}
+                style={{ padding: "6px 14px", fontFamily: lbl, fontSize: 11, background: C.ink, color: C.paper, border: `1px solid ${C.ink}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase", opacity: descSearching || !descQuery.trim() ? 0.5 : 1 }}
               >{descSearching ? "…" : "Search"}</button>
             </div>
             {descResults && descResults.length > 0 && (
@@ -337,7 +337,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: lbl, fontSize: 12, fontWeight: 700, color: C.ink }}>{s.thn || s.code}</span>
-                        <span style={{ fontFamily: lbl, fontSize: 9, padding: "1px 6px", borderRadius: 2, background: pill.bg, color: pill.fg, fontWeight: 700 }}>
+                        <span style={{ fontFamily: lbl, fontSize: 11, padding: "1px 6px", borderRadius: 2, background: pill.bg, color: pill.fg, fontWeight: 700 }}>
                           {Math.round((s.confidence ?? 0) * 100)}%{s.needs_review ? " · REVIEW" : ""}
                         </span>
                       </div>
@@ -351,7 +351,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
 
           {/* manual entry */}
           <div style={{ paddingTop: 10, borderTop: `1px solid ${C.paperBorder}`, display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontFamily: lbl, fontSize: 9, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", fontWeight: 600 }}>Or set an HS code manually</div>
+            <div style={{ fontFamily: lbl, fontSize: 11, letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase", fontWeight: 600 }}>Or set an HS code manually</div>
             <div style={{ display: "flex", gap: 6 }}>
               <input
                 value={manualThn}
@@ -360,9 +360,9 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                 style={{ flex: 1, fontFamily: lbl, fontSize: 12, padding: "6px 8px", border: `1px solid ${C.paperBorder}`, borderRadius: 3, background: "#fff", color: C.ink, outline: "none" }}
               />
               <button onClick={lookupManual} disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
-                style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 10, background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase" }}>Lookup</button>
+                style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 11, background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase" }}>Lookup</button>
               <button onClick={applyManual} disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
-                style={{ padding: "6px 14px", fontFamily: lbl, fontSize: 10, background: C.ink, color: C.paper, border: `1px solid ${C.ink}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>Apply</button>
+                style={{ padding: "6px 14px", fontFamily: lbl, fontSize: 11, background: C.ink, color: C.paper, border: `1px solid ${C.ink}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>Apply</button>
             </div>
             {manualLookup && (
               <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid, background: C.paperAlt, padding: "6px 8px", borderRadius: 3 }}>
@@ -377,9 +377,9 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
           {/* actions */}
           <div style={{ display: "flex", gap: 6, marginTop: 12, justifyContent: "flex-end" }}>
             <button onClick={reclassify} disabled={busy || !line.description}
-              style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 10, background: "transparent", color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase", fontWeight: 600 }}>Re-run Classifier</button>
+              style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 11, background: "transparent", color: C.amber, border: `1px solid ${C.amber}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase", fontWeight: 600 }}>Re-run Classifier</button>
             <button onClick={() => setOpen(false)}
-              style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 10, background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase" }}>Close</button>
+              style={{ padding: "6px 10px", fontFamily: lbl, fontSize: 11, background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase" }}>Close</button>
           </div>
         </div>,
         document.body,

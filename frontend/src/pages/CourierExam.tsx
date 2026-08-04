@@ -260,14 +260,14 @@ function CorrectionCard({
   };
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
     letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase",
     marginBottom: 3, fontWeight: 600,
   };
 
   return (
     <div style={{
-      background: isNewLine ? "#FFF8E8" : "#FFFAEC",
+      background: isNewLine ? "#FFF8E8" : "#FBF0D8",
       border: `1px solid ${isNewLine ? C.amber + "44" : C.paperBorder}`,
       borderRadius: 4, padding: 14, marginBottom: 10,
     }}>
@@ -285,7 +285,7 @@ function CorrectionCard({
             value={draft.kind}
             onChange={e => onChange({ ...draft, kind: e.target.value as any })}
             style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               padding: "4px 8px", borderRadius: 3,
               border: `1px solid ${C.paperBorder}`, background: "#fff",
               color: C.inkMid, textTransform: "uppercase", letterSpacing: "0.06em",
@@ -298,7 +298,7 @@ function CorrectionCard({
             <option value="seizure">Seizure</option>
           </select>
           <button onClick={onRemove} style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             padding: "4px 8px", color: C.critBorder, background: "transparent",
             border: `1px solid ${C.critBorder}33`, borderRadius: 3, cursor: "pointer",
           }}>
@@ -374,7 +374,7 @@ function CorrectionCard({
         <div style={{ marginLeft: isMobile ? 0 : "auto", display: "flex", gap: 6, width: isMobile ? "100%" : "auto" }}>
           <button onClick={recomputeFromCost} style={{
             padding: isMobile ? "9px 10px" : "5px 10px", flex: isMobile ? 1 : "0 0 auto",
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
             background: "transparent", color: C.amber,
             border: `1px solid ${C.amber}`, borderRadius: 3, cursor: "pointer",
@@ -384,7 +384,7 @@ function CorrectionCard({
           {line && (
             <button onClick={applyTaxRemoval} style={{
               padding: isMobile ? "9px 10px" : "5px 10px", flex: isMobile ? 1 : "0 0 auto",
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600,
               background: "transparent", color: C.green,
               border: `1px solid ${C.green}`, borderRadius: 3, cursor: "pointer",
@@ -503,14 +503,14 @@ export default function CourierExam() {
           <div>
             <button onClick={() => navigate(`/stallion/courier/${manifest.id}`)} style={{
               background: "transparent", border: "none", padding: 0, cursor: "pointer",
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff8",
               marginBottom: 6, display: "block",
             }}>
               Workbench
             </button>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.12em", color: "#fff8", textTransform: "uppercase",
               marginBottom: 4,
             }}>
@@ -522,7 +522,7 @@ export default function CourierExam() {
           </div>
           {!isMobile && <div style={{ width: 1, alignSelf: "stretch", background: "#fff4" }} />}
           <div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
               Examined At
             </div>
             <input type="date" value={examinedAt} onChange={e => setExaminedAt(e.target.value)}
@@ -533,7 +533,7 @@ export default function CourierExam() {
               }} />
           </div>
           <div style={{ flex: isMobile ? "1 1 100%" : "0 0 auto" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: "#fff8", textTransform: "uppercase", marginBottom: 3 }}>
               Examining Officer
             </div>
             <input value={examiningOfficer} onChange={e => setExaminingOfficer(e.target.value)}
@@ -568,7 +568,7 @@ export default function CourierExam() {
             borderRadius: 4, padding: 14, marginBottom: 24,
           }}>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
               fontWeight: 700, marginBottom: 10,
             }}>
@@ -600,7 +600,7 @@ export default function CourierExam() {
                       {l.description}
                     </span>
                     <span style={{
-                      fontSize: 9, fontWeight: 700, color: pill.color, background: pill.bg,
+                      fontSize: 11, fontWeight: 700, color: pill.color, background: pill.bg,
                       padding: "1px 4px", borderRadius: 2,
                     }}>
                       {pill.label}

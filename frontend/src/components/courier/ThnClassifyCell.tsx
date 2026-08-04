@@ -200,7 +200,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 3 }}>
                   <div style={{
                     fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+                    fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase",
                     color: C.inkLight, fontWeight: 700,
                   }}>
                     Line {line.line_no}
@@ -213,7 +213,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                       }}
                       style={{
                         padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
+                        fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
                         fontWeight: 700,
                         background: C.amber, color: "#fff",
                         border: `1px solid ${C.amber}`, borderRadius: 3,
@@ -236,7 +236,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
               {suggestions.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
                   <div style={{
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                     letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
                     marginBottom: 6, fontWeight: 600,
                   }}>
@@ -277,7 +277,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                             </span>
                             <span style={{
                               fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: 9, fontWeight: 700,
+                              fontSize: 11, fontWeight: 700,
                               color: pill.color, background: pill.bg,
                               padding: "1px 5px", borderRadius: 2,
                               letterSpacing: "0.06em",
@@ -285,7 +285,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                               {pill.label}
                             </span>
                             <span style={{
-                              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                               color: conf.fg, background: conf.bg,
                               padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em",
                               fontWeight: 600,
@@ -294,7 +294,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                             </span>
                             {isCurrent && (
                               <span style={{
-                                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                                 color: C.green, letterSpacing: "0.08em",
                                 marginLeft: "auto", fontWeight: 700,
                               }}>
@@ -309,7 +309,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                             {s.description}
                           </div>
                           <div style={{
-                            fontFamily: "'Fraunces', serif", fontSize: 10,
+                            fontFamily: "'Fraunces', serif", fontSize: 11,
                             color: C.inkLight, fontStyle: "italic",
                           }}>
                             {s.match_reason}
@@ -327,7 +327,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                 display: "flex", flexDirection: "column", gap: 6,
               }}>
                 <div style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
                   fontWeight: 600,
                 }}>
@@ -354,7 +354,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                     disabled={descSearching || !descQuery.trim()}
                     style={{
                       padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 10, background: C.ink, color: C.paper,
+                      fontSize: 11, background: C.ink, color: C.paper,
                       border: `1px solid ${C.ink}`, borderRadius: 3,
                       letterSpacing: "0.06em", cursor: "pointer",
                       fontWeight: 600, textTransform: "uppercase",
@@ -404,7 +404,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                               {s.thn}
                             </span>
                             <span style={{
-                              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                               padding: "1px 6px", borderRadius: 2,
                               background: pill.bg, color: pill.fg,
                               fontWeight: 700,
@@ -432,7 +432,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                 display: "flex", flexDirection: "column", gap: 6,
               }}>
                 <div style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
                   fontWeight: 600,
                 }}>
@@ -459,7 +459,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                     disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
                     style={{
                       padding: "6px 10px",
-                      fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                      fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                       background: "transparent", color: C.inkMid,
                       border: `1px solid ${C.paperBorder}`, borderRadius: 3,
                       letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
@@ -472,7 +472,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                     disabled={busy || manualThn.replace(/\D/g, "").length !== 8}
                     style={{
                       padding: "6px 14px", fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: 10, background: C.ink, color: C.paper,
+                      fontSize: 11, background: C.ink, color: C.paper,
                       border: `1px solid ${C.ink}`, borderRadius: 3,
                       letterSpacing: "0.06em", cursor: "pointer",
                       fontWeight: 600, textTransform: "uppercase",
@@ -501,7 +501,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                   disabled={busy || !line.description}
                   style={{
                     padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10, background: "transparent", color: C.amber,
+                    fontSize: 11, background: "transparent", color: C.amber,
                     border: `1px solid ${C.amber}`, borderRadius: 3,
                     letterSpacing: "0.06em", cursor: "pointer",
                     textTransform: "uppercase", fontWeight: 600,
@@ -513,7 +513,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
                   onClick={() => setOpen(false)}
                   style={{
                     padding: "6px 10px", fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10, background: "transparent", color: C.inkMid,
+                    fontSize: 11, background: "transparent", color: C.inkMid,
                     border: `1px solid ${C.paperBorder}`, borderRadius: 3,
                     letterSpacing: "0.06em", cursor: "pointer", textTransform: "uppercase",
                   }}
@@ -555,7 +555,7 @@ export function ThnClassifyCell({ line, onUpdate, onReload }: Props) {
       >
         <span>{line.thn || "-"}</span>
         <span style={{
-          fontSize: 9, letterSpacing: "0.08em",
+          fontSize: 11, letterSpacing: "0.08em",
           background: "rgba(0,0,0,0.06)", padding: "1px 4px", borderRadius: 2,
           fontWeight: 600,
         }}>

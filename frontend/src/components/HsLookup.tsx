@@ -21,30 +21,30 @@ export function HsLookup({ defaultQuery = "", onSelect, onClose, theme = "paper"
   const isDark = theme === "dark";
 
   const colors = isDark ? {
-    bg:         "#191D26",
-    border:     "#2E3748",
-    input:      "#111318",
-    inputBorder:"#2E3748",
+    bg:         "#1C1714",
+    border:     "#332A24",
+    input:      "#14100E",
+    inputBorder:"#332A24",
     text:       "#E0E4EE",
-    textLight:  "#A0AABB",
-    textDim:    "#6B7585",
-    resultHover:"#1F2430",
+    textLight:  "#E4DCD2",
+    textDim:    "#A89A8B",
+    resultHover:"#241D19",
     codeFg:     "#7EC8E3",
     rateBg:     "#1F3A55",
     rateFg:     "#7EC8E3",
-    closeFg:    "#6B7585",
+    closeFg:    "#A89A8B",
   } : {
     bg:         "#F6F3EE",
-    border:     "#E2DDD6",
+    border:     "#DCD5C8",
     input:      "#FFFFFF",
-    inputBorder:"#CCC7BE",
+    inputBorder:"#C7BFB0",
     text:       "#18150F",
-    textLight:  "#6B6560",
+    textLight:  "#4A453D",
     textDim:    "#9C9389",
-    resultHover:"#EFECE6",
-    codeFg:     "#1A4A8C",
-    rateBg:     "#EEF2FA",
-    rateFg:     "#1A4A8C",
+    resultHover:"#E8E1D5",
+    codeFg:     "#1E4A8C",
+    rateBg:     "#EBF0F8",
+    rateFg:     "#1E4A8C",
     closeFg:    "#9C9389",
   };
 
@@ -119,7 +119,7 @@ export function HsLookup({ defaultQuery = "", onSelect, onClose, theme = "paper"
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <div style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 9, letterSpacing: "0.12em",
+          fontSize: 11, letterSpacing: "0.12em",
           color: colors.textDim, fontWeight: 700, flex: 1,
         }}>
           HS CODE SEARCH · TT TARIFF
@@ -174,7 +174,7 @@ export function HsLookup({ defaultQuery = "", onSelect, onClose, theme = "paper"
       {lastSearchQuery && lastSearchQuery.toLowerCase() !== query.trim().toLowerCase() && (
         <div style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 10,
+          fontSize: 11,
           color: colors.textDim,
           marginBottom: 8,
         }}>
@@ -246,7 +246,7 @@ export function HsLookup({ defaultQuery = "", onSelect, onClose, theme = "paper"
 
               {/* Duty rate badge */}
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 fontWeight: 700, color: colors.rateFg,
                 background: colors.rateBg,
                 padding: "2px 7px", borderRadius: 3,
@@ -258,7 +258,7 @@ export function HsLookup({ defaultQuery = "", onSelect, onClose, theme = "paper"
           ))}
           <div style={{
             fontFamily: "'Fraunces', serif", fontStyle: "italic",
-            fontSize: 10, color: colors.textDim,
+            fontSize: 11, color: colors.textDim,
             marginTop: 4, padding: "0 2px",
           }}>
             Click a result to apply. Always verify against the official TT tariff schedule.

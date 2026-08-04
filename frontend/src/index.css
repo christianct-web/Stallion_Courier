@@ -2,6 +2,162 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================================
+   STALLION — Trinidad & Tobago customs declaration system
+   ----------------------------------------------------------------------------
+   The HSL custom properties below are the Tailwind/shadcn theme layer. They are
+   the same palette as src/brand/stallion.ts, restated in the form shadcn's
+   components consume — so a <Button>, <Dialog> or <Select> lands on-brand
+   without a wrapper.
+
+   Before this, these vars carried a generic slate-blue "enterprise" theme
+   (--primary: 215 45% 25%) while the hand-built pages used the warm Stallion
+   palette. Every shadcn component on a page rendered in a different visual
+   language than the page around it. Both halves of the app now share one set
+   of values; brand/stallion.ts remains the source of truth and this file
+   mirrors it.
+
+   Keep the two in sync. Hex equivalents are noted per line.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* Canvas — warm paper, not the cool grey it replaces */
+    --background: 37 33% 91%;          /* #EFE9DF canvas */
+    --foreground: 40 23% 8%;           /* #18150F ink      15.08:1 */
+
+    /* Cards lift off the canvas toward white */
+    --card: 37 31% 95%;                /* #F6F3EE paper */
+    --card-foreground: 40 23% 8%;      /* #18150F ink */
+
+    --popover: 37 31% 95%;             /* #F6F3EE */
+    --popover-foreground: 40 23% 8%;   /* #18150F */
+
+    /* Primary — burnt orange. The deep variant is used for solid fills because
+       white on the brand hex measures 4.49:1, a hair under threshold. */
+    --primary: 21 82% 35%;             /* #A34410 accentDeep  white on it 6.19:1 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 38 29% 87%;           /* #E8E1D5 paperAlt */
+    --secondary-foreground: 40 16% 15%;/* #2C2820 inkMid */
+
+    --muted: 38 29% 87%;               /* #E8E1D5 paperAlt */
+    --muted-foreground: 37 10% 26%;    /* #4A453D inkLight   7.31:1 on muted */
+
+    --accent: 28 76% 93%;              /* #FBEDE1 accentLight */
+    --accent-foreground: 19 81% 33%;   /* #963A10 accentText */
+
+    --destructive: 0 69% 41%;          /* #B02020 red */
+    --destructive-foreground: 0 0% 100%;
+
+    /* Declaration lifecycle */
+    --status-draft: 42 100% 24%;             /* #7A5600 gold */
+    --status-draft-foreground: 0 0% 100%;
+    --status-ready: 142 45% 22%;             /* #1F5232 green */
+    --status-ready-foreground: 0 0% 100%;
+    --status-exported: 216 65% 33%;          /* #1E4A8C blue */
+    --status-exported-foreground: 0 0% 100%;
+
+    /* Validation */
+    --validation-error: 0 69% 41%;     /* #B02020 */
+    --validation-warning: 42 100% 24%; /* #7A5600 — replaces #B8860B, which
+                                          measured 2.94:1 on paper */
+    --validation-success: 142 45% 22%; /* #1F5232 */
+
+    --border: 39 22% 82%;              /* #DCD5C8 paperBorder */
+    --input: 39 17% 74%;               /* #C7BFB0 paperMid — inputs need a
+                                          stronger edge than a card divider */
+    --ring: 22 76% 43%;                /* #C2571B accent   3.72:1 on canvas,
+                                          clears the 3:1 non-text threshold */
+
+    /* Squared editorial cards — Stallion does not use the soft rounding of the
+       consumer products in the stable. */
+    --radius: 0.375rem;
+
+    /* Dark chrome (top bar, bottom nav, dark panels) */
+    --sidebar-background: 20 18% 7%;         /* #14100E void */
+    --sidebar-foreground: 33 25% 86%;        /* #E4DCD2 ghost    13.93:1 */
+    --sidebar-primary: 27 66% 50%;           /* #D4762B accent-on-dark  5.79:1 */
+    --sidebar-primary-foreground: 20 18% 7%;
+    --sidebar-accent: 22 18% 12%;            /* #241D19 voidSurface */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 24 17% 17%;            /* #332A24 voidBorder */
+    --sidebar-ring: 27 66% 50%;              /* #D4762B */
+
+    /* Tables — the primary reading surface in this product */
+    --table-header: 38 29% 87%;        /* #E8E1D5 paperAlt */
+    --table-row-hover: 28 76% 93%;     /* #FBEDE1 accentLight — a warm tint, so
+                                          the hovered row reads as "the row I am
+                                          on" while scanning a manifest */
+    --table-border: 39 22% 82%;        /* #DCD5C8 */
+
+    --focus-ring: 22 76% 43%;          /* #C2571B */
+    --focus-ring-offset: 37 33% 91%;   /* #EFE9DF */
+  }
+
+  /* Dark mode mirrors the chrome palette. Stallion's working surfaces are
+     deliberately light — brokers read declarations side by side with paper
+     documents — so this is for low-light field use, not the default. */
+  .dark {
+    --background: 20 18% 7%;           /* #14100E */
+    --foreground: 33 25% 86%;          /* #E4DCD2 */
+
+    --card: 22 17% 9%;                 /* #1C1714 */
+    --card-foreground: 33 25% 86%;
+
+    --popover: 22 18% 12%;             /* #241D19 */
+    --popover-foreground: 33 25% 86%;
+
+    --primary: 27 66% 50%;             /* #D4762B */
+    --primary-foreground: 20 18% 7%;
+
+    --secondary: 22 18% 12%;           /* #241D19 */
+    --secondary-foreground: 33 25% 86%;
+
+    --muted: 22 18% 12%;
+    --muted-foreground: 31 14% 60%;    /* #A89A8B   6.90:1 on #14100E */
+
+    --accent: 24 17% 17%;              /* #332A24 */
+    --accent-foreground: 27 66% 50%;   /* #D4762B */
+
+    --destructive: 0 60% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --status-draft: 44 74% 45%;        /* #C89A1E */
+    --status-draft-foreground: 20 18% 7%;
+    --status-ready: 142 35% 55%;
+    --status-ready-foreground: 20 18% 7%;
+    --status-exported: 216 55% 65%;
+    --status-exported-foreground: 20 18% 7%;
+
+    --validation-error: 0 60% 55%;
+    --validation-warning: 44 74% 45%;
+    --validation-success: 142 35% 55%;
+
+    --border: 24 17% 17%;              /* #332A24 */
+    --input: 24 17% 17%;
+    --ring: 27 66% 50%;                /* #D4762B */
+
+    --sidebar-background: 20 18% 5%;
+    --sidebar-foreground: 33 25% 86%;
+    --sidebar-primary: 27 66% 50%;
+    --sidebar-primary-foreground: 20 18% 7%;
+    --sidebar-accent: 22 18% 12%;
+    --sidebar-accent-foreground: 33 25% 86%;
+    --sidebar-border: 24 17% 17%;
+    --sidebar-ring: 27 66% 50%;
+
+    --table-header: 22 17% 9%;
+    --table-row-hover: 22 18% 12%;
+    --table-border: 24 17% 17%;
+
+    --focus-ring: 27 66% 50%;
+    --focus-ring-offset: 20 18% 7%;
+  }
+}
+
+/* ── Brand marks ─────────────────────────────────────────────────────────── */
+
 .stallion-logo-horizontal {
   display: block;
   width: 132px;
@@ -24,139 +180,6 @@
   }
 }
 
-/* ACE Replacement - Trinidad & Tobago Customs Declaration System
-   Enterprise-grade design system for data-correctness and speed
-   Professional, utilitarian aesthetic optimized for brokers
-*/
-
-@layer base {
-  :root {
-    /* Core backgrounds */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
-
-    /* Cards and containers */
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
-
-    /* Popovers and dropdowns */
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
-
-    /* Primary - Professional deep slate blue */
-    --primary: 215 45% 25%;
-    --primary-foreground: 210 40% 98%;
-
-    /* Secondary - Neutral gray */
-    --secondary: 210 15% 93%;
-    --secondary-foreground: 215 25% 25%;
-
-    /* Muted - Subtle backgrounds */
-    --muted: 210 15% 95%;
-    --muted-foreground: 215 15% 45%;
-
-    /* Accent - Interaction highlight */
-    --accent: 210 100% 96%;
-    --accent-foreground: 215 45% 25%;
-
-    /* Destructive - Clear error red */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Status colors */
-    --status-draft: 45 93% 47%;
-    --status-draft-foreground: 45 100% 15%;
-    --status-ready: 142 76% 36%;
-    --status-ready-foreground: 0 0% 100%;
-    --status-exported: 215 85% 50%;
-    --status-exported-foreground: 0 0% 100%;
-
-    /* Validation states */
-    --validation-error: 0 72% 51%;
-    --validation-warning: 38 92% 50%;
-    --validation-success: 142 76% 36%;
-
-    /* Borders and inputs */
-    --border: 214 20% 85%;
-    --input: 214 20% 85%;
-    --ring: 215 45% 25%;
-
-    --radius: 0.375rem;
-
-    /* Sidebar - darker professional look */
-    --sidebar-background: 215 30% 18%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 210 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 30% 25%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 215 25% 25%;
-    --sidebar-ring: 210 100% 60%;
-
-    /* Table styling */
-    --table-header: 210 15% 96%;
-    --table-row-hover: 210 20% 97%;
-    --table-border: 214 15% 90%;
-
-    /* Data entry focus */
-    --focus-ring: 215 85% 55%;
-    --focus-ring-offset: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 215 30% 10%;
-    --foreground: 210 20% 95%;
-
-    --card: 215 28% 13%;
-    --card-foreground: 210 20% 95%;
-
-    --popover: 215 28% 13%;
-    --popover-foreground: 210 20% 95%;
-
-    --primary: 210 100% 60%;
-    --primary-foreground: 215 30% 10%;
-
-    --secondary: 215 25% 20%;
-    --secondary-foreground: 210 20% 90%;
-
-    --muted: 215 25% 18%;
-    --muted-foreground: 215 15% 60%;
-
-    --accent: 215 30% 22%;
-    --accent-foreground: 210 20% 95%;
-
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --status-draft: 45 93% 55%;
-    --status-draft-foreground: 45 100% 10%;
-    --status-ready: 142 65% 45%;
-    --status-ready-foreground: 0 0% 100%;
-    --status-exported: 215 85% 60%;
-    --status-exported-foreground: 0 0% 100%;
-
-    --border: 215 25% 25%;
-    --input: 215 25% 25%;
-    --ring: 210 100% 60%;
-
-    --sidebar-background: 215 35% 8%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 210 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 30% 15%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 215 25% 18%;
-    --sidebar-ring: 210 100% 60%;
-
-    --table-header: 215 28% 15%;
-    --table-row-hover: 215 28% 16%;
-    --table-border: 215 25% 22%;
-
-    --focus-ring: 210 100% 60%;
-    --focus-ring-offset: 215 30% 10%;
-  }
-}
-
 @layer base {
   * {
     @apply border-border;
@@ -164,10 +187,22 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Enterprise form styling */
+  #root {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Every numeral in this product sits in a column that gets compared —
+     TTD amounts, duty rates, HS/THN codes, package counts. Tabular figures
+     keep those columns aligned. */
+  code, kbd, samp, pre,
+  input[type="number"],
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
   input[type="text"],
   input[type="number"],
   select,
@@ -175,13 +210,32 @@
     @apply transition-colors duration-150;
   }
 
-  /* Focus states for data entry */
-  input:focus,
-  select:focus,
-  textarea:focus {
-    @apply outline-none ring-2 ring-offset-1;
-    --tw-ring-color: hsl(var(--focus-ring));
-    --tw-ring-offset-color: hsl(var(--focus-ring-offset));
+  /* Focus. `:focus-visible` rather than `:focus` so a broker tabbing through a
+     line grid gets a clear ring, while mouse clicks do not flash one on every
+     cell. The ring is the brand accent at 3.72:1 against paper — above the
+     3:1 WCAG threshold for non-text UI. */
+  :where(input, select, textarea, button, a, [tabindex]):focus-visible {
+    outline: 2px solid hsl(var(--focus-ring));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-offset: 1px;
+  }
+
+  /* Respect reduced-motion preferences. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 
   /* Status pill base styles */
@@ -253,92 +307,27 @@
   }
 }
 
-/* Keyboard navigation hints */
 @layer utilities {
   .kbd {
     @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono bg-muted border rounded;
   }
-}
 
-/* ============================================================================
-   STALLION GLOBAL TYPE LAYER
-   ----------------------------------------------------------------------------
-   Pushes type heavier / darker / larger across the whole app (trade + courier),
-   without hand-editing the ~600 inline fontSize/color literals in the pages.
+  /* Skip link — first tab stop, visible only when focused. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
 
-   Strategy:
-     - Pages render inline-styled elements with the Fraunces + JetBrains Mono
-       pairing. We can't restyle every literal, but we CAN lift the floor:
-       scale up the tiny sizes, raise weight, and darken the washed-out greys.
-     - Scoped under #root so it only touches the app, never the marketing site.
-     - Uses min()/max() on font-size so we nudge sizes up proportionally rather
-       than forcing one value (keeps the visual hierarchy the pages designed).
-
-   Colour tokens (kept in sync with components/courier/tokens.ts):
-     ink #18150F · inkMid #3D3830 · inkLight #6B6560 (washed) · amber #C65911
-   ============================================================================ */
-
-:root {
-  --stallion-ink:        #18150F;
-  --stallion-ink-mid:    #3D3830;
-  --stallion-amber:      #C65911;
-  --stallion-paper-bord: #CCC7BE;
-}
-
-/* 1 — Base weight + smoothing lift. Body copy goes from 400 -> 500 everywhere
-       so nothing reads thin. Headings handled below. */
-#root {
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-/* 2 — Display serif: make every Fraunces heading heavier + tighter.
-       Catches inline style="font-family:'Fraunces'..." via attribute match. */
-#root [style*="Fraunces"] {
-  font-weight: 700 !important;
-  letter-spacing: -0.01em;
-}
-
-/* 3 — Mono labels/data: lift from the common 400 to 600, and darken the
-       washed-out label grey (#6B6560 / #6B7585 / ghostDim) toward ink so
-       uppercase tracked labels actually read. */
-#root [style*="JetBrains Mono"] {
-  font-weight: 600 !important;
-}
-
-/* 4 — (Grey darkening is handled at the token level in tokens.ts and each
-       page's local palette — far more reliable than matching serialized
-       inline colours, which React may emit as rgb() in any property order.) */
-
-/* 5 — Size floor. Bump the tiny mono label/data sizes up one notch so the
-       8–11px crowd becomes legible without breaking 12px+ hierarchy.
-       Done with descendant min-size on the mono family (where the small
-       sizes live). */
-#root [style*="JetBrains Mono"][style*="font-size: 8px"],
-#root [style*="JetBrains Mono"][style*="fontSize: 8"]   { font-size: 9.5px !important; }
-#root [style*="JetBrains Mono"][style*="font-size: 9px"],
-#root [style*="JetBrains Mono"][style*="fontSize: 9"]   { font-size: 10.5px !important; }
-#root [style*="JetBrains Mono"][style*="font-size: 10px"],
-#root [style*="JetBrains Mono"][style*="fontSize: 10"]  { font-size: 11.5px !important; }
-#root [style*="JetBrains Mono"][style*="font-size: 11px"],
-#root [style*="JetBrains Mono"][style*="fontSize: 11"]  { font-size: 12.5px !important; }
-
-/* 6 — Stat-card / big-number Fraunces & mono numerals: full ink, never grey. */
-#root [style*="font-size: 40px"],
-#root [style*="font-size: 36px"],
-#root [style*="font-size: 32px"],
-#root [style*="font-size: 30px"],
-#root [style*="font-size: 28px"],
-#root [style*="font-size: 26px"],
-#root [style*="font-size: 24px"] {
-  letter-spacing: -0.02em;
-}
-
-/* 7 — Native form controls + buttons inherit the heavier mono so inputs
-       in the data grids match. */
-#root input,
-#root select,
-#root textarea,
-#root button {
-  font-weight: 600;
+  .skip-link:focus {
+    left: 8px;
+    top: 8px;
+    padding: 8px 14px;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 3px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+  }
 }

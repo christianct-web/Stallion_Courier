@@ -1,19 +1,15 @@
 /**
  * Shared design tokens for courier module pages.
- * Mirrors the palette already used in DeclarationsList, Clients, etc.
+ *
+ * The palette itself now lives in `@/brand/stallion` — the single source of
+ * truth for the whole app. This module re-exports it so the existing courier
+ * imports keep working, and adds the courier-specific formatters and pill
+ * styles that only make sense in a customs context.
  */
-export const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  green: "#1A5C3A", greenMid: "#2E7D52", greenLight: "#EBF5EE",
-  warn: "#FEF3DC", warnBorder: "#D4A020", warnText: "#7A5000",
-  critical: "#FEE8E8", critBorder: "#B02020",
-  amber: "#C65911", amberLight: "#FDF2E5",
-  blue: "#1E4A8C", blueLight: "#EEF2FA",
-  purple: "#5A3A8A", purpleLight: "#F1ECF7",
-};
+export { C } from "@/brand/stallion";
+export { SERIF, MONO, SIZE, WEIGHT, RADIUS, SPACE } from "@/brand/stallion";
+
+import { C } from "@/brand/stallion";
 
 /** Style for the FREE / EXEMPT / 20% rate pill in line tables. */
 export function ratePillStyle(exemption_class: string, duty_rate: number) {
@@ -24,7 +20,9 @@ export function ratePillStyle(exemption_class: string, duty_rate: number) {
     return { color: C.blue, bg: C.blueLight, label: "FREE" };
   }
   if (duty_rate > 0) {
-    return { color: C.amber, bg: C.amberLight, label: `${Math.round(duty_rate * 100)}%` };
+    // amberText, not the brand accent: this is small text on a light wash, and
+    // the brand hex only reaches 4.06:1 there.
+    return { color: C.amberText, bg: C.amberLight, label: `${Math.round(duty_rate * 100)}%` };
   }
   return { color: C.inkLight, bg: C.paperAlt, label: "?" };
 }
@@ -60,7 +58,7 @@ export function thnConfidenceStyle(confidence: number | null | undefined): {
     return { bg: C.paperAlt, border: C.paperBorder, fg: C.inkLight, label: "—", level: "none" };
   }
   if (confidence >= 1.0) {
-    return { bg: "#DDEEDF", border: C.green, fg: C.green, label: "CONFIRMED", level: "confirmed" };
+    return { bg: "#D8E6DC", border: C.green, fg: C.green, label: "CONFIRMED", level: "confirmed" };
   }
   if (confidence >= 0.85) {
     return { bg: C.greenLight, border: C.greenMid, fg: C.green, label: "HIGH", level: "high" };

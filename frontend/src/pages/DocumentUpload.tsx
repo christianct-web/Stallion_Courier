@@ -3,15 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { extractDocuments } from "@/services/stallionApi";
 import { TopNav } from "@/components/TopNav";
 import { HelpBox, HelpTip, HelpHeading } from "@/components/HelpBox";
+import { C } from "@/brand/stallion";
 
 // Design tokens (matching paper/void system from other pages)
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void_: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  approved: "#1A5E3A", pending: "#96700A", warn: "#FEF3DC", warnBorder: "#D4A020",
-};
 
 type PermitFlag = {
   invoiceName: string;
@@ -49,7 +43,7 @@ function ConfidencePill({ confidence }: { confidence: number }) {
   const color = pct >= 90 ? C.approved : pct >= 70 ? C.pending : "#963A10";
   return (
     <span style={{
-      fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
       letterSpacing: "0.1em", color, padding: "2px 8px", borderRadius: 3,
       background: color + "18", border: `1px solid ${color}44`,
     }}>
@@ -123,7 +117,7 @@ export default function DocumentUpload() {
         {/* Page header */}
         <div style={{ background: C.void_, borderBottom: `1px solid ${C.voidBorder}`, padding: "24px 32px 20px" }}>
           <div style={{ maxWidth: 960, margin: "0 auto" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.16em", color: C.ghostDim, marginBottom: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.16em", color: C.ghostDim, marginBottom: 8 }}>
               EXTRACTION
             </div>
             <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 700, color: "#fff", margin: 0, lineHeight: 1 }}>
@@ -154,7 +148,7 @@ export default function DocumentUpload() {
                 ["Caricom Certificate of Origin", "If present, Stallion extracts the certificate number and issuing country for the declaration record."],
                 ["Health / Free-Sale Certificate", "If present, certificate number and issuing authority are extracted and stored against the declaration."],
               ].map(([name, desc]) => (
-                <div key={name} style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
+                <div key={name} style={{ paddingLeft: 12, borderLeft: "2px solid #DCD5C8" }}>
                   <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>{name}</div>
                   <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>{desc}</div>
                 </div>
@@ -163,14 +157,14 @@ export default function DocumentUpload() {
 
             <HelpHeading>BATCH vs SEPARATE MODE</HelpHeading>
             <div style={{ display: "grid", gap: 6 }}>
-              <div style={{ paddingLeft: 12, borderLeft: "2px solid #D4A020" }}>
+              <div style={{ paddingLeft: 12, borderLeft: "2px solid #C89A1E" }}>
                 <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>Batch mode</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>
                   All uploaded files relate to <strong>one shipment</strong>. Stallion reads them together and merges the data.
                   Use this when you have an invoice + AWB for the same consignment.
                 </div>
               </div>
-              <div style={{ paddingLeft: 12, borderLeft: "2px solid #E2DDD6" }}>
+              <div style={{ paddingLeft: 12, borderLeft: "2px solid #DCD5C8" }}>
                 <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: 12, color: "#2C2820", marginBottom: 2 }}>Separate mode</div>
                 <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#4A453D" }}>
                   Each uploaded file is a <strong>different shipment</strong>. Stallion creates one declaration per file.
@@ -190,7 +184,7 @@ export default function DocumentUpload() {
                 ["Below 70%", "Significant gaps. The document may be unclear, a scanned image, or missing key data. Broker will need to fill in missing fields."],
               ].map(([range, desc]) => (
                 <div key={range} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 70 }}>{range}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1F5232", minWidth: 70 }}>{range}</span>
                   <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                 </div>
               ))}
@@ -201,7 +195,7 @@ export default function DocumentUpload() {
 
           {/* Mode toggle */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: C.inkLight, marginRight: 4 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: C.inkLight, marginRight: 4 }}>
               MODE
             </div>
             {(["batch", "separate"] as const).map(m => (
@@ -214,7 +208,7 @@ export default function DocumentUpload() {
                   border: `1px solid ${mode === m ? C.ink : C.paperBorder}`,
                   borderRadius: 3, cursor: "pointer",
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 10, letterSpacing: "0.08em", fontWeight: 700,
+                  fontSize: 11, letterSpacing: "0.08em", fontWeight: 700,
                   color: mode === m ? C.paper : C.inkLight,
                   transition: "all 0.15s",
                 }}
@@ -267,7 +261,7 @@ export default function DocumentUpload() {
           {files.length > 0 && (
             <div style={{ border: `1px solid ${C.paperBorder}`, borderRadius: 3, marginBottom: 16, overflow: "hidden" }}>
               <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: C.inkLight }}>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: C.inkLight }}>
                   {files.length} FILE{files.length !== 1 ? "S" : ""} QUEUED
                 </span>
                 <button onClick={e => { e.stopPropagation(); clearFiles(); }} style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: "'Fraunces', serif", fontSize: 12, color: C.inkLight }}>
@@ -277,7 +271,7 @@ export default function DocumentUpload() {
               {files.map((f, i) => (
                 <div key={i} style={{ padding: "8px 14px", borderBottom: i < files.length - 1 ? `1px solid ${C.paperBorder}` : "none", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontFamily: "'Fraunces', serif", fontSize: 13, color: C.inkMid }}>{f.name}</span>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight }}>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight }}>
                     {(f.size / 1024).toFixed(0)} KB
                   </span>
                 </div>
@@ -320,7 +314,7 @@ export default function DocumentUpload() {
           </div>
 
           {error && (
-            <div style={{ padding: "12px 16px", background: "#FEE8E8", border: "1px solid #B0202044", borderRadius: 3, marginBottom: 20, fontFamily: "'Fraunces', serif", fontSize: 13, color: "#7A1E1E" }}>
+            <div style={{ padding: "12px 16px", background: "#FBE6E4", border: "1px solid #B0202044", borderRadius: 3, marginBottom: 20, fontFamily: "'Fraunces', serif", fontSize: 13, color: "#7A1E1E" }}>
               {error}
             </div>
           )}
@@ -328,7 +322,7 @@ export default function DocumentUpload() {
           {/* Results */}
           {results.length > 0 && (
             <div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 12 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 12 }}>
                 EXTRACTION RESULTS · {results.length}
               </div>
               <div style={{ display: "grid", gap: 10 }}>
@@ -358,7 +352,7 @@ export default function DocumentUpload() {
                           ["REF", r.id],
                         ].map(([label, value]) => (
                           <div key={label}>
-                            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 3 }}>{label}</div>
+                            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 3 }}>{label}</div>
                             <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.inkMid, fontWeight: 700 }}>{value}</div>
                           </div>
                         ))}
@@ -371,16 +365,16 @@ export default function DocumentUpload() {
                             <div key={i} style={{
                               display: "flex", alignItems: "baseline", gap: 8,
                               padding: "6px 10px", marginBottom: 4,
-                              background: "#FFF7E6", border: "1px solid #D4A02044",
-                              borderLeft: "3px solid #D4A020", borderRadius: 3,
+                              background: "#FFF7E6", border: "1px solid #C89A1E44",
+                              borderLeft: "3px solid #C89A1E", borderRadius: 3,
                             }}>
-                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#96700A" }}>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#7A5600" }}>
                                 IMPORT PERMIT REQUIRED
                               </span>
                               <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#2C2820" }}>
                                 {p.ttbizlinkName}
                               </span>
-                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: "#96700A", marginLeft: "auto" }}>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#7A5600", marginLeft: "auto" }}>
                                 {p.category} · SEQ {p.sequence} · {p.permitType.toUpperCase()}
                               </span>
                             </div>
@@ -395,10 +389,10 @@ export default function DocumentUpload() {
                             <div key={i} style={{
                               display: "flex", alignItems: "baseline", gap: 8,
                               padding: "5px 10px", marginBottom: 3,
-                              background: "#F0F5F0", border: "1px solid #1A5E3A22",
-                              borderLeft: "3px solid #1A5E3A", borderRadius: 3,
+                              background: "#F0F5F0", border: "1px solid #1F523222",
+                              borderLeft: "3px solid #1F5232", borderRadius: 3,
                             }}>
-                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "#1A5E3A" }}>
+                              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#1F5232" }}>
                                 {c.type}
                               </span>
                               <span style={{ fontFamily: "'Fraunces', serif", fontSize: 12, color: "#2C2820" }}>
@@ -415,7 +409,7 @@ export default function DocumentUpload() {
                       )}
 
                       {!!r.notes?.length && (
-                        <div style={{ padding: "7px 10px", background: C.warn, border: `1px solid ${C.warnBorder}44`, borderRadius: 3, marginBottom: 10, fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: "#7A5000" }}>
+                        <div style={{ padding: "7px 10px", background: C.warn, border: `1px solid ${C.warnBorder}44`, borderRadius: 3, marginBottom: 10, fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: C.warnText }}>
                           ⚠ {r.notes.join(" · ")}
                         </div>
                       )}

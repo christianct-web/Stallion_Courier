@@ -8,14 +8,18 @@
  */
 import { Outlet } from "react-router-dom";
 import { TopNav } from "@/components/TopNav";
+import { C } from "@/brand/stallion";
 
 export default function StallionShell() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: C.canvas }}>
+      {/* First tab stop: lets keyboard users jump the module nav straight into
+          the declaration they are working on. */}
+      <a href="#main" className="skip-link">Skip to content</a>
       <TopNav />
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <main id="main" style={{ flex: 1, minHeight: 0 }}>
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

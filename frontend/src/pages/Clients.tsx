@@ -1,16 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { STALLION_BASE_URL } from "@/services/stallionApi";
+import { C } from "@/brand/stallion";
 
 // ── Design tokens (matches existing Stallion palette) ──────────────────────
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  green: "#1A5C3A", greenMid: "#2E7D52", greenLight: "#EBF5EE",
-  warn: "#FEF3DC", warnBorder: "#D4A020", critical: "#FEE8E8", critBorder: "#B02020",
-};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Client {
@@ -65,7 +58,7 @@ function Field({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <label style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.08em",
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.08em",
         color: empty ? C.critBorder : C.inkLight, textTransform: "uppercase",
       }}>
         {label}{required && <span style={{ color: C.critBorder }}> *</span>}
@@ -94,7 +87,7 @@ function TextArea({ label, value, onChange, placeholder = "" }: {
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase" }}>
+      <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase" }}>
         {label}
       </label>
       <textarea
@@ -174,7 +167,7 @@ function ClientDrawer({
             <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 17, color: "#fff" }}>
               {client ? "Edit Client" : "New Client"}
             </div>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "#9DC8AC", marginTop: 2 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: "#9DC8AC", marginTop: 2 }}>
               CLIENT DIRECTORY
             </div>
           </div>
@@ -187,7 +180,7 @@ function ClientDrawer({
         {/* Body */}
         <div style={{ flex: 1, overflow: "auto", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Identity */}
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6 }}>
             IDENTITY
           </div>
           <Field label="Company Name" value={form.name} onChange={F("name")} placeholder="Basco Food Distributors Ltd" required />
@@ -198,7 +191,7 @@ function ClientDrawer({
           <TextArea label="Address" value={form.address} onChange={F("address")} placeholder={"101 Henry Street\nPort of Spain\nTrinidad"} />
 
           {/* Contact */}
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6, marginTop: 4 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6, marginTop: 4 }}>
             CONTACT
           </div>
           <Field label="Contact Person" value={form.contactName} onChange={F("contactName")} placeholder="Jane Smith" />
@@ -208,7 +201,7 @@ function ClientDrawer({
           </div>
 
           {/* Brokerage */}
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6, marginTop: 4 }}>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.ghostDim, borderBottom: `1px solid ${C.paperBorder}`, paddingBottom: 6, marginTop: 4 }}>
             BROKERAGE
           </div>
           <Field
@@ -354,7 +347,7 @@ export default function ClientsPage() {
 
       {/* Page header */}
       <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 6 }}>
+        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: C.inkLight, marginBottom: 6 }}>
           CLIENT DIRECTORY
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
@@ -399,7 +392,7 @@ export default function ClientsPage() {
         <div style={{
           display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
           gap: 16, padding: "8px 20px",
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em",
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em",
           color: C.ghostDim, textTransform: "uppercase",
         }}>
           <span>Client</span>

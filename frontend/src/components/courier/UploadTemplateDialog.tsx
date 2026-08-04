@@ -137,7 +137,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
                 Drop the Excel file here, or click to browse
               </div>
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 color: C.inkLight, letterSpacing: "0.08em", textTransform: "uppercase",
               }}>
                 .xlsx or .xls
@@ -150,7 +150,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div>
             <label style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase",
               display: "block", marginBottom: 4,
             }}>
@@ -171,7 +171,7 @@ export function UploadTemplateDialog({ onCreated, onClose }: Props) {
           </div>
           <div>
             <label style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase",
               display: "block", marginBottom: 4,
             }}>

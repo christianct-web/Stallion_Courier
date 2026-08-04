@@ -59,7 +59,7 @@ const EMPTY_STATE: LookupState = {
 
 const SectionHeader = ({ children }: { children: React.ReactNode }) => (
   <div style={{
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
     letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
     fontWeight: 700, marginBottom: 10, marginTop: 4,
   }}>
@@ -69,7 +69,7 @@ const SectionHeader = ({ children }: { children: React.ReactNode }) => (
 
 const Label = ({ children }: { children: React.ReactNode }) => (
   <label style={{
-    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+    fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
     letterSpacing: "0.08em", color: C.inkLight, textTransform: "uppercase",
     fontWeight: 600, display: "block", marginBottom: 4,
   }}>
@@ -276,7 +276,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
           borderBottom: `1px solid ${C.voidBorder}`,
         }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             letterSpacing: "0.12em", color: C.amber, textTransform: "uppercase",
             marginBottom: 4,
           }}>
@@ -298,7 +298,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
             </div>
             <span style={{
               marginLeft: "auto", padding: "3px 8px", borderRadius: 3,
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.1em", fontWeight: 700,
               color: state.isUserEntry ? C.amber : C.ghost,
               background: state.isUserEntry ? C.amberLight : "transparent",
@@ -336,7 +336,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: "12px 16px", background: "transparent", border: "none",
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700,
                 color: activeTab === tab ? C.ink : C.inkLight,
                 borderBottom: `2px solid ${activeTab === tab ? C.amber : "transparent"}`,
@@ -405,7 +405,7 @@ export function MaintainTariffDialog({ thn, onClose, onSaved }: Props) {
               display: "flex", alignItems: "center", gap: 10,
             }}>
               <div style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
                 fontWeight: 600,
               }}>

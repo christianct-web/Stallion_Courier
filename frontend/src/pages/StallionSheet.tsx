@@ -30,16 +30,19 @@ import { HsClassifyCell } from "./HsClassifyCell";
 import { ChecklistModal } from "./ChecklistModal";
 import { presubmissionCheck, type ChecklistReport } from "@/services/sheetApi";
 import { SecureDownloadLink } from "@/components/SecureDownloadLink";
+import { C as BRAND } from "@/brand/stallion";
 
 // ── design tokens (match BrokerReview) ───────────────────────────────────────
+/**
+ * This page's `amber` is a pale attention *background* (with `amberText` on
+ * top), while `amberAction` is the burnt-orange CTA. That is the warn pair plus
+ * the accent, so it maps onto the brand tokens rather than owning its own hexes.
+ */
 const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430", voidBorder: "#2E3748",
-  ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  gold: "#B8860B", amber: "#FFF4D6", amberText: "#8A6D00", amberAction: "#C65911",
-  approved: "#1A5E3A", warn: "#FEF3DC", warnBorder: "#D4A020",
-  critBorder: "#B02020",
+  ...BRAND,
+  amber: BRAND.warn,
+  amberText: BRAND.warnText,
+  amberAction: BRAND.amber,
 };
 const MONO = "'JetBrains Mono','SFMono-Regular',monospace";
 const SERIF = "'Fraunces',Georgia,serif";
@@ -90,7 +93,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 130 }}>
       <label style={{
-        fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em",
+        fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em",
         color: C.inkLight, textTransform: "uppercase",
       }}>{label}</label>
       {children}
@@ -253,10 +256,10 @@ function ConcessionRow({ line, refData, onUpdate }: {
       {line.concession_code && (
         <div style={{
           fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkMid,
-          background: "#EBF5EE", border: "1px solid #1A5C3A33", borderRadius: 4,
+          background: "#E6EFE8", border: "1px solid #1F523233", borderRadius: 4,
           padding: "8px 12px",
         }}>
-          <span style={{ color: "#1A5C3A", fontWeight: 700 }}>Relief TT$ {fmt(relief)}</span>
+          <span style={{ color: "#1F5232", fontWeight: 700 }}>Relief TT$ {fmt(relief)}</span>
           {quantum === "capped" && (line.cap_applied_ttd ?? 0) > 0 && (
             <span> · cap applied TT$ {fmt(line.cap_applied_ttd)}</span>
           )}
@@ -281,7 +284,7 @@ function ConcessionHeaderPanel({ sheet, refData, onPatch }: {
       borderLeft: `3px solid ${C.approved}`, borderRadius: 6, padding: 16, marginBottom: 14,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.approved }}>
+        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.1em", color: C.approved }}>
           C84 — DUTY / TAX CONCESSION
         </div>
         {(t.relief_total ?? 0) > 0 && (
@@ -319,7 +322,7 @@ function ConcessionHeaderPanel({ sheet, refData, onPatch }: {
           <Cell value={c.residence_abroad_to || ""} width={110}
             onCommit={v => onPatch({ residence_abroad_to: v })} /></Field>
       </div>
-      <div style={{ fontFamily: MONO, fontSize: 10, color: C.inkLight, marginTop: 10, fontStyle: "italic" }}>
+      <div style={{ fontFamily: MONO, fontSize: 11, color: C.inkLight, marginTop: 10, fontStyle: "italic" }}>
         Set the concession per line in each row's drawer. Vehicle relief caps are
         defaults — confirm against the current Customs notice before filing.
       </div>
@@ -372,7 +375,7 @@ function GenerateModal({ sheet, refData, onClose, onGenerate }: {
         )}
         {warnings && warnings.length === 0 && (
           <div style={{
-            background: "#EBF5EE", border: "1px solid #1A5E3A33", borderRadius: 6,
+            background: "#E6EFE8", border: "1px solid #1F523233", borderRadius: 6,
             padding: "10px 14px", marginBottom: 18, fontFamily: MONO, fontSize: 12,
             color: C.approved, fontWeight: 700,
           }}>✓ Preflight checks passed</div>
@@ -518,7 +521,7 @@ export default function StallionSheet() {
 
   const TH = (label: string, w?: number, align: any = "left") => (
     <th style={{
-      fontFamily: MONO, fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase",
+      fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
       color: "#fff", background: C.ink, padding: "8px 7px", textAlign: align,
       width: w, position: "sticky", top: 0,
     }}>{label}</th>
@@ -534,8 +537,8 @@ export default function StallionSheet() {
     receipted: [],
   };
   const statusColor: Record<string, string> = {
-    draft: C.inkLight, pending: "#B8860B", correction: "#B02020",
-    approved: "#1A5E3A", submitted: "#2A4D8F", receipted: "#5A3A8A",
+    draft: C.inkLight, pending: "#7A5600", correction: "#B02020",
+    approved: "#1F5232", submitted: "#2A4D8F", receipted: "#5A3A8A",
   };
 
   // Lifecycle track shown as a stepper in the status bar.
@@ -566,7 +569,7 @@ export default function StallionSheet() {
           {curIdx >= 0 && LIFECYCLE.map((st, i) => (
             <div key={st} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{
-                fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+                fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
                 textTransform: "uppercase", padding: "3px 9px", borderRadius: 3,
                 color: i === curIdx ? "#fff" : i < curIdx ? C.ghost : C.ghostDim,
                 background: i === curIdx ? (statusColor[st] || C.inkLight) : "transparent",
@@ -579,7 +582,7 @@ export default function StallionSheet() {
           ))}
           {sheet.status === "correction" && (
             <span style={{
-              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+              fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
               textTransform: "uppercase", padding: "3px 9px", borderRadius: 3, color: "#fff",
               background: statusColor.correction,
             }}>correction</span>
@@ -736,7 +739,7 @@ export default function StallionSheet() {
             display: "flex", flexDirection: "column", gap: 3, justifyContent: "flex-end",
             padding: "0 12px", background: C.amber, borderRadius: 4, border: `1px solid ${C.warnBorder}`,
           }}>
-            <label style={{ fontFamily: MONO, fontSize: 9, color: C.amberText, textTransform: "uppercase", paddingTop: 6 }}>
+            <label style={{ fontFamily: MONO, fontSize: 11, color: C.amberText, textTransform: "uppercase", paddingTop: 6 }}>
               CIF Factor</label>
             <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: C.amberText, paddingBottom: 6 }}>
               {(sheet.cif_factor ?? 0).toFixed(12)}</div>
@@ -820,7 +823,7 @@ export default function StallionSheet() {
           background: C.void, borderRadius: 8, padding: "18px 18px", color: C.ghost,
         }}>
           <div style={{
-            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
             textTransform: "uppercase", color: C.ghostDim, marginBottom: 14,
           }}>Duties &amp; Totals</div>
 
@@ -849,7 +852,7 @@ export default function StallionSheet() {
           <div style={{ height: 1, background: C.voidBorder, margin: "14px 0" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 18 }}>
             <span style={{
-              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
+              fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
               textTransform: "uppercase", color: C.ghostDim,
             }}>Payable</span>
             <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 700, color: C.amberAction, letterSpacing: "-0.01em" }}>
@@ -906,7 +909,7 @@ function btn(c: typeof C, kind: "solid" | "outline"): React.CSSProperties {
 
 function railBtn(c: typeof C, kind: "solid" | "ghost"): React.CSSProperties {
   return {
-    fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: kind === "solid" ? "10px 12px" : "9px 12px",
+    fontFamily: MONO, fontSize: 11, fontWeight: 600, padding: kind === "solid" ? "10px 12px" : "9px 12px",
     cursor: "pointer", borderRadius: 4, letterSpacing: "0.06em", textTransform: "uppercase",
     textAlign: "center" as const, display: "block",
     border: kind === "solid" ? "none" : `1px solid ${c.voidBorder}`,

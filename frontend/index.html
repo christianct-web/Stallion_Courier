@@ -6,14 +6,20 @@
     <title>Stallion — Customs Declaration System</title>
     <meta name="description" content="Stallion — Trinidad &amp; Tobago customs declaration and brokerage platform" />
 
-    <!-- Stallion typography: Fraunces (display serif) + JetBrains Mono (data/labels) -->
+    <!-- Stallion typography: Fraunces (display serif) + JetBrains Mono (data/labels).
+         Fraunces is requested as a variable range through 900 — the brand's
+         display headings run heavy, and the previous request topped out at 700,
+         so every masthead was silently synthesising or clamping its weight. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <meta name="author" content="Stallion" />
+
+    <!-- Warm near-black chrome, matched by the mobile browser UI. -->
+    <meta name="theme-color" content="#14100E" />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/stallion-icon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/stallion-icon-180.png" />

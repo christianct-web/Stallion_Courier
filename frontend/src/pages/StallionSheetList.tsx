@@ -16,19 +16,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSheet, deleteSheet, listSheets, Sheet } from "@/services/sheetApi";
 import { StatusPill } from "@/components/StatusPill";
+import { C } from "@/brand/stallion";
 
 /* ------------------------------------------------------------------ tokens */
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  green: "#1A5C3A", greenLight: "#EBF5EE",
-  amber: "#C65911", amberLight: "#FDF2E5",
-  blue: "#1E4A8C", blueLight: "#EEF2FA",
-  gold: "#B8860B",
-  warn: "#FEF3DC", warnBorder: "#D4A020", warnText: "#7A5000",
-  critical: "#FEE8E8", critBorder: "#B02020",
-  purple: "#5A3A8A", purpleLight: "#F0EBF7",
-};
 const MONO = "'JetBrains Mono', monospace";
 const SERIF = "'Fraunces', serif";
 
@@ -379,7 +369,7 @@ export default function StallionSheetList() {
               background: C.paper, border: `1px solid ${C.paperBorder}`,
               borderRadius: 4, padding: "13px 16px",
             }}>
-              <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em",
+              <div style={{ fontFamily: MONO, fontSize: 11.5, letterSpacing: "0.1em",
                 color: C.inkLight, textTransform: "uppercase", marginBottom: 4 }}>
                 {card.label}
               </div>
@@ -466,7 +456,7 @@ export default function StallionSheetList() {
                       .map((h, i) => (
                         <th key={h + i} style={{
                           textAlign: i >= 5 && i <= 7 ? "right" : "left",
-                          padding: "11px 14px", fontFamily: MONO, fontSize: 9.5,
+                          padding: "11px 14px", fontFamily: MONO, fontSize: 11.5,
                           letterSpacing: "0.1em", color: C.paperMid, fontWeight: 700,
                           textTransform: "uppercase", whiteSpace: "nowrap",
                           position: "sticky", top: 0,
@@ -526,7 +516,7 @@ export default function StallionSheetList() {
                         </td>
                         <td style={{ padding: "12px 14px" }}>
                           {conf ? (
-                            <span style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 700,
+                            <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 700,
                               letterSpacing: "0.05em", color: conf.fg, background: conf.bg,
                               border: `1px solid ${conf.border}`,
                               padding: "3px 7px", borderRadius: 3, whiteSpace: "nowrap" }}>
@@ -541,7 +531,7 @@ export default function StallionSheetList() {
                         <td style={{ padding: "12px 14px", textAlign: "right" }}
                           onClick={e => e.stopPropagation()}>
                           <button onClick={e => remove(s.id, e)} title="Delete declaration" style={{
-                            fontFamily: MONO, fontSize: 10, letterSpacing: "0.06em",
+                            fontFamily: MONO, fontSize: 11, letterSpacing: "0.06em",
                             textTransform: "uppercase", color: C.critBorder, background: "transparent",
                             padding: "4px 8px", border: `1px solid ${C.critBorder}33`,
                             borderRadius: 3, cursor: "pointer",

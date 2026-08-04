@@ -96,9 +96,9 @@ export function WorkbenchParties({
         </span>
         {sectionComplete !== undefined && (
           <span style={{
-            fontFamily: "var(--wb-font-mono)", fontSize: 10, fontWeight: 700,
+            fontFamily: "var(--wb-font-mono)", fontSize: 11, fontWeight: 700,
             padding: "2px 8px", borderRadius: 3,
-            background: sectionComplete ? "#EBF7F1" : "var(--wb-critical)",
+            background: sectionComplete ? "#E6EFE8" : "var(--wb-critical)",
             color: sectionComplete ? "var(--wb-approved)" : "var(--wb-crit-border)",
             border: `1px solid ${sectionComplete ? "var(--wb-approved)" : "var(--wb-crit-border)"}44`,
           }}>
@@ -111,12 +111,12 @@ export function WorkbenchParties({
         {missingRequired.length > 0 && (
           <div style={{
             padding: "8px 16px",
-            background: "#FEF0E8",
+            background: "#FBEDE1",
             borderBottom: "1px solid #963A1022",
             display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
           }}>
             <span style={{
-              fontFamily: "var(--wb-font-mono)", fontSize: 9, fontWeight: 700,
+              fontFamily: "var(--wb-font-mono)", fontSize: 11, fontWeight: 700,
               letterSpacing: "0.12em", color: "var(--wb-correction)", flexShrink: 0,
             }}>
               COMPLETE FIRST

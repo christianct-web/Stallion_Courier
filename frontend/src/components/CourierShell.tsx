@@ -13,11 +13,20 @@
  */
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { TopNav } from "@/components/TopNav";
+import { TopNav, chromeActionStyle } from "@/components/TopNav";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { C } from "@/components/courier/tokens";
+import { C, SERIF, MONO, TOUCH_TARGET } from "@/brand/stallion";
 
-/* Bottom-nav destinations */
+/* Bottom-nav destinations
+ *
+ * Three real destinations, one tab each. The previous set had a "Home" and a
+ * "Manifests" tab that both navigated to /stallion/courier — that route *is*
+ * the manifests list, so one of the three tabs was dead, and "Manifests" could
+ * never light up (its match tested for a deeper path than tapping it produced).
+ *
+ * It also left mobile users stranded: the courier shell replaces the desktop
+ * TopNav, so once inside the module there was no route back to the rest of
+ * Stallion. "Dashboard" is that way out. */
 
 type NavItem = {
   label: string;
@@ -30,19 +39,9 @@ const stroke = (active: boolean) => (active ? "#fff" : C.ghostDim);
 
 const NAV: NavItem[] = [
   {
-    label: "Home",
-    path: "/stallion/courier",
-    match: (p) => p === "/stallion/courier",
-    icon: (a) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
-      </svg>
-    ),
-  },
-  {
     label: "Manifests",
     path: "/stallion/courier",
-    match: (p) => p.startsWith("/stallion/courier/") && !p.endsWith("/tariff"),
+    match: (p) => p === "/stallion/courier" || (p.startsWith("/stallion/courier/") && !p.endsWith("/tariff")),
     icon: (a) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" />
@@ -56,6 +55,16 @@ const NAV: NavItem[] = [
     icon: (a) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+    ),
+  },
+  {
+    label: "Dashboard",
+    path: "/",
+    match: (p) => p === "/",
+    icon: (a) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(a)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" />
       </svg>
     ),
   },
@@ -116,15 +125,7 @@ export default function CourierShell() {
         <TopNav
           rightSlot={
             canInstall ? (
-              <button
-                onClick={promptInstall}
-                style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-                  letterSpacing: "0.06em", textTransform: "uppercase",
-                  padding: "6px 12px", borderRadius: 3, cursor: "pointer",
-                  background: C.amber, color: "#fff", border: "none",
-                }}
-              >
+              <button onClick={promptInstall} style={chromeActionStyle}>
                 Install app
               </button>
             ) : undefined
@@ -144,7 +145,7 @@ export default function CourierShell() {
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        background: C.paper,
+        background: C.canvas,
       }}
     >
       {/* Slim top bar */}
@@ -170,9 +171,9 @@ export default function CourierShell() {
         />
         <span
           style={{
-            fontFamily: "'Fraunces', serif",
-            fontSize: 15,
-            fontWeight: 600,
+            fontFamily: SERIF,
+            fontSize: 16,
+            fontWeight: 700,
             color: "#fff",
             letterSpacing: "0.01em",
           }}
@@ -182,13 +183,7 @@ export default function CourierShell() {
         {canInstall && (
           <button
             onClick={promptInstall}
-            style={{
-              marginLeft: "auto",
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-              letterSpacing: "0.06em", textTransform: "uppercase",
-              padding: "5px 10px", borderRadius: 3, cursor: "pointer",
-              background: C.amber, color: "#fff", border: "none",
-            }}
+            style={{ ...chromeActionStyle, marginLeft: "auto", padding: "6px 10px" }}
           >
             Install
           </button>
@@ -209,6 +204,7 @@ export default function CourierShell() {
 
       {/* Fixed bottom nav */}
       <nav
+        aria-label="Courier sections"
         style={{
           position: "fixed",
           left: 0,
@@ -229,6 +225,7 @@ export default function CourierShell() {
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
+              aria-current={active ? "page" : undefined}
               style={{
                 flex: 1,
                 display: "flex",
@@ -238,15 +235,20 @@ export default function CourierShell() {
                 gap: 3,
                 background: "transparent",
                 border: "none",
+                /* An accent rule on the active tab, so the current section is
+                   legible without relying on the icon/label colour shift. */
+                borderTop: `2px solid ${active ? C.amberOnDark : "transparent"}`,
                 cursor: "pointer",
                 padding: "6px 0",
+                minHeight: TOUCH_TARGET,
               }}
             >
               {item.icon(active)}
               <span
                 style={{
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 9.5,
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  fontWeight: active ? 700 : 500,
                   letterSpacing: "0.04em",
                   textTransform: "uppercase",
                   color: active ? "#fff" : C.ghostDim,

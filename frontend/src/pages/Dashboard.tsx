@@ -15,14 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { listSheets } from "@/services/sheetApi";
 import { listManifests, getAuditLog } from "@/services/courierApi";
 import { listClients } from "@/services/stallionApi";
+import { C } from "@/brand/stallion";
 
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  amber: "#C65911", green: "#1A5C3A", blue: "#1E4A8C", purple: "#5A3A8A",
-  gold: "#B8860B", red: "#B02020",
-};
 const SERIF = "'Fraunces', Georgia, serif";
 const MONO = "'JetBrains Mono', 'SFMono-Regular', monospace";
 
@@ -32,9 +26,9 @@ const TINT: Record<string, { bg: string; border: string; title: string; label: s
   green:  { bg: "#EDF3EC", border: "#CFE1CC", title: "#143D28", label: "#3E6B52" },
   blue:   { bg: "#ECF1F8", border: "#C9D9EE", title: "#163963", label: "#3F608C" },
   amber:  { bg: "#FBEEE6", border: "#E5A06B", title: "#7A3A12", label: "#993C1D" },
-  gold:   { bg: "#FAF3E2", border: "#E8D199", title: "#6B4E0A", label: "#8A6D00" },
-  purple: { bg: "#F1ECF7", border: "#D6C7E8", title: "#3D2960", label: "#5A3A8A" },
-  neutral:{ bg: "#EFECE6", border: "#D8D2C7", title: "#2C2820", label: "#4A453D" },
+  gold:   { bg: "#FAF3E2", border: "#E8D199", title: "#6B4E0A", label: "#7A5600" },
+  purple: { bg: "#F0EBF7", border: "#D6C7E8", title: "#3D2960", label: "#5A3A8A" },
+  neutral:{ bg: "#E8E1D5", border: "#D8D2C7", title: "#2C2820", label: "#4A453D" },
 };
 
 type Counts = {
@@ -122,7 +116,7 @@ export default function Dashboard() {
           marginBottom: 16,
         }}>
           <div style={{
-            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
+            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
             color: C.ghostDim, textTransform: "uppercase", lineHeight: 1.3,
           }}>Needs<br />Attention</div>
 
@@ -135,7 +129,7 @@ export default function Dashboard() {
             tone={c.tradeCorrections > 0 ? "#F09595" : "#fff"} sub={C.ghostDim} loaded={c.loaded} />
 
           <button onClick={() => nav("/stallion/brokerreview4")} style={{
-            marginLeft: "auto", fontFamily: MONO, fontSize: 10, fontWeight: 700,
+            marginLeft: "auto", fontFamily: MONO, fontSize: 11, fontWeight: 700,
             letterSpacing: "0.06em", textTransform: "uppercase", padding: "9px 18px",
             cursor: "pointer", borderRadius: 4, border: "none", background: C.amber, color: "#fff",
           }}>Review queue →</button>
@@ -245,7 +239,7 @@ function ModuleCard({ tint, title, icon, badge, big, note, noteAlert, onClick, l
         <span style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 700, color: t.title, letterSpacing: "-0.01em" }}>{title}</span>
         {badge ? (
           <span style={{
-            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.04em",
+            fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em",
             textTransform: "uppercase", background: C.red, color: "#fff",
             padding: "2px 8px", borderRadius: 10,
           }}>{badge}</span>

@@ -9,13 +9,8 @@
  * so the broker's eye lands on problems first.
  */
 import { ChecklistReport, ChecklistItem } from "@/services/sheetApi";
+import { C } from "@/brand/stallion";
 
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  amber: "#C65911", green: "#1A5C3A", red: "#B02020", gold: "#B8860B",
-};
 const SERIF = "'Fraunces', Georgia, serif";
 const MONO = "'JetBrains Mono', 'SFMono-Regular', monospace";
 
@@ -106,7 +101,7 @@ export function ChecklistModal({ report, mode, onClose, onProceed, busy }: {
                 </div>
                 {it.severity === "critical" && it.status !== "ok" && (
                   <span style={{
-                    marginLeft: "auto", flexShrink: 0, fontFamily: MONO, fontSize: 8, fontWeight: 700,
+                    marginLeft: "auto", flexShrink: 0, fontFamily: MONO, fontSize: 11, fontWeight: 700,
                     letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff",
                     background: C.red, padding: "2px 6px", borderRadius: 3, marginTop: 2,
                   }}>required</span>
@@ -155,7 +150,7 @@ function Chip({ n, label, tone, active }: { n: number; label: string; tone: stri
       background: active ? tone + "14" : "#fff", border: `1px solid ${active ? tone + "44" : C.paperBorder}`,
     }}>
       <span style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 700, color: active ? tone : C.inkLight, lineHeight: 1 }}>{n}</span>
-      <span style={{ fontFamily: MONO, fontSize: 10, fontWeight: 600, color: active ? tone : C.inkLight }}>{label}</span>
+      <span style={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: active ? tone : C.inkLight }}>{label}</span>
     </div>
   );
 }

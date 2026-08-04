@@ -93,9 +93,9 @@ function buildWorksheet(form: any) {
 
 // ─── Design tokens (matches paper/ink system) ───────────────────────────────
 const CL = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  ink: "#18150F", inkMid: "#3D3830", inkLight: "#6B6560",
-  approved: "#1A5E3A", correction: "#963A10",
+  paper: "#F6F3EE", paperAlt: "#E8E1D5", paperBorder: "#DCD5C8",
+  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
+  approved: "#1F5232", correction: "#963A10",
 };
 
 // ─── Completion checklist sidebar ────────────────────────────────────────────
@@ -174,7 +174,7 @@ function ChecklistSidebar({ form, items, calc }: { form: any; items: any[]; calc
         borderBottom: `1px solid ${allDone ? CL.approved + "44" : CL.paperBorder}`,
       }}>
         <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
           letterSpacing: "0.12em", color: allDone ? "#ffffffaa" : CL.inkLight,
           marginBottom: 8,
         }}>
@@ -217,14 +217,14 @@ function ChecklistSidebar({ form, items, calc }: { form: any; items: any[]; calc
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 <span style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   letterSpacing: "0.12em", fontWeight: 700,
                   color: secComplete ? CL.approved : CL.inkMid,
                 }}>
                   {sec.label.toUpperCase()}
                 </span>
                 <span style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   color: secComplete ? CL.approved : CL.inkLight,
                 }}>
                   {secDone}/{sec.fields.length}
@@ -245,7 +245,7 @@ function ChecklistSidebar({ form, items, calc }: { form: any; items: any[]; calc
                   onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                 >
                   <span style={{
-                    fontSize: 8, flexShrink: 0, lineHeight: 1,
+                    fontSize: 11, flexShrink: 0, lineHeight: 1,
                     color: field.ok ? CL.approved : CL.correction,
                   }}>
                     {field.ok ? "●" : "○"}
@@ -605,8 +605,8 @@ export default function StallionWorkbench() {
                 ["Items", "One row per HS code line. Enter the HS code, description, country of origin, quantity, weight, and value."],
               ].map(([tab, desc]) => (
                 <div key={tab} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 90, flexShrink: 0 }}>{tab}</span>
-                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1F5232", minWidth: 90, flexShrink: 0 }}>{tab}</span>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                 </div>
               ))}
             </div>
@@ -619,8 +619,8 @@ export default function StallionWorkbench() {
                 ["CPC", "Customs Procedure Code — usually 4000 for standard import. Leave as default unless advised otherwise."],
               ].map(([field, desc]) => (
                 <div key={field} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#96700A", minWidth: 120, flexShrink: 0 }}>{field}</span>
-                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#6B6560" }}>{desc}</span>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#7A5600", minWidth: 120, flexShrink: 0 }}>{field}</span>
+                  <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                 </div>
               ))}
             </div>

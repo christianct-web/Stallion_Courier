@@ -34,7 +34,7 @@ function RatePill({ line }: { line: CourierLine }) {
   const s = ratePillStyle(line.exemption_class, line.duty_rate);
   return (
     <span style={{
-      fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700,
+      fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
       letterSpacing: "0.08em", color: s.color, background: s.bg,
       padding: "2px 6px", borderRadius: 3,
     }}>
@@ -52,7 +52,7 @@ function HeaderField({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <label style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
         letterSpacing: "0.1em", color: C.ghost, textTransform: "uppercase",
       }}>
         {label}
@@ -109,14 +109,14 @@ function ClassifySuggestions({ suggestions, onPick }: {
                 {s.code}
               </span>
               <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
                 letterSpacing: "0.08em", color: pill.color, background: pill.bg,
                 padding: "1px 5px", borderRadius: 2,
               }}>
                 {pill.label}
               </span>
               <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                 color: C.inkLight, marginLeft: "auto",
               }}>
                 {Math.round(s.confidence * 100)}% conf.
@@ -223,7 +223,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
       borderRadius: 4, padding: 16, marginTop: 16,
     }}>
       <div style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
         letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
         marginBottom: 10, fontWeight: 700,
       }}>
@@ -243,7 +243,7 @@ function AddLineRow({ manifestId, onAdded, isMobile }: {
           {classifying && (
             <span style={{
               position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-              fontSize: 10, color: C.inkLight, fontStyle: "italic", fontFamily: "'Fraunces', serif",
+              fontSize: 11, color: C.inkLight, fontStyle: "italic", fontFamily: "'Fraunces', serif",
             }}>
               classifying...
             </span>
@@ -361,7 +361,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
   if (isMobile) {
     return (
       <div style={{
-        background: editing ? "#FFFAEC" : C.paper,
+        background: editing ? "#FBF0D8" : C.paper,
         border: `1px solid ${C.paperBorder}`, borderRadius: 6,
         padding: "12px 12px 10px",
       }}>
@@ -384,7 +384,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
               </div>
             )}
             {line.hawb && (
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, marginTop: 2 }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, marginTop: 2 }}>
                 HAWB {line.hawb}
               </div>
             )}
@@ -420,7 +420,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
             ["Total", fmtTtd(line.total_taxes)],
           ] as [string, string | null][]).map(([lbl, val], i) => (
             <div key={lbl}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, letterSpacing: "0.08em", textTransform: "uppercase", color: C.inkLight }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11.5, letterSpacing: "0.08em", textTransform: "uppercase", color: C.inkLight }}>
                 {lbl}
               </div>
               {lbl === "Cost" && editing ? (
@@ -489,7 +489,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
   return (
     <tr style={{
       borderBottom: `1px solid ${C.paperBorder}`,
-      background: editing ? "#FFFAEC" : "transparent",
+      background: editing ? "#FBF0D8" : "transparent",
     }}>
       <td style={{ ...cellStyle, color: C.inkLight, fontWeight: 600, textAlign: "center", width: 32 }}>
         {line.line_no}
@@ -549,7 +549,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
           <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
             <button onClick={save} disabled={busy} style={{
               padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
               background: C.green, color: "#fff", border: "none", borderRadius: 3,
               cursor: "pointer", fontWeight: 600,
             }}>
@@ -557,7 +557,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
             </button>
             <button onClick={cancel} disabled={busy} style={{
               padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
               background: "transparent", color: C.inkMid, border: `1px solid ${C.paperBorder}`,
               borderRadius: 3, cursor: "pointer",
             }}>
@@ -568,7 +568,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
           <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
             <button onClick={() => setEditing(true)} style={{
               padding: "4px 10px", fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase",
+              fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase",
               background: "transparent", color: C.amber,
               border: `1px solid ${C.amber}33`, borderRadius: 3, cursor: "pointer",
             }}>
@@ -576,7 +576,7 @@ function LineRow({ manifestId, line, onChanged, onDelete, isMobile }: {
             </button>
             <button onClick={() => onDelete(line)} style={{
               padding: "4px 8px", fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 10, color: C.critBorder, background: "transparent",
+              fontSize: 11, color: C.critBorder, background: "transparent",
               border: `1px solid ${C.critBorder}33`, borderRadius: 3, cursor: "pointer",
             }}>
               x
@@ -686,14 +686,14 @@ export default function CourierWorkbench() {
           <div>
             <button onClick={() => navigate("/stallion/courier")} style={{
               background: "transparent", border: "none", padding: 0, cursor: "pointer",
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.08em", textTransform: "uppercase", color: C.ghostDim,
               marginBottom: 6, display: "block",
             }}>
               Manifests
             </button>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.12em",
               color: manifest.officer_examination ? "#7CE38B" : C.amber,
               textTransform: "uppercase",
@@ -805,7 +805,7 @@ export default function CourierWorkbench() {
             <div style={{
               padding: "10px 14px", background: C.paperAlt,
               borderBottom: `1px solid ${C.paperBorder}`,
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
               letterSpacing: "0.1em", color: C.inkLight, textTransform: "uppercase",
               fontWeight: 700,
             }}>
@@ -838,7 +838,7 @@ export default function CourierWorkbench() {
                         <th key={i} style={{
                           textAlign: ["Cost", "CIF", "Duty", "OPT", "VAT", "Total"].includes(h) ? "right" : "left",
                           padding: "8px 8px",
-                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                           letterSpacing: "0.08em", color: C.inkLight, fontWeight: 600,
                           textTransform: "uppercase",
                         }}>
@@ -887,8 +887,8 @@ export default function CourierWorkbench() {
               <div style={{
                 padding: "10px 14px", background: "#FCE4D6",
                 borderBottom: `1px solid ${C.paperBorder}`,
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                letterSpacing: "0.1em", color: "#3D3830", textTransform: "uppercase",
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+                letterSpacing: "0.1em", color: "#2C2820", textTransform: "uppercase",
                 fontWeight: 700,
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
@@ -897,7 +897,7 @@ export default function CourierWorkbench() {
                 </span>
                 <span style={{
                   fontFamily: "'Fraunces', serif", fontStyle: "italic",
-                  fontSize: 11, color: "#6B6560", letterSpacing: "normal",
+                  fontSize: 11, color: "#4A453D", letterSpacing: "normal",
                   textTransform: "none", fontWeight: 400,
                 }}>
                   Examined by {manifest.officer_examination.examining_officer || "-"}
@@ -919,7 +919,7 @@ export default function CourierWorkbench() {
                                       "Add OPT", "Add VAT", "Add Total"].includes(h)
                             ? "right" : "left",
                           padding: "8px 8px",
-                          fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
+                          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                           letterSpacing: "0.08em", color: C.inkMid, fontWeight: 700,
                           textTransform: "uppercase",
                         }}>
@@ -947,7 +947,7 @@ export default function CourierWorkbench() {
                         }}>
                           <td style={{
                             ...cellStyleS3, fontWeight: 600,
-                            color: isNewLine ? "#C65911" : C.ink,
+                            color: isNewLine ? "#C2571B" : C.ink,
                           }}>
                             {corr.line_no != null ? `#${corr.line_no}` : "NEW"}
                           </td>
@@ -970,7 +970,7 @@ export default function CourierWorkbench() {
                                     </span>
                                     <span style={{
                                       display: "block", fontWeight: 600,
-                                      color: "#C65911",
+                                      color: "#C2571B",
                                     }}>
                                       {"->"} {nu}
                                     </span>
@@ -985,7 +985,7 @@ export default function CourierWorkbench() {
                             {corr.officer_thn || "-"}
                           </td>
                           <td style={{
-                            ...cellStyleS3, fontSize: 10,
+                            ...cellStyleS3, fontSize: 11,
                             color: C.inkLight, textTransform: "uppercase",
                             letterSpacing: "0.06em",
                           }}>
@@ -1015,7 +1015,7 @@ export default function CourierWorkbench() {
                                   + (corr.add_opt || 0)
                                   + (corr.add_vat || 0)))}
                           </td>
-                          <td style={{ ...cellStyleS3, fontSize: 10 }}>
+                          <td style={{ ...cellStyleS3, fontSize: 11 }}>
                             {flags.length ? flags.join(" / ") : "-"}
                           </td>
                         </tr>
@@ -1037,7 +1037,7 @@ export default function CourierWorkbench() {
           borderRadius: 4, padding: 18, height: "fit-content", position: "sticky", top: 80,
         }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
             letterSpacing: "0.1em", color: C.amber, textTransform: "uppercase",
             fontWeight: 700, marginBottom: 12,
           }}>
@@ -1085,7 +1085,7 @@ export default function CourierWorkbench() {
                 borderTop: `1px dashed ${C.paperBorder}`,
               }}>
                 <div style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
                   letterSpacing: "0.1em", color: "#7CE38B",
                   textTransform: "uppercase", fontWeight: 700, marginBottom: 8,
                 }}>

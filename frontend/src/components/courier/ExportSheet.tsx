@@ -175,7 +175,7 @@ export function ExportSheet({ manifest, onClose, onOpenHazmatForm }: Props) {
         <div
           style={{
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 10,
+            fontSize: 11,
             letterSpacing: "0.1em",
             textTransform: "uppercase",
             color: C.inkLight,
@@ -245,7 +245,7 @@ export function ExportSheet({ manifest, onClose, onOpenHazmatForm }: Props) {
                     width: "100%",
                     padding: "10px",
                     fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10,
+                    fontSize: 11,
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
                     background: "transparent",

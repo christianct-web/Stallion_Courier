@@ -172,7 +172,7 @@ export function WorkbenchWorksheet({
                 background: "transparent",
                 border: "none",
                 borderLeft: "1px solid var(--wb-paper-border)",
-                fontFamily: "var(--wb-font-mono)", fontSize: 9,
+                fontFamily: "var(--wb-font-mono)", fontSize: 11,
                 fontWeight: 700, letterSpacing: "0.1em",
                 color: cbttLoading ? "var(--wb-paper-mid)" : "var(--wb-approved)",
                 cursor: cbttLoading ? "default" : "pointer",
@@ -187,9 +187,9 @@ export function WorkbenchWorksheet({
         {(cbttSource || cbttWarning) && (
           <div style={{
             padding: "6px 16px",
-            background: cbttWarning ? "var(--wb-warn)" : "#EBF7F1",
+            background: cbttWarning ? "var(--wb-warn)" : "#E6EFE8",
             borderBottom: `1px solid ${cbttWarning ? "var(--wb-warn-border)" : "var(--wb-approved)"}`,
-            fontFamily: "var(--wb-font-mono)", fontSize: 10,
+            fontFamily: "var(--wb-font-mono)", fontSize: 11,
             color: cbttWarning ? "var(--wb-warn-text)" : "var(--wb-approved)",
           }}>
             {cbttWarning
@@ -330,7 +330,7 @@ export function WorkbenchWorksheet({
                       <td>{label as string}</td>
                       <td style={{ textAlign: "right", color: "var(--wb-ink-mid)" }}>
                         {(val as number).toLocaleString("en-TT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        <span style={{ color: "var(--wb-paper-mid)", marginLeft: 4, fontSize: 10 }}>{ccy as string}</span>
+                        <span style={{ color: "var(--wb-paper-mid)", marginLeft: 4, fontSize: 11 }}>{ccy as string}</span>
                       </td>
                     </tr>
                   ))}
@@ -338,12 +338,12 @@ export function WorkbenchWorksheet({
                     <td>Total Due</td>
                     <td style={{ textAlign: "right" }}>
                       {liveCalc.total.toLocaleString("en-TT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      <span style={{ color: "var(--wb-paper-mid)", marginLeft: 4, fontSize: 10 }}>TTD</span>
+                      <span style={{ color: "var(--wb-paper-mid)", marginLeft: 4, fontSize: 11 }}>TTD</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
-              <div style={{ marginTop: 8, fontFamily: "var(--wb-font-mono)", fontSize: 9, color: "var(--wb-paper-mid)", fontStyle: "italic" }}>
+              <div style={{ marginTop: 8, fontFamily: "var(--wb-font-mono)", fontSize: 11, color: "var(--wb-paper-mid)", fontStyle: "italic" }}>
                 Live estimate · updates as you type · click Calculate to confirm
               </div>
             </div>

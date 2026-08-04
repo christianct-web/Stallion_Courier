@@ -10,31 +10,23 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
+import { C } from "@/brand/stallion";
 
 // ─── Design tokens ──────────────────────────────────────────────────────────
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6",
-  paperMid: "#CCC7BE", ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430",
-  voidBorder: "#2E3748", ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  pending: "#96700A", approved: "#1A5E3A", correction: "#963A10",
-  rejected: "#7A1E1E", warn: "#FEF3DC", warnBorder: "#D4A020",
-  warnText: "#7A5000", critical: "#FEE8E8", critBorder: "#B02020",
-};
 
 // Unified status config — covers both backend and localStorage statuses
 const STATUS_STYLE: Record<string, { color: string; bg: string; border: string; label: string }> = {
   Draft:            { color: C.ghostDim,    bg: C.voidSurface, border: C.voidBorder,         label: "DRAFT"       },
   draft:            { color: C.ghostDim,    bg: C.voidSurface, border: C.voidBorder,         label: "DRAFT"       },
-  Ready:            { color: C.approved,    bg: "#EBF7F1",     border: C.approved + "44",    label: "READY"       },
-  Exported:         { color: "#1E4A8C",     bg: "#EEF2FA",     border: "#1E4A8C44",           label: "EXPORTED"    },
+  Ready:            { color: C.approved,    bg: "#E6EFE8",     border: C.approved + "44",    label: "READY"       },
+  Exported:         { color: "#1E4A8C",     bg: "#EBF0F8",     border: "#1E4A8C44",           label: "EXPORTED"    },
   pending_review:   { color: C.pending,     bg: C.warn,        border: C.warnBorder + "44",  label: "PENDING"     },
   pending:          { color: C.pending,     bg: C.warn,        border: C.warnBorder + "44",  label: "PENDING"     },
-  approved:         { color: C.approved,    bg: "#EBF7F1",     border: C.approved + "44",    label: "APPROVED"    },
-  needs_correction: { color: C.correction,  bg: "#FEF0E8",     border: C.correction + "44",  label: "CORRECTION"  },
+  approved:         { color: C.approved,    bg: "#E6EFE8",     border: C.approved + "44",    label: "APPROVED"    },
+  needs_correction: { color: C.correction,  bg: "#FBEDE1",     border: C.correction + "44",  label: "CORRECTION"  },
   rejected:         { color: C.rejected,    bg: C.critical,    border: C.rejected + "44",    label: "REJECTED"    },
-  submitted:        { color: "#1E4A8C",     bg: "#EEF2FA",     border: "#1E4A8C44",           label: "SUBMITTED"   },
-  receipted:        { color: "#1E4A8C",     bg: "#EEF2FA",     border: "#1E4A8C44",           label: "RECEIPTED"   },
+  submitted:        { color: "#1E4A8C",     bg: "#EBF0F8",     border: "#1E4A8C44",           label: "SUBMITTED"   },
+  receipted:        { color: "#1E4A8C",     bg: "#EBF0F8",     border: "#1E4A8C44",           label: "RECEIPTED"   },
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -42,7 +34,7 @@ function StatusPill({ status }: { status: string }) {
   return (
     <span style={{
       fontFamily: "'JetBrains Mono', monospace",
-      fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.1em",
       color: s.color, background: s.bg,
       padding: "3px 8px", borderRadius: 3,
       border: `1px solid ${s.border}`,
@@ -94,7 +86,7 @@ function confidenceTone(conf: number | null) {
   if (conf == null) return { color: C.ghostDim, bg: "transparent", border: C.paperBorder, label: "—" };
   if (conf < 70) return { color: C.rejected, bg: C.critical, border: C.critBorder, label: `${Math.round(conf)}%` };
   if (conf < 90) return { color: C.pending, bg: C.warn, border: C.warnBorder, label: `${Math.round(conf)}%` };
-  return { color: C.approved, bg: "#EBF7F1", border: C.approved + "44", label: `${Math.round(conf)}%` };
+  return { color: C.approved, bg: "#E6EFE8", border: C.approved + "44", label: `${Math.round(conf)}%` };
 }
 
 // ─── Action card (urgent) ────────────────────────────────────────────────────
@@ -122,7 +114,7 @@ function ActionCard({
         transition: "all 0.15s", flex: 1, minWidth: 220,
       }}
     >
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.12em", color: color + "bb", marginBottom: 8 }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", color: color + "bb", marginBottom: 8 }}>
         URGENT WORK
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
@@ -147,7 +139,7 @@ function WorkflowCard({
   title: string; sub: string; meta: string; accent?: boolean; onClick: () => void;
 }) {
   const [hov, setHov] = useState(false);
-  const bg   = accent ? (hov ? C.approved : "#1A5E3A11") : (hov ? C.voidSurface : C.void);
+  const bg   = accent ? (hov ? C.approved : "#1F523211") : (hov ? C.voidSurface : C.void);
   const bord = accent ? C.approved + "55" : C.voidBorder;
   const titc = accent ? (hov ? "#fff" : C.approved) : (hov ? "#fff" : C.ghost);
   const subc = accent ? C.approved + "99" : C.ghostDim;
@@ -169,7 +161,7 @@ function WorkflowCard({
       <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 12, color: subc, marginBottom: 12 }}>
         {sub}
       </div>
-      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.1em", color: accent ? C.approved + "88" : C.ghostDim }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.1em", color: accent ? C.approved + "88" : C.ghostDim }}>
         {meta}
       </div>
     </button>
@@ -361,7 +353,7 @@ export default function DeclarationsList() {
         *, *::before, *::after { box-sizing: border-box; }
         body { background: ${C.paper}; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-thumb { background: #2E3748; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #332A24; border-radius: 3px; }
         .decl-row { transition: background 0.1s; }
         .decl-row:hover { background: ${C.paperAlt} !important; }
         .decl-row:hover .decl-ref { color: ${C.ink} !important; }
@@ -378,7 +370,7 @@ export default function DeclarationsList() {
         {/* ── Hero ── */}
         <div style={{ background: C.void, borderBottom: `1px solid ${C.voidBorder}`, padding: "28px 32px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", color: "#C65911", marginBottom: 8 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", color: "#C2571B", marginBottom: 8 }}>
               DECLARATIONS
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
@@ -397,7 +389,7 @@ export default function DeclarationsList() {
                     <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 21, fontWeight: 700, color: tone.color, lineHeight: 1 }}>
                       {value}
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: tone.color, letterSpacing: "0.12em", marginTop: 5 }}>
+                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: tone.color, letterSpacing: "0.12em", marginTop: 5 }}>
                       {label}
                     </div>
                   </div>
@@ -413,7 +405,7 @@ export default function DeclarationsList() {
           {/* Urgent actions */}
           {hasUrgent && (
             <div style={{ marginBottom: 28, borderRadius: 3, padding: 14 }}>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em", color: C.inkMid, marginBottom: 10, fontWeight: 700, display: "flex", alignItems: "center" }}>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkMid, marginBottom: 10, fontWeight: 700, display: "flex", alignItems: "center" }}>
                 <span className="urgent-dot" style={{ background: C.correction }} />
                 NEEDS ATTENTION TODAY
               </div>
@@ -422,7 +414,7 @@ export default function DeclarationsList() {
                   color={C.pending} bg={C.warn} border={C.warnBorder}
                   onClick={() => navigate("/stallion/brokerreview4")} />
                 <ActionCard count={counts.correction} label="Need Correction" sub="Declarations flagged by broker"
-                  color={C.correction} bg="#FEF0E8" border={C.correction}
+                  color={C.correction} bg="#FBEDE1" border={C.correction}
                   onClick={() => navigate("/stallion/brokerreview4")} />
               </div>
             </div>
@@ -430,7 +422,7 @@ export default function DeclarationsList() {
 
           {/* Workflow cards */}
           <div style={{ marginBottom: 28 }}>
-            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 10 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight, marginBottom: 10 }}>
               WORKFLOWS
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -452,7 +444,7 @@ export default function DeclarationsList() {
             <div>
               {/* Toolbar */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
-                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em", color: C.inkLight }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.14em", color: C.inkLight }}>
                   DECLARATIONS
                 </div>
                 <div style={{ position: "relative", flex: 1, maxWidth: 300 }}>
@@ -476,7 +468,7 @@ export default function DeclarationsList() {
                     padding: "7px 14px", background: "transparent",
                     border: `1px solid ${C.paperBorder}`, borderRadius: 3,
                     color: C.inkLight, fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 10, letterSpacing: "0.08em", cursor: "pointer",
+                    fontSize: 11, letterSpacing: "0.08em", cursor: "pointer",
                   }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = C.inkLight)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = C.paperBorder)}
@@ -526,19 +518,19 @@ export default function DeclarationsList() {
                           key={i}
                           onClick={() => setConfSort(s => s === "asc" ? "desc" : s === "desc" ? null : "asc")}
                           style={{
-                            fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700,
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700,
                             letterSpacing: "0.12em", color: confSort ? C.inkMid : C.inkLight,
                             textAlign: "left", background: "transparent", border: "none",
                             cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4,
                           }}
                         >
                           {h}
-                          <span style={{ fontSize: 10 }}>
+                          <span style={{ fontSize: 11 }}>
                             {confSort === "asc" ? "↑" : confSort === "desc" ? "↓" : "↕"}
                           </span>
                         </button>
                       ) : (
-                        <div key={i} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight, textAlign: i === 4 ? "right" as const : "left" as const }}>
+                        <div key={i} style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight, textAlign: i === 4 ? "right" as const : "left" as const }}>
                           {h}
                         </div>
                       )
@@ -562,7 +554,7 @@ export default function DeclarationsList() {
                       >
                         {/* Ref + consignee */}
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.ghostDim, width: 18, flexShrink: 0 }}>
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.ghostDim, width: 18, flexShrink: 0 }}>
                             {String(idx + 1).padStart(2, "0")}
                           </span>
                           <div style={{ minWidth: 0 }}>
@@ -591,7 +583,7 @@ export default function DeclarationsList() {
                                 background: tone.bg,
                                 color: tone.color,
                                 fontFamily: "'JetBrains Mono', monospace",
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: 700,
                                 letterSpacing: "0.06em",
                               }}>
@@ -601,7 +593,7 @@ export default function DeclarationsList() {
                           })()}
                         </div>
                         <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.inkLight }}>
-                          {itemCount}<span style={{ fontSize: 10, marginLeft: 2 }}>item{itemCount !== 1 ? "s" : ""}</span>
+                          {itemCount}<span style={{ fontSize: 11, marginLeft: 2 }}>item{itemCount !== 1 ? "s" : ""}</span>
                         </div>
                         <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: C.inkLight }}>
                           {updatedAt ? formatDistanceToNow(new Date(updatedAt), { addSuffix: true }) : "—"}
@@ -614,7 +606,7 @@ export default function DeclarationsList() {
                                 style={{
                                   padding: "4px 8px",
                                   fontFamily: "'JetBrains Mono', monospace",
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   background: "transparent",
                                   border: `1px solid ${C.paperBorder}`,
                                   borderRadius: 3,
@@ -630,7 +622,7 @@ export default function DeclarationsList() {
                                 style={{
                                   padding: "4px 8px",
                                   fontFamily: "'JetBrains Mono', monospace",
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   background: "transparent",
                                   border: `1px solid ${C.paperBorder}`,
                                   borderRadius: 3,
@@ -663,7 +655,7 @@ export default function DeclarationsList() {
                 </div>
               )}
               {sorted.length > 0 && (
-                <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.inkLight, letterSpacing: "0.06em" }}>
+                <div style={{ marginTop: 10, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkLight, letterSpacing: "0.06em" }}>
                   {sorted.length} of {allDeclarations.length} declaration{allDeclarations.length !== 1 ? "s" : ""}
                   {searchQuery && ` matching "${searchQuery}"`}
                   {" · "}<span style={{ color: C.ghostDim }}>{backendDeclarations.length} from backend</span>
@@ -676,7 +668,7 @@ export default function DeclarationsList() {
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Quick actions */}
               <div style={{ border: `1px solid ${C.paperBorder}`, borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
+                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
                   QUICK ACTIONS
                 </div>
                 <div style={{ padding: 10, display: "grid", gap: 8 }}>
@@ -751,7 +743,7 @@ export default function DeclarationsList() {
                     ["4. Receipt", "After ASYCUDA processing, enter the receipt number to complete the record."],
                   ].map(([step, desc]) => (
                     <div key={step} style={{ display: "flex", gap: 8, fontSize: 12 }}>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1A5E3A", minWidth: 60, flexShrink: 0 }}>{step}</span>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, color: "#1F5232", minWidth: 60, flexShrink: 0 }}>{step}</span>
                       <span style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", color: "#4A453D" }}>{desc}</span>
                     </div>
                   ))}
@@ -761,7 +753,7 @@ export default function DeclarationsList() {
 
               {/* Recent activity */}
               <div style={{ border: `1px solid ${C.paperBorder}`, borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
+                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
                   RECENT ACTIVITY
                 </div>
                 {recentActivity.length === 0 ? (
@@ -779,7 +771,7 @@ export default function DeclarationsList() {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                         <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: C.inkMid, letterSpacing: "0.04em" }}>{ref}</span>
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, fontWeight: 700, color: cfg.color, letterSpacing: "0.08em" }}>{cfg.label}</span>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, color: cfg.color, letterSpacing: "0.08em" }}>{cfg.label}</span>
                       </div>
                       <div style={{ fontFamily: "'Fraunces', serif", fontStyle: "italic", fontSize: 11, color: C.inkLight }}>
                         {formatActivityDate(decl.updated_at || "")}
@@ -791,7 +783,7 @@ export default function DeclarationsList() {
 
               {/* This month summary */}
               <div style={{ border: `1px solid ${C.paperBorder}`, borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
+                <div style={{ padding: "8px 14px", background: C.paperAlt, borderBottom: `1px solid ${C.paperBorder}`, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: C.inkLight }}>
                   {format(new Date(), "MMMM yyyy").toUpperCase()}
                 </div>
                 {[
