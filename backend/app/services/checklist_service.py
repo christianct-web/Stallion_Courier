@@ -224,7 +224,7 @@ def build_presubmission_report(sheet: Dict[str, Any]) -> Dict[str, Any]:
         if missing_hs:
             items.append({
                 "field": "hs_code",
-                "label": f"{len(missing_hs)} line(s) missing an HS code",
+                "label": f"{len(missing_hs)} line{'' if len(missing_hs) == 1 else 's'} missing an HS code",
                 "status": "missing", "severity": "critical",
                 "detail": "Every line needs a classification before XML.",
             })
@@ -233,7 +233,7 @@ def build_presubmission_report(sheet: Dict[str, Any]) -> Dict[str, Any]:
         if zero_val:
             items.append({
                 "field": "exworks_usd",
-                "label": f"{len(zero_val)} line(s) with zero value",
+                "label": f"{len(zero_val)} line{'' if len(zero_val) == 1 else 's'} with zero value",
                 "status": "review", "severity": "warn",
                 "detail": "Zero-value lines are unusual — confirm they're correct.",
             })
