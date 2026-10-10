@@ -57,16 +57,18 @@ export function TypePicker({ value, onChange, name = "decl-type", disabled }: {
 
 /* ── form fields that commit on blur / Enter ─────────────────────────────── */
 type FieldProps = {
-  label: string; fieldKey?: string; missing?: boolean; className?: string; hint?: string;
+  label: string; fieldKey?: string; className?: string; hint?: string;
+  /** From the server report: "needed" = blocking, "check" = worth verifying. */
+  flag?: "needed" | "check";
 };
 
-function FieldShell({ label, fieldKey, missing, className, hint, htmlFor, children }: FieldProps & {
+function FieldShell({ label, flag, className, hint, htmlFor, children }: FieldProps & {
   htmlFor: string; children: ReactNode;
 }) {
   return (
-    <div className={`st-field${missing ? " is-missing" : ""}${className ? " " + className : ""}`}>
+    <div className={`st-field${flag ? ` is-${flag}` : ""}${className ? " " + className : ""}`}>
       <label htmlFor={htmlFor}>
-        {label}{missing && <span className="st-flag">· needed</span>}
+        {label}{flag && <span className="st-flag">· {flag}</span>}
       </label>
       {children}
       {hint && <span className="st-hint">{hint}</span>}
@@ -86,7 +88,8 @@ export function TextField({ value, onCommit, type = "text", align, prose, placeh
     <FieldShell {...shell} htmlFor={id}>
       <input id={id} type={type} value={v} placeholder={placeholder}
         className={`st-input${prose ? " prose" : ""}${align === "right" ? " right" : ""}`}
-        aria-invalid={shell.missing || undefined}
+        aria-invalid={shell.flag === "needed" || undefined}
+        data-flag={shell.flag}
         inputMode={type === "number" ? "decimal" : undefined}
         onChange={e => setV(e.target.value)}
         onBlur={() => { if (v !== String(value ?? "")) onCommit(v); }}
@@ -104,7 +107,7 @@ export function SelectField({ value, options, onCommit, placeholder, ...shell }:
   const known = options.some(o => o.code === val);
   return (
     <FieldShell {...shell} htmlFor={id}>
-      <select id={id} className="st-select" value={val} aria-invalid={shell.missing || undefined}
+      <select id={id} className="st-select" value={val} aria-invalid={shell.flag === "needed" || undefined} data-flag={shell.flag}
         onChange={e => onCommit(e.target.value)}>
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {!known && val !== "" && <option value={val}>{val}</option>}
@@ -115,7 +118,9 @@ export function SelectField({ value, options, onCommit, placeholder, ...shell }:
 }
 
 /* ── checklist (extraction report / pre-submission report) ───────────────── */
-const ORDER = (i: ChecklistItem) => (i.status === "missing" ? 0 : i.status === "review" ? 1 : 2);
+// Icon and order follow severity, so the list agrees with the blocking / to-check counts.
+const tone = (i: ChecklistItem) => (i.status === "ok" ? "ok" : i.severity === "critical" ? "missing" : "review");
+const ORDER = (i: ChecklistItem) => ({ missing: 0, review: 1, ok: 2 })[tone(i)];
 
 export function Checklist({ items, onGo, hideOk }: {
   items: ChecklistItem[]; onGo?: (field: string) => void; hideOk?: boolean;
@@ -126,8 +131,8 @@ export function Checklist({ items, onGo, hideOk }: {
     <ul className="st-check">
       {sorted.map((it, i) => (
         <li key={`${it.field}-${i}`}>
-          <span className={`st-check__icon st-check__icon--${it.status}`} aria-hidden="true">
-            {it.status === "ok" ? <Check /> : it.status === "missing" ? <X /> : <AlertTriangle />}
+          <span className={`st-check__icon st-check__icon--${tone(it)}`} aria-hidden="true">
+            {tone(it) === "ok" ? <Check /> : tone(it) === "missing" ? <X /> : <AlertTriangle />}
           </span>
           <span>
             <span className="st-check__label">{it.label}</span>

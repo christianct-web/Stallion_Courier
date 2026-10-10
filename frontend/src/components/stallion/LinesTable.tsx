@@ -127,6 +127,7 @@ export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, o
 
   return (
     <div id="f-lines">
+      {lines.length > 0 && <p className="st-scroll-hint" aria-hidden="true">Swipe the table sideways for HS, values and taxes →</p>}
       <div className="st-table-wrap">
         <table className="st-table">
           <thead>

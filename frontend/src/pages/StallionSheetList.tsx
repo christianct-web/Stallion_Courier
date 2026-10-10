@@ -63,19 +63,24 @@ function groupDate(key: GroupKey, today: Date): string {
   return "";
 }
 
+// The day rule already says Today / Tomorrow; the cell always carries the date.
 function whenCell(s: Sheet, today: Date) {
   const d = localDay(s.arrival_date);
   if (!d) return <span className="st-row__when">—</span>;
   const diff = dayDiff(d, today);
-  if (diff === 0) return <span className="st-row__when"><b>Today</b></span>;
-  if (diff === 1) return <span className="st-row__when"><b>Tmrw</b></span>;
-  if (diff < 0 && diff > -60) {
-    return <span className="st-row__when">{SHORT_FMT.format(d)}<br /><small style={{ color: "var(--ink-3)" }}>{-diff}d ago</small></span>;
-  }
-  return <span className="st-row__when">{SHORT_FMT.format(d)}</span>;
+  return (
+    <span className="st-row__when">
+      <b>{SHORT_FMT.format(d)}</b>
+      {diff < 0 && diff > -60 && <small>{-diff}d ago</small>}
+    </span>
+  );
 }
 
-const payable = (s: Sheet) => s.totals?.total_payable;
+// A job with no lines has no computed payable yet: that is unknown, not zero.
+const payable = (s: Sheet): number | null => {
+  const v = s.totals?.total_payable;
+  return (s.lines || []).length > 0 && v !== null && v !== undefined ? v : null;
+};
 
 export default function StallionSheetList() {
   const nav = useNavigate();
@@ -135,8 +140,9 @@ export default function StallionSheetList() {
         if (da !== db) return g === "cleared" || g === "landed" ? db.localeCompare(da) : da.localeCompare(db);
         return (b.updated_at || "").localeCompare(a.updated_at || "");
       });
-      const total = items.reduce((sum, s) => sum + (payable(s) ?? 0), 0);
-      return { key: g, items, total };
+      const costed = items.map(payable).filter((v): v is number => v !== null);
+      const total = costed.length ? costed.reduce((a, b) => a + b, 0) : null;
+      return { key: g, items, total, uncosted: items.length - costed.length };
     });
     // `today` is derived per render; the day only changes at midnight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -306,14 +312,20 @@ export default function StallionSheetList() {
             <div className="st-docket">
               {groups.map(g => {
                 const dateText = groupDate(g.key, today);
-                const tone = g.key === "landed" ? " st-day--alert" : g.key === "undated" || g.key === "cleared" ? " st-day--quiet" : "";
+                const tone = g.key === "landed" ? " st-day--alert" : g.key === "today" ? " st-day--today"
+                  : g.key === "undated" || g.key === "cleared" ? " st-day--quiet" : "";
                 return (
                   <section key={g.key} className={`st-day${tone}`} aria-labelledby={`grp-${g.key}`}>
                     <div className="st-day__rule">
-                      <h2 id={`grp-${g.key}`} className="st-day__name" style={{ margin: 0 }}>{GROUP_NAME[g.key]}</h2>
+                      <h2 id={`grp-${g.key}`} className="st-day__name" style={{ margin: 0 }}>
+                        {g.key === "landed" && <AlertTriangle aria-hidden="true" className="st-day__icon" />}
+                        {GROUP_NAME[g.key]}
+                      </h2>
                       {dateText && <span className="st-day__date">{dateText}</span>}
                       <span className="st-day__meta">
-                        <b>{g.items.length}</b> job{g.items.length === 1 ? "" : "s"} · TT$ <b>{money(g.total)}</b>
+                        <b>{g.items.length}</b> job{g.items.length === 1 ? "" : "s"}
+                        {g.total !== null && <> · TT$ <b>{money(g.total)}</b></>}
+                        {g.uncosted > 0 && <> · {g.uncosted} not costed yet</>}
                       </span>
                     </div>
                     <ul className="st-rows">
@@ -339,7 +351,7 @@ export default function StallionSheetList() {
                               <span className="st-row__track"><StationTrack done={done} current={cur} label /></span>
                               <span className="st-row__status"><StatusChip status={s.status} /></span>
                               <span className="st-row__money">
-                                {(s.lines || []).length ? money(payable(s)) : "—"}
+                                {money(payable(s))}
                                 <small>{(s.lines || []).length} line{(s.lines || []).length === 1 ? "" : "s"} · {relTime(s.updated_at)}</small>
                               </span>
                               <span className="st-row__go" aria-hidden="true"><ChevronRight /></span>

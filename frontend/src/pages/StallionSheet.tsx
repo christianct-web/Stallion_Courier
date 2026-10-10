@@ -169,12 +169,14 @@ export default function StallionSheet() {
   }
 
   const locked = isLocked(sheet);
-  const missing = new Set((report?.items || []).filter(i => i.status !== "ok" && i.field).map(i => i.field!));
+  const missing = new Map<string, "needed" | "check">(
+    (report?.items || []).filter(i => i.status !== "ok" && i.field)
+      .map(i => [i.field!, i.severity === "critical" ? "needed" : "check"]));
   const showRail = step !== "setup";
 
   return (
     <div className="st">
-      <JobBar sheet={sheet} role={user.role} onAdvance={advance} />
+      <JobBar sheet={sheet} role={user.role} blocking={report?.counts.critical ?? 0} onAdvance={advance} />
       <StationRail sheet={sheet} step={step} report={report} onPick={goStep} />
 
       <div className={`st-work${showRail ? "" : " st-work--solo"}`}>
@@ -207,8 +209,8 @@ export default function StallionSheet() {
 }
 
 /* ── job bar ─────────────────────────────────────────────────────────────── */
-function JobBar({ sheet, role, onAdvance }: {
-  sheet: Sheet; role: ReturnType<typeof currentUser>["role"];
+function JobBar({ sheet, role, blocking, onAdvance }: {
+  sheet: Sheet; role: ReturnType<typeof currentUser>["role"]; blocking: number;
   onAdvance: (t: Transition, extra: { notes?: string; receipt_number?: string }) => Promise<void>;
 }) {
   const status = normStatus(sheet.status);
@@ -247,6 +249,11 @@ function JobBar({ sheet, role, onAdvance }: {
               <b>{money(sheet.totals?.total_payable)}</b>
             </div>
             <StatusChip status={sheet.status} />
+            {blocking > 0 && moves.some(t => t.to === "pending") && (
+              <span className="st-jobbar__hint" role="note">
+                <AlertTriangle aria-hidden="true" />{blocking} blocking item{blocking === 1 ? "" : "s"} open
+              </span>
+            )}
             {moves.length > 0 && (
               <div className="st-jobbar__actions">
                 {moves.map(t => (
@@ -330,6 +337,15 @@ function StationRail({ sheet, step, report, onPick }: {
   const crit = report?.counts.critical ?? 0;
   const warn = report?.counts.warn ?? 0;
   const status = normStatus(sheet.status);
+  const rail = useRef<HTMLDivElement>(null);
+  // On narrow screens the rail scrolls; keep the active station in view.
+  useEffect(() => {
+    const el = rail.current?.querySelector<HTMLElement>('[aria-current="step"]');
+    const box = rail.current;
+    if (el && box && box.scrollWidth > box.clientWidth) {
+      box.scrollTo({ left: el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
+    }
+  }, [step]);
   const sub: Record<StationKey, string> = {
     setup: done.setup ? typeLabel(sheet) : "Reference needed",
     documents: n ? `${n} line${n === 1 ? "" : "s"} on the job` : "Upload invoice / BL",
@@ -338,7 +354,7 @@ function StationRail({ sheet, step, report, onPick }: {
   };
   return (
     <nav className="st-stations" aria-label="Job stations">
-      <div className="st-stations__in">
+      <div className="st-stations__in" ref={rail}>
         {STATIONS.map((s, i) => {
           const isDone = done[s.key] && !(s.key === "verify" && crit > 0);
           return (
@@ -388,7 +404,7 @@ function SetupStep({ sheet, clients, locked, onPatch, onClient, onNext }: {
           <div className="st-panel__body" style={{ paddingTop: 22 }}>
             <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
               <TextField label="Reference number" fieldKey="reference" value={sheet.reference}
-                missing={!sheet.reference?.trim()} onCommit={v => onPatch({ reference: v.trim() })} />
+                flag={sheet.reference?.trim() ? undefined : "needed"} onCommit={v => onPatch({ reference: v.trim() })} />
               <SelectField label="Client" value={sheet.client_id || ""} placeholder="No saved client"
                 options={clients.map(c => ({ code: c.id, label: c.name }))} onCommit={onClient}
                 hint="Picking a client fills the consignee, TIN and address." />
@@ -525,7 +541,7 @@ function DocumentsStep({ sheet, locked, onSheet, onGo, onNext }: {
 /* ── 3 · verify ──────────────────────────────────────────────────────────── */
 function VerifyStep(p: {
   sheet: Sheet; refData: RefData; clients: Client[]; locked: boolean;
-  report: ChecklistReport | null; missing: Set<string>; onGo: (f: string) => void;
+  report: ChecklistReport | null; missing: Map<string, "needed" | "check">; onGo: (f: string) => void;
   onPatch: (x: Partial<Sheet>) => Promise<void>; onConcession: (x: Partial<Concession>) => Promise<void>;
   onClient: (id: string) => Promise<void>;
   onPatchLine: (n: number, x: Partial<SheetLine>) => void; onAddLine: () => void; onDeleteLine: (n: number) => void;
@@ -565,10 +581,10 @@ function VerifyStep(p: {
             <div className="st-grid">
               <SelectField label="Client" value={s.client_id || ""} placeholder="No saved client"
                 options={p.clients.map(c => ({ code: c.id, label: c.name }))} onCommit={p.onClient} />
-              <TextField label="Consignee" fieldKey="consignee" prose missing={m.has("consignee")} value={s.consignee} onCommit={txt("consignee")} />
+              <TextField label="Consignee" fieldKey="consignee" prose flag={m.get("consignee")} value={s.consignee} onCommit={txt("consignee")} />
               <TextField label="Consignee TIN / code" fieldKey="consignee_tin" value={s.consignee_tin} onCommit={txt("consignee_tin")} />
               <TextField label="Consignee address" className="span-2" prose value={s.consignee_address || ""} onCommit={txt("consignee_address")} />
-              <TextField label="Consignor / supplier" fieldKey="consignor" prose missing={m.has("consignor")} value={s.consignor} onCommit={txt("consignor")} />
+              <TextField label="Consignor / supplier" fieldKey="consignor" prose flag={m.get("consignor")} value={s.consignor} onCommit={txt("consignor")} />
               <TextField label="Consignor address" className="span-2" prose value={s.consignor_address || ""} onCommit={txt("consignor_address")} />
               <TextField label="Declarant name" prose value={s.declarant_name || ""} onCommit={txt("declarant_name")} />
               <TextField label="Declarant TIN" value={s.declarant_tin || ""} onCommit={txt("declarant_tin")} />
@@ -577,25 +593,25 @@ function VerifyStep(p: {
             <div className="st-subhead">Shipment</div>
             <div className="st-grid">
               <TextField label="Vessel / flight" value={s.vessel} onCommit={txt("vessel")} />
-              <TextField label="Bill of lading / AWB" fieldKey="bl_number" missing={m.has("bl_number")} value={s.bl_number} onCommit={txt("bl_number")} />
+              <TextField label="Bill of lading / AWB" fieldKey="bl_number" flag={m.get("bl_number")} value={s.bl_number} onCommit={txt("bl_number")} />
               <TextField label="B/L date" type="date" value={s.bl_date || ""} onCommit={txt("bl_date")} />
               <TextField label="Rotation no." value={s.rotation_no || ""} onCommit={txt("rotation_no")} />
-              <SelectField label="Port" fieldKey="port" missing={m.has("port")} value={s.port} options={r.ports}
+              <SelectField label="Port" fieldKey="port" flag={m.get("port")} value={s.port} options={r.ports}
                 placeholder="Select port" onCommit={txt("port")} />
-              <TextField label="Arrival date" fieldKey="arrival_date" type="date" missing={m.has("arrival_date")} value={s.arrival_date} onCommit={txt("arrival_date")} />
+              <TextField label="Arrival date" fieldKey="arrival_date" type="date" flag={m.get("arrival_date")} value={s.arrival_date} onCommit={txt("arrival_date")} />
               <SelectField label="Transport mode" value={s.mode_of_transport ?? ""} options={TRANSPORT_MODES}
                 placeholder="Select mode" onCommit={v => onPatch({ mode_of_transport: Number(v) })} />
             </div>
 
             <div className="st-subhead">Invoice &amp; valuation</div>
             <div className="st-grid">
-              <TextField label="Invoice no." fieldKey="invoice_no" missing={m.has("invoice_no")} value={s.invoice_no || ""} onCommit={txt("invoice_no")} />
+              <TextField label="Invoice no." fieldKey="invoice_no" flag={m.get("invoice_no")} value={s.invoice_no || ""} onCommit={txt("invoice_no")} />
               <TextField label="Invoice date" type="date" value={s.invoice_date || ""} onCommit={txt("invoice_date")} />
-              <TextField label="Currency" fieldKey="currency" missing={m.has("currency")} value={s.currency || ""} onCommit={v => onPatch({ currency: v.toUpperCase() })} />
-              <SelectField label="Incoterm" fieldKey="incoterm" missing={m.has("incoterm")} value={s.incoterm} options={r.incoterms}
+              <TextField label="Currency" fieldKey="currency" flag={m.get("currency")} value={s.currency || ""} onCommit={v => onPatch({ currency: v.toUpperCase() })} />
+              <SelectField label="Incoterm" fieldKey="incoterm" flag={m.get("incoterm")} value={s.incoterm} options={r.incoterms}
                 placeholder="Select incoterm" onCommit={txt("incoterm")} />
               <TextField label="Exchange rate" type="number" align="right" value={s.exchange_rate} onCommit={num("exchange_rate")} />
-              <TextField label="Freight USD" fieldKey="freight_usd" type="number" align="right" missing={m.has("freight_usd")} value={s.freight_usd} onCommit={num("freight_usd")} />
+              <TextField label="Freight USD" fieldKey="freight_usd" type="number" align="right" flag={m.get("freight_usd")} value={s.freight_usd} onCommit={num("freight_usd")} />
               <TextField label="Insurance USD" type="number" align="right" value={s.insurance_usd} onCommit={num("insurance_usd")} />
               <TextField label="Gross weight kg" type="number" align="right" value={s.gross_weight} onCommit={num("gross_weight")} />
               <TextField label="Total packages" type="number" align="right" value={s.total_packages} onCommit={num("total_packages")} />
