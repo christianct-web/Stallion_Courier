@@ -116,7 +116,7 @@ export function stationsDone(s: Sheet): Record<StationKey, boolean> {
     setup: filled(s.reference),
     documents: lines.length > 0,
     verify: lines.length > 0 && filled(s.consignee) && filled(s.invoice_no) && filled(s.currency)
-      && lines.every(l => filled(l.hs_code)),
+      && lines.every(l => filled(l.hs_code) && filled(l.cpc) && filled(l.country_of_origin)),
     outputs: ["pending", "approved", "submitted", "receipted"].includes(status),
   };
 }

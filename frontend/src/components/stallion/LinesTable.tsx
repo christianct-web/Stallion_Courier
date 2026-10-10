@@ -64,9 +64,6 @@ function RowDrawer({ line, refData, onUpdate }: {
         <SourceNote source={lineOrigin(line).at ? lineOrigin(line) : undefined} />
       </div>
       <div className="st-grid">
-        <SelectField label="CPC" className="span-2" value={line.cpc} options={refData.cpc} source={src("cpc")} onCommit={v => onUpdate({ cpc: v })} />
-        <SelectField label="Country of origin" value={line.country_of_origin} options={refData.countries}
-          source={src("country_of_origin")} onCommit={v => onUpdate({ country_of_origin: v })} />
         <TextField label="Gross kg" type="number" align="right" value={line.gross_kg ?? 0} source={src("gross_kg")} onCommit={num("gross_kg")} />
         <TextField label="Net kg" type="number" align="right" value={line.net_kg ?? 0} source={src("net_kg")} onCommit={num("net_kg")} />
         <SelectField label="Package type" value={line.package_type} options={refData.package_types}
@@ -129,6 +126,27 @@ function RowDrawer({ line, refData, onUpdate }: {
   );
 }
 
+/** The two codes a person must choose for every line, extracted or not. */
+function LineCodes({ line, refData, locked, onPatch }: {
+  line: SheetLine; refData: RefData; locked: boolean;
+  onPatch: (lineNo: number, patch: Partial<SheetLine>) => Promise<void>;
+}) {
+  const src = (k: string) => line.field_sources?.[k];
+  const flag = (k: "cpc" | "country_of_origin") => (String(line[k] ?? "").trim() ? undefined : "needed" as const);
+  return (
+    <fieldset className="st-fieldset" disabled={locked}>
+      <div className="st-linecodes">
+        <SelectField label="CPC" value={line.cpc} options={refData.cpc} placeholder="Choose CPC"
+          flag={flag("cpc")} source={src("cpc")}
+          onCommit={v => onPatch(line.line_no, { cpc: v })} />
+        <SelectField label="Origin" value={line.country_of_origin} options={refData.countries} placeholder="Choose origin"
+          flag={flag("country_of_origin")} source={src("country_of_origin")}
+          onCommit={v => onPatch(line.line_no, { country_of_origin: v })} />
+      </div>
+    </fieldset>
+  );
+}
+
 // Hand-added lines carry no record yet; show them as entered by hand.
 const lineOriginOrHand = (ln: SheetLine): FieldSource => {
   const o = lineOrigin(ln);
@@ -171,6 +189,7 @@ function LineCards({ lines, refData, locked, onPatch, onAdd, onDelete, onReload 
                 )}
               </div>
               <HsClassifyCell line={ln} onUpdate={p => onPatch(ln.line_no, p)} onReload={onReload} />
+              <LineCodes line={ln} refData={refData} locked={locked} onPatch={onPatch} />
               <div className="st-lcard__nums">
                 <label className="st-lcard__num">
                   <span className="st-label">Ex-works USD</span>
@@ -190,7 +209,7 @@ function LineCards({ lines, refData, locked, onPatch, onAdd, onDelete, onReload 
               <button type="button" className="st-btn st-btn--ghost st-btn--sm" style={{ alignSelf: "flex-start" }}
                 onClick={() => toggle(ln.line_no)} aria-expanded={isOpen}>
                 {isOpen ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
-                {isOpen ? "Hide declaration fields" : "CPC, origin, packages, concession"}
+                {isOpen ? "Hide declaration fields" : "Packages, weights, concession"}
               </button>
               {isOpen && (
                 <div className="st-lcard__drawer">
@@ -265,6 +284,7 @@ function LineGrid({ lines, refData, locked, onPatch, onAdd, onDelete, onReload }
                     </td>
                     <td>
                       <HsClassifyCell line={ln} onUpdate={p => onPatch(ln.line_no, p)} onReload={onReload} />
+                      <LineCodes line={ln} refData={refData} locked={locked} onPatch={onPatch} />
                     </td>
                     <td>
                       <InlineNum label={`Ex-works USD, line ${ln.line_no}`} value={ln.exworks_usd} disabled={locked}

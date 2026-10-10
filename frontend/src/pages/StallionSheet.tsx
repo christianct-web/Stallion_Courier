@@ -686,7 +686,7 @@ function VerifyStep(p: {
         <section className="st-panel" aria-labelledby="lines-title">
           <div className="st-panel__head">
             <h3 id="lines-title" className="st-panel__title">Line items</h3>
-            <span className="st-panel__aside">Open a line for CPC, origin, packages and concession</span>
+            <span className="st-panel__aside">Every line needs a CPC and origin; open a line for packages, weights and concession</span>
           </div>
           <div style={{ marginTop: 12 }}>
             <LinesTable lines={s.lines || []} refData={r} locked={p.locked}
