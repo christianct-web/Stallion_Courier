@@ -131,7 +131,8 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
       setOpen(false);
       toast.success(`HS code set to ${s.thn || s.code}`);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to set HS code");
+      // The sheet's save handler has already shown its own error toast.
+      if (!e?.reported) toast.error(e?.message || "Failed to set HS code");
     } finally { setBusy(false); }
   };
 
@@ -168,7 +169,8 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
       setOpen(false);
       toast.success(`HS code set to ${t}`);
     } catch (e: any) {
-      toast.error(e?.message || "Failed to set HS code");
+      // The sheet's save handler has already shown its own error toast.
+      if (!e?.reported) toast.error(e?.message || "Failed to set HS code");
     } finally { setBusy(false); }
   };
 
@@ -204,7 +206,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
   return (
     <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <DescInput value={line.description} onCommit={(v) => onUpdate({ description: v })} />
+        <DescInput value={line.description} onCommit={(v) => { Promise.resolve(onUpdate({ description: v })).catch(() => {}); }} />
       </div>
 
       {/* confidence-coloured HS code button */}

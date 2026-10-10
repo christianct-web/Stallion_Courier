@@ -56,6 +56,10 @@ export function TypePicker({ value, onChange, name = "decl-type", disabled }: {
 }
 
 /* ── form fields that commit on blur / Enter ─────────────────────────────── */
+// A commit may be a save; its failure is reported by the caller, never unhandled here.
+type Commit = (v: string) => void | Promise<unknown>;
+const fire = (fn: Commit, v: string) => { Promise.resolve(fn(v)).catch(() => {}); };
+
 type FieldProps = {
   label: string; fieldKey?: string; className?: string; hint?: string;
   /** From the server report: "needed" = blocking, "check" = worth verifying. */
@@ -77,7 +81,7 @@ function FieldShell({ label, flag, className, hint, htmlFor, children }: FieldPr
 }
 
 export function TextField({ value, onCommit, type = "text", align, prose, placeholder, ...shell }: FieldProps & {
-  value: string | number | null | undefined; onCommit: (v: string) => void;
+  value: string | number | null | undefined; onCommit: Commit;
   type?: string; align?: "right"; prose?: boolean; placeholder?: string;
 }) {
   const autoId = useId();
@@ -92,14 +96,14 @@ export function TextField({ value, onCommit, type = "text", align, prose, placeh
         data-flag={shell.flag}
         inputMode={type === "number" ? "decimal" : undefined}
         onChange={e => setV(e.target.value)}
-        onBlur={() => { if (v !== String(value ?? "")) onCommit(v); }}
+        onBlur={() => { if (v !== String(value ?? "")) fire(onCommit, v); }}
         onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
     </FieldShell>
   );
 }
 
 export function SelectField({ value, options, onCommit, placeholder, ...shell }: FieldProps & {
-  value: string | number | null | undefined; options: RefOption[]; onCommit: (v: string) => void; placeholder?: string;
+  value: string | number | null | undefined; options: RefOption[]; onCommit: Commit; placeholder?: string;
 }) {
   const autoId = useId();
   const id = shell.fieldKey ? `f-${shell.fieldKey}` : autoId;
@@ -108,7 +112,7 @@ export function SelectField({ value, options, onCommit, placeholder, ...shell }:
   return (
     <FieldShell {...shell} htmlFor={id}>
       <select id={id} className="st-select" value={val} aria-invalid={shell.flag === "needed" || undefined} data-flag={shell.flag}
-        onChange={e => onCommit(e.target.value)}>
+        onChange={e => fire(onCommit, e.target.value)}>
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {!known && val !== "" && <option value={val}>{val}</option>}
         {options.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}

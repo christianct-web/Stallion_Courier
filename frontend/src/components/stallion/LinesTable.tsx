@@ -16,14 +16,15 @@ type Props = {
   lines: SheetLine[];
   refData: RefData;
   locked: boolean;
-  onPatch: (lineNo: number, patch: Partial<SheetLine>) => void;
-  onAdd: () => void;
+  /** Rejects when the save fails (already reported to the user). */
+  onPatch: (lineNo: number, patch: Partial<SheetLine>) => Promise<void>;
+  onAdd: () => Promise<void>;
   onDelete: (lineNo: number) => void;
   onReload: () => Promise<void> | void;
 };
 
 function InlineNum({ value, onCommit, label, disabled }: {
-  value: number | null | undefined; onCommit: (n: number) => void; label: string; disabled?: boolean;
+  value: number | null | undefined; onCommit: (n: number) => void | Promise<unknown>; label: string; disabled?: boolean;
 }) {
   const [v, setV] = useState<string | null>(null);
   const shown = v ?? String(value ?? "");
@@ -34,7 +35,7 @@ function InlineNum({ value, onCommit, label, disabled }: {
       onBlur={() => {
         if (v !== null && v !== String(value ?? "")) {
           const n = Number(v);
-          if (!Number.isNaN(n)) onCommit(n);
+          if (!Number.isNaN(n)) Promise.resolve(onCommit(n)).catch(() => {});
         }
         setV(null);
       }}
@@ -43,7 +44,7 @@ function InlineNum({ value, onCommit, label, disabled }: {
 }
 
 function RowDrawer({ line, refData, onUpdate }: {
-  line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => void;
+  line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => Promise<void>;
 }) {
   const num = (k: keyof SheetLine) => (v: string) => onUpdate({ [k]: Number(v) } as Partial<SheetLine>);
   const cat = refData.concessions?.find(c => c.code === line.concession_code);
@@ -207,7 +208,7 @@ export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, o
         </table>
       </div>
       {!locked && (
-        <button type="button" className="st-addline" onClick={onAdd}><Plus aria-hidden="true" />Add line</button>
+        <button type="button" className="st-addline" onClick={() => { onAdd().catch(() => {}); }}><Plus aria-hidden="true" />Add line</button>
       )}
     </div>
   );

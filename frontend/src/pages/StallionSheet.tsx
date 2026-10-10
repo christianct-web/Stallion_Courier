@@ -68,13 +68,16 @@ export default function StallionSheet() {
   const [loadError, setLoadError] = useState("");
   const [report, setReport] = useState<ChecklistReport | null>(null);
   const [pendingFocus, setPendingFocus] = useState<string | null>(null);
+  // updated_at of the newest sheet applied, readable before React re-renders.
+  const stampRef = useRef("");
 
   useEffect(() => { getReference().then(setRefData).catch(e => setLoadError(errMsg(e, "Reference data did not load."))); }, []);
   useEffect(() => { listClients().then(setClients).catch(() => {}); }, []);
   useEffect(() => {
     if (!sheetId) return;
     setLoadError("");
-    getSheet(sheetId).then(setSheet).catch(e => setLoadError(errMsg(e, "The job did not load.")));
+    getSheet(sheetId).then(s => { stampRef.current = s.updated_at; setSheet(s); })
+      .catch(e => setLoadError(errMsg(e, "The job did not load.")));
   }, [sheetId]);
 
   // Keep the server's pre-submission report in step with the sheet.
@@ -98,9 +101,35 @@ export default function StallionSheet() {
   }, [setParams]);
 
   /* mutations ────────────────────────────────────────────────────────────── */
-  const guard = useCallback(async (fn: () => Promise<Sheet>, failMsg: string) => {
-    try { setSheet(await fn()); } catch (e) { toast.error(`${failMsg}: ${errMsg(e, "error")}`); }
+  // Every write goes through track(): responses are applied in the order the
+  // requests were issued (a slow early save never overwrites a later one), and
+  // settle() lets an action wait for every in-flight save before it reads the job.
+  const issued = useRef(0);
+  const applied = useRef(0);
+  const inflight = useRef(new Set<Promise<unknown>>());
+  const track = useCallback(async (fn: () => Promise<Sheet>): Promise<Sheet> => {
+    const seq = ++issued.current;
+    const p = fn();
+    inflight.current.add(p);
+    try {
+      const s = await p;
+      if (seq > applied.current) { applied.current = seq; stampRef.current = s.updated_at; setSheet(s); }
+      return s;
+    } finally { inflight.current.delete(p); }
   }, []);
+  // Waits for every in-flight save, then returns the stamp of the job as stored.
+  const settle = useCallback(async (): Promise<string> => {
+    while (inflight.current.size) await Promise.allSettled([...inflight.current]);
+    return stampRef.current;
+  }, []);
+  // Report the failure once, then re-throw so callers never confirm a save that
+  // did not happen. Fire-and-forget callers (field blur) swallow the rejection.
+  const guard = useCallback(async (fn: () => Promise<Sheet>, failMsg: string): Promise<void> => {
+    try { await track(fn); } catch (e) {
+      toast.error(`${failMsg}: ${errMsg(e, "error")}`);
+      throw Object.assign(e instanceof Error ? e : new Error(String(e)), { reported: true });
+    }
+  }, [track]);
   const patchHeader = useCallback((patch: Partial<Sheet>) =>
     guard(() => updateHeader(sheetId, patch), "Could not save"), [guard, sheetId]);
   const patchConcession = useCallback((patch: Partial<Concession>) => {
@@ -112,18 +141,20 @@ export default function StallionSheet() {
   const addRow = useCallback(() => guard(() => addLine(sheetId, {}), "Could not add line"), [guard, sheetId]);
   const removeRow = useCallback((n: number) => {
     if (!window.confirm(`Delete line ${n}?`)) return;
-    guard(() => deleteLine(sheetId, n), "Could not delete line");
+    guard(() => deleteLine(sheetId, n), "Could not delete line").catch(() => {});
   }, [guard, sheetId]);
-  const reload = useCallback(async () => { setSheet(await getSheet(sheetId)); }, [sheetId]);
+  const reload = useCallback(async () => { await track(() => getSheet(sheetId)); }, [track, sheetId]);
 
   const pickClient = useCallback(async (clientId: string) => {
     const c = clients.find(x => x.id === clientId);
-    if (!c) { await patchHeader({ client_id: "" }); return; }
-    await patchHeader({
+    if (!c) { await patchHeader({ client_id: "" }).catch(() => {}); return; }
+    try {
+      await patchHeader({
       client_id: c.id, consignee: c.name,
       consignee_tin: c.tin || c.consigneeCode || "", consignee_address: c.address || "",
-    });
-    toast.success(`Loaded ${c.name}`);
+      });
+      toast.success(`Loaded ${c.name}`);
+    } catch { /* already reported by guard */ }
   }, [clients, patchHeader]);
 
   const advance = useCallback(async (t: Transition, extra: { notes?: string; receipt_number?: string }) => {
@@ -187,7 +218,7 @@ export default function StallionSheet() {
               onPatch={patchHeader} onClient={pickClient} onNext={() => goStep("documents")} />
           )}
           {step === "documents" && (
-            <DocumentsStep sheet={sheet} locked={locked} onSheet={setSheet}
+            <DocumentsStep sheet={sheet} locked={locked} track={track}
               onGo={goToField} onNext={() => goStep("verify")} />
           )}
           {step === "verify" && (
@@ -198,8 +229,8 @@ export default function StallionSheet() {
               onNext={() => goStep("outputs")} />
           )}
           {step === "outputs" && (
-            <OutputsStep sheet={sheet} refData={refData} report={report} role={user.role}
-              onGo={goToField} onSheet={setSheet} onAdvance={advance} />
+            <OutputsStep sheet={sheet} refData={refData} report={report} role={user.role} locked={locked}
+              onGo={goToField} onPatch={patchHeader} settle={settle} onAdvance={advance} />
           )}
         </main>
         {showRail && <DutyRail sheet={sheet} />}
@@ -393,7 +424,7 @@ function SetupStep({ sheet, clients, locked, onPatch, onClient, onNext }: {
 }) {
   const setType = (dt: string) => {
     const c = DECL_CHOICES.find(x => x.declaration_type === dt);
-    if (c) onPatch({ declaration_type: c.declaration_type, customs_regime: c.regime });
+    if (c) onPatch({ declaration_type: c.declaration_type, customs_regime: c.regime }).catch(() => {});
   };
   const manual = choiceFor(sheet).key === "manual";
   return (
@@ -426,8 +457,9 @@ function SetupStep({ sheet, clients, locked, onPatch, onClient, onNext }: {
 /* ── 2 · documents ───────────────────────────────────────────────────────── */
 type Upload = { id: number; name: string; state: "queued" | "extracting" | "done" | "failed"; note?: string };
 
-function DocumentsStep({ sheet, locked, onSheet, onGo, onNext }: {
-  sheet: Sheet; locked: boolean; onSheet: (s: Sheet) => void; onGo: (f: string) => void; onNext: () => void;
+function DocumentsStep({ sheet, locked, track, onGo, onNext }: {
+  sheet: Sheet; locked: boolean; track: (fn: () => Promise<Sheet>) => Promise<Sheet>;
+  onGo: (f: string) => void; onNext: () => void;
 }) {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [lastReport, setLastReport] = useState<ChecklistReport | null>(null);
@@ -445,9 +477,13 @@ function DocumentsStep({ sheet, locked, onSheet, onGo, onNext }: {
       const job = queue.current.shift()!;
       setUploads(u => u.map(x => x.id === job.id ? { ...x, state: "extracting" } : x));
       try {
-        const { sheet: s, report } = await uploadExtract(sheet.id, job.file);
+        let report: ChecklistReport | null = null;
+        const s = await track(async () => {
+          const out = await uploadExtract(sheet.id, job.file);
+          report = out.report;
+          return out.sheet;
+        });
         const added = (s.lines || []).length;
-        onSheet(s);
         setLastReport(report);
         setUploads(u => u.map(x => x.id === job.id ? { ...x, state: "done", note: `${added} line${added === 1 ? "" : "s"} on the job` } : x));
       } catch (e) {
@@ -455,7 +491,7 @@ function DocumentsStep({ sheet, locked, onSheet, onGo, onNext }: {
       }
     }
     running.current = false;
-  }, [sheet.id, onSheet]);
+  }, [sheet.id, track]);
 
   const add = (files: FileList | File[] | null) => {
     if (!files || locked) return;
@@ -544,7 +580,7 @@ function VerifyStep(p: {
   report: ChecklistReport | null; missing: Map<string, "needed" | "check">; onGo: (f: string) => void;
   onPatch: (x: Partial<Sheet>) => Promise<void>; onConcession: (x: Partial<Concession>) => Promise<void>;
   onClient: (id: string) => Promise<void>;
-  onPatchLine: (n: number, x: Partial<SheetLine>) => void; onAddLine: () => void; onDeleteLine: (n: number) => void;
+  onPatchLine: (n: number, x: Partial<SheetLine>) => Promise<void>; onAddLine: () => Promise<void>; onDeleteLine: (n: number) => void;
   onReload: () => Promise<void>; onNext: () => void;
 }) {
   const { sheet: s, refData: r, missing: m, onPatch } = p;
@@ -698,9 +734,10 @@ function ConcessionPanel({ sheet, refData, onPatch }: {
 }
 
 /* ── 4 · outputs ─────────────────────────────────────────────────────────── */
-function OutputsStep({ sheet, refData, report, role, onGo, onSheet, onAdvance }: {
+function OutputsStep({ sheet, refData, report, role, locked, onGo, onPatch, settle, onAdvance }: {
   sheet: Sheet; refData: RefData; report: ChecklistReport | null; role: ReturnType<typeof currentUser>["role"];
-  onGo: (f: string) => void; onSheet: (s: Sheet) => void;
+  locked: boolean; onGo: (f: string) => void;
+  onPatch: (p: Partial<Sheet>) => Promise<void>; settle: () => Promise<string>;
   onAdvance: (t: Transition, extra: { notes?: string; receipt_number?: string }) => Promise<void>;
 }) {
   const t = sheet.totals || ({} as Sheet["totals"]);
@@ -788,7 +825,7 @@ function OutputsStep({ sheet, refData, report, role, onGo, onSheet, onAdvance }:
         </div>
       </section>
 
-      <XmlPanel sheet={sheet} refData={refData} onSheet={onSheet} />
+      <XmlPanel sheet={sheet} refData={refData} locked={locked} onPatch={onPatch} settle={settle} />
 
       {handoff && (
         <section className="st-panel">
@@ -807,15 +844,21 @@ function OutputsStep({ sheet, refData, report, role, onGo, onSheet, onAdvance }:
   );
 }
 
-function XmlPanel({ sheet, refData, onSheet }: { sheet: Sheet; refData: RefData; onSheet: (s: Sheet) => void }) {
-  const [regime, setRegime] = useState(sheet.customs_regime || "");
-  const [nature, setNature] = useState(sheet.nature_of_transaction || "");
-  const [tin, setTin] = useState(sheet.consignee_tin || "");
+function XmlPanel({ sheet, refData, locked, onPatch, settle }: {
+  sheet: Sheet; refData: RefData; locked: boolean;
+  onPatch: (p: Partial<Sheet>) => Promise<void>; settle: () => Promise<string>;
+}) {
+  // The declaration-level fields are ordinary saved fields read from the sheet,
+  // so they always show what is stored and can never write back an old value.
   const [warnings, setWarnings] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ xml: string; filename: string } | null>(null);
+  const [result, setResult] = useState<{ xml: string; filename: string; stamp: string } | null>(null);
   const stamp = sheet.updated_at;
+  // XML is built from the whole job: any saved change after generation makes it stale.
+  const stale = !!result && result.stamp !== stamp;
+  const current = result && !stale ? result : null;
+  const save = (patch: Partial<Sheet>) => { onPatch(patch).catch(() => {}); };
 
   useEffect(() => {
     getWarnings(sheet.id).then(r => setWarnings(r.warnings)).catch(() => setWarnings(null));
@@ -824,14 +867,12 @@ function XmlPanel({ sheet, refData, onSheet }: { sheet: Sheet; refData: RefData;
   const generate = async () => {
     setBusy(true); setError("");
     try {
-      // Send only what is set, so an empty select never blanks the sheet.
-      const patch: Partial<Sheet> = {};
-      if (regime) patch.customs_regime = regime;
-      if (nature) patch.nature_of_transaction = nature;
-      if (tin.trim()) patch.consignee_tin = tin.trim();
-      const out = await fetchXml(sheet.id, patch);
-      setResult(out);
-      getSheet(sheet.id).then(onSheet).catch(() => {});
+      // Let any save still in flight (a field just blurred, on this station or
+      // the last) land first, then generate from what is stored. No overrides
+      // are sent, so generating never mutates the job.
+      const before = await settle();
+      const out = await fetchXml(sheet.id, {});
+      setResult({ ...out, stamp: before });
       toast.success("C82 XML generated");
     } catch (e) {
       setError(errMsg(e, "XML generation failed"));
@@ -839,15 +880,15 @@ function XmlPanel({ sheet, refData, onSheet }: { sheet: Sheet; refData: RefData;
     } finally { setBusy(false); }
   };
   const download = () => {
-    if (!result) return;
-    const url = URL.createObjectURL(new Blob([result.xml], { type: "application/xml" }));
+    if (!current) return;
+    const url = URL.createObjectURL(new Blob([current.xml], { type: "application/xml" }));
     const a = document.createElement("a");
-    a.href = url; a.download = result.filename; a.click();
+    a.href = url; a.download = current.filename; a.click();
     URL.revokeObjectURL(url);
   };
   const copy = () => {
-    if (!result) return;
-    navigator.clipboard?.writeText(result.xml).then(() => toast.success("XML copied")).catch(() => toast.error("Copy failed"));
+    if (!current) return;
+    navigator.clipboard?.writeText(current.xml).then(() => toast.success("XML copied")).catch(() => toast.error("Copy failed"));
   };
 
   return (
@@ -855,7 +896,9 @@ function XmlPanel({ sheet, refData, onSheet }: { sheet: Sheet; refData: RefData;
       <div className="st-panel__head">
         <h3 id="xml-title" className="st-panel__title">C82 XML</h3>
         <span className="st-panel__aside">ASYCUDA SAD</span>
-        <p className="st-panel__lede">Confirm the declaration-level fields, then generate. The XML is previewed here before you download it.</p>
+        <p className="st-panel__lede">{locked
+          ? "This job is locked, so these fields are read-only. Generating reads the stored declaration and changes nothing."
+          : "Confirm the declaration-level fields (they save like any other field), then generate. The XML is previewed here before you download it."}</p>
       </div>
       <div className="st-panel__body">
         {warnings && warnings.length > 0 && (
@@ -867,28 +910,37 @@ function XmlPanel({ sheet, refData, onSheet }: { sheet: Sheet; refData: RefData;
             </span>
           </div>
         )}
-        <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
-          <SelectField label="Customs regime" value={regime} options={refData.customs_regimes} placeholder="Select regime" onCommit={setRegime} />
-          <SelectField label="Nature of transaction (box 24)" value={nature} options={refData.nature_of_transaction}
-            placeholder="Select" onCommit={setNature} />
-          <TextField label="Consignee TIN / code" value={tin} onCommit={setTin} />
-        </div>
+        <fieldset className="st-fieldset" disabled={locked || busy}>
+          <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
+            <SelectField label="Customs regime" value={sheet.customs_regime} options={refData.customs_regimes}
+              placeholder="Select regime" onCommit={v => save({ customs_regime: v })} />
+            <SelectField label="Nature of transaction (box 24)" value={sheet.nature_of_transaction}
+              options={refData.nature_of_transaction} placeholder="Select" onCommit={v => save({ nature_of_transaction: v })} />
+            <TextField label="Consignee TIN / code" value={sheet.consignee_tin} onCommit={v => save({ consignee_tin: v.trim() })} />
+          </div>
+        </fieldset>
         {error && (
           <div className="st-banner st-banner--crit" role="alert" style={{ marginTop: 16, marginBottom: 0 }}>
             <AlertTriangle aria-hidden="true" /><span><b>The XML was not generated.</b> {error}</span>
           </div>
         )}
-        {result && (
+        {stale && (
+          <div className="st-banner st-banner--warn" role="status" style={{ marginTop: 16, marginBottom: 0 }}>
+            <AlertTriangle aria-hidden="true" />
+            <span><b>The job changed after this XML was generated.</b> Regenerate it before you download or copy.</span>
+          </div>
+        )}
+        {current && (
           <div style={{ marginTop: 18 }}>
-            <XmlPreview xml={result.xml} />
+            <XmlPreview xml={current.xml} />
           </div>
         )}
       </div>
       <div className="st-panel__foot">
-        {result && <span className="st-note mono" style={{ marginRight: "auto" }}>{result.filename}</span>}
-        {result && <button type="button" className="st-btn" onClick={copy}><Copy aria-hidden="true" />Copy</button>}
-        {result && <button type="button" className="st-btn st-btn--ink" onClick={download}><Download aria-hidden="true" />Download XML</button>}
-        <button type="button" className={`st-btn ${result ? "" : "st-btn--primary"}`} onClick={generate} disabled={busy}>
+        {current && <span className="st-note mono" style={{ marginRight: "auto" }}>{current.filename}</span>}
+        {current && <button type="button" className="st-btn" onClick={copy}><Copy aria-hidden="true" />Copy</button>}
+        {current && <button type="button" className="st-btn st-btn--ink" onClick={download}><Download aria-hidden="true" />Download XML</button>}
+        <button type="button" className={`st-btn ${current ? "" : "st-btn--primary"}`} onClick={generate} disabled={busy}>
           {busy ? <Loader2 className="st-spin" aria-hidden="true" /> : <FileCode2 aria-hidden="true" />}
           {busy ? "Generating…" : result ? "Regenerate" : "Generate XML"}
         </button>
