@@ -7,10 +7,18 @@
  */
 import { Fragment, useState } from "react";
 import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
-import type { RefData, SheetLine } from "@/services/sheetApi";
+import type { FieldSource, RefData, SheetLine } from "@/services/sheetApi";
 import { HsClassifyCell } from "@/pages/HsClassifyCell";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { money } from "./model";
-import { SelectField, TextField } from "./ui";
+import { SelectField, SourceNote, TextField } from "./ui";
+
+/** Where a line came from: the document that produced it, or a person. */
+function lineOrigin(ln: SheetLine): FieldSource {
+  const srcs = Object.values(ln.field_sources || {});
+  const doc = srcs.find(x => x.source === "extracted");
+  return doc ?? { source: "manual", at: "" };
+}
 
 type Props = {
   lines: SheetLine[];
@@ -47,36 +55,40 @@ function RowDrawer({ line, refData, onUpdate }: {
   line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => Promise<void>;
 }) {
   const num = (k: keyof SheetLine) => (v: string) => onUpdate({ [k]: Number(v) } as Partial<SheetLine>);
+  const src = (k: string) => line.field_sources?.[k];
   const cat = refData.concessions?.find(c => c.code === line.concession_code);
   return (
     <>
-      <div className="st-subhead">Line {line.line_no} · declaration fields</div>
+      <div className="st-subhead" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <span>Line {line.line_no} · declaration fields</span>
+        <SourceNote source={lineOrigin(line).at ? lineOrigin(line) : undefined} />
+      </div>
       <div className="st-grid">
-        <SelectField label="CPC" className="span-2" value={line.cpc} options={refData.cpc} onCommit={v => onUpdate({ cpc: v })} />
+        <SelectField label="CPC" className="span-2" value={line.cpc} options={refData.cpc} source={src("cpc")} onCommit={v => onUpdate({ cpc: v })} />
         <SelectField label="Country of origin" value={line.country_of_origin} options={refData.countries}
-          onCommit={v => onUpdate({ country_of_origin: v })} />
-        <TextField label="Gross kg" type="number" align="right" value={line.gross_kg ?? 0} onCommit={num("gross_kg")} />
-        <TextField label="Net kg" type="number" align="right" value={line.net_kg ?? 0} onCommit={num("net_kg")} />
+          source={src("country_of_origin")} onCommit={v => onUpdate({ country_of_origin: v })} />
+        <TextField label="Gross kg" type="number" align="right" value={line.gross_kg ?? 0} source={src("gross_kg")} onCommit={num("gross_kg")} />
+        <TextField label="Net kg" type="number" align="right" value={line.net_kg ?? 0} source={src("net_kg")} onCommit={num("net_kg")} />
         <SelectField label="Package type" value={line.package_type} options={refData.package_types}
-          onCommit={v => onUpdate({ package_type: v })} />
-        <TextField label="Package name" value={line.package_type_name || ""} onCommit={v => onUpdate({ package_type_name: v })} />
-        <TextField label="Package count" type="number" align="right" value={line.package_count} onCommit={num("package_count")} />
+          source={src("package_type")} onCommit={v => onUpdate({ package_type: v })} />
+        <TextField label="Package name" value={line.package_type_name || ""} source={src("package_type_name")} onCommit={v => onUpdate({ package_type_name: v })} />
+        <TextField label="Package count" type="number" align="right" value={line.package_count} source={src("package_count")} onCommit={num("package_count")} />
         <SelectField label="Supp. unit" value={line.supplementary_unit} options={refData.supplementary_units}
-          onCommit={v => onUpdate({ supplementary_unit: v })} />
-        <TextField label="Supp. qty" type="number" align="right" value={line.supplementary_qty} onCommit={num("supplementary_qty")} />
-        <TextField label="Licence no." value={line.licence_no} onCommit={v => onUpdate({ licence_no: v })} />
+          source={src("supplementary_unit")} onCommit={v => onUpdate({ supplementary_unit: v })} />
+        <TextField label="Supp. qty" type="number" align="right" value={line.supplementary_qty} source={src("supplementary_qty")} onCommit={num("supplementary_qty")} />
+        <TextField label="Licence no." value={line.licence_no} source={src("licence_no")} onCommit={v => onUpdate({ licence_no: v })} />
         <TextField label="National CPC" value={line.national_customs_procedure || "000"}
-          onCommit={v => onUpdate({ national_customs_procedure: v })} />
-        <TextField label="Quota code" value={line.quota_code || "NEW"} onCommit={v => onUpdate({ quota_code: v })} />
-        <TextField label="Rate adj." type="number" align="right" value={line.rate_of_adjustment ?? 1} onCommit={num("rate_of_adjustment")} />
-        <TextField label="Marks 1" value={line.marks1 || ""} onCommit={v => onUpdate({ marks1: v })} />
-        <TextField label="Marks 2" value={line.marks2 || ""} onCommit={v => onUpdate({ marks2: v })} />
+          source={src("national_customs_procedure")} onCommit={v => onUpdate({ national_customs_procedure: v })} />
+        <TextField label="Quota code" value={line.quota_code || "NEW"} source={src("quota_code")} onCommit={v => onUpdate({ quota_code: v })} />
+        <TextField label="Rate adj." type="number" align="right" value={line.rate_of_adjustment ?? 1} source={src("rate_of_adjustment")} onCommit={num("rate_of_adjustment")} />
+        <TextField label="Marks 1" value={line.marks1 || ""} source={src("marks1")} onCommit={v => onUpdate({ marks1: v })} />
+        <TextField label="Marks 2" value={line.marks2 || ""} source={src("marks2")} onCommit={v => onUpdate({ marks2: v })} />
         <SelectField label="Effects group" value={line.effects_group || "household"}
           options={[{ code: "household", label: "household" }, { code: "personal", label: "personal" }]}
-          onCommit={v => onUpdate({ effects_group: v as SheetLine["effects_group"] })} />
+          source={src("effects_group")} onCommit={v => onUpdate({ effects_group: v as SheetLine["effects_group"] })} />
         <SelectField label="Relieved override" value={line.relieved_override ? "yes" : "no"}
           options={[{ code: "no", label: "No" }, { code: "yes", label: "Yes" }]}
-          onCommit={v => onUpdate({ relieved_override: v === "yes" })} />
+          source={src("relieved_override")} onCommit={v => onUpdate({ relieved_override: v === "yes" })} />
       </div>
 
       {(refData.concessions?.length ?? 0) > 0 && (
@@ -86,19 +98,19 @@ function RowDrawer({ line, refData, onUpdate }: {
             <SelectField label="Concession" className="span-2" value={line.concession_code || ""}
               placeholder="None (dutiable)"
               options={(refData.concessions || []).map(c => ({ code: c.code, label: c.label }))}
-              onCommit={v => onUpdate({ concession_code: v })} />
+              source={src("concession_code")} onCommit={v => onUpdate({ concession_code: v })} />
             {cat?.quantum === "capped" && (
               <>
-                <TextField label="Engine (cc)" type="number" align="right" value={line.engine_cc ?? 0} onCommit={num("engine_cc")} />
-                <TextField label="Motor veh. tax TT$" type="number" align="right" value={line.mvt_ttd ?? 0} onCommit={num("mvt_ttd")} />
+                <TextField label="Engine (cc)" type="number" align="right" value={line.engine_cc ?? 0} source={src("engine_cc")} onCommit={num("engine_cc")} />
+                <TextField label="Motor veh. tax TT$" type="number" align="right" value={line.mvt_ttd ?? 0} source={src("mvt_ttd")} onCommit={num("mvt_ttd")} />
                 <TextField label="Cap override TT$" hint="0 uses the band" type="number" align="right"
-                  value={line.cap_override_ttd ?? 0} onCommit={num("cap_override_ttd")} />
+                  value={line.cap_override_ttd ?? 0} source={src("cap_override_ttd")} onCommit={num("cap_override_ttd")} />
               </>
             )}
             {cat?.quantum === "rate" && (
               <>
-                <TextField label="Conc. duty %" type="number" align="right" value={line.conc_duty_pct ?? 0} onCommit={num("conc_duty_pct")} />
-                <TextField label="Conc. VAT %" type="number" align="right" value={line.conc_vat_pct ?? line.vat_pct} onCommit={num("conc_vat_pct")} />
+                <TextField label="Conc. duty %" type="number" align="right" value={line.conc_duty_pct ?? 0} source={src("conc_duty_pct")} onCommit={num("conc_duty_pct")} />
+                <TextField label="Conc. VAT %" type="number" align="right" value={line.conc_vat_pct ?? line.vat_pct} source={src("conc_vat_pct")} onCommit={num("conc_vat_pct")} />
               </>
             )}
           </div>
@@ -117,7 +129,88 @@ function RowDrawer({ line, refData, onUpdate }: {
   );
 }
 
-export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, onReload }: Props) {
+// Hand-added lines carry no record yet; show them as entered by hand.
+const lineOriginOrHand = (ln: SheetLine): FieldSource => {
+  const o = lineOrigin(ln);
+  return o.at ? o : { source: "manual", at: "" };
+};
+
+export function LinesTable(props: Props) {
+  const mobile = useIsMobile();
+  return mobile ? <LineCards {...props} /> : <LineGrid {...props} />;
+}
+
+/** Phones: one card per line, every figure visible without sideways scrolling. */
+function LineCards({ lines, refData, locked, onPatch, onAdd, onDelete, onReload }: Props) {
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  const toggle = (n: number) => setOpen(p => {
+    const next = new Set(p);
+    if (next.has(n)) next.delete(n); else next.add(n);
+    return next;
+  });
+  return (
+    <div id="f-lines">
+      {lines.length === 0 && (
+        <p style={{ padding: "24px 16px", textAlign: "center", color: "var(--ink-3)", margin: 0 }}>
+          No lines yet. Upload a document on the Documents station, or add a line by hand.
+        </p>
+      )}
+      <ul className="st-lcards">
+        {lines.map(ln => {
+          const isOpen = open.has(ln.line_no);
+          const o = lineOriginOrHand(ln);
+          return (
+            <li key={ln.id} className="st-lcard">
+              <div className="st-lcard__head">
+                <b>Line {ln.line_no}</b>
+                <SourceNote source={o.at ? o : { source: "manual", at: "", by: "" }} />
+                <span className="spacer" />
+                {!locked && (
+                  <button type="button" className="st-iconbtn st-iconbtn--danger" onClick={() => onDelete(ln.line_no)}
+                    aria-label={`Delete line ${ln.line_no}`} title="Delete line"><Trash2 /></button>
+                )}
+              </div>
+              <HsClassifyCell line={ln} onUpdate={p => onPatch(ln.line_no, p)} onReload={onReload} />
+              <div className="st-lcard__nums">
+                <label className="st-lcard__num">
+                  <span className="st-label">Ex-works USD</span>
+                  <InlineNum label={`Ex-works USD, line ${ln.line_no}`} value={ln.exworks_usd} disabled={locked}
+                    onCommit={n => onPatch(ln.line_no, { exworks_usd: n })} />
+                </label>
+                <label className="st-lcard__num">
+                  <span className="st-label">Duty %</span>
+                  <InlineNum label={`Duty %, line ${ln.line_no}`} value={ln.duty_pct} disabled={locked}
+                    onCommit={n => onPatch(ln.line_no, { duty_pct: n })} />
+                </label>
+                <span className="st-lcard__num"><span className="st-label">CIF TT$</span><b>{money(ln.cif_ttd)}</b></span>
+                <span className="st-lcard__num"><span className="st-label">Duty</span><b>{money(ln.duty)}</b></span>
+                <span className="st-lcard__num"><span className="st-label">VAT</span><b>{money(ln.vat)}</b></span>
+                <span className="st-lcard__num total"><span className="st-label">Total tax</span><b>{money(ln.total_tax)}</b></span>
+              </div>
+              <button type="button" className="st-btn st-btn--ghost st-btn--sm" style={{ alignSelf: "flex-start" }}
+                onClick={() => toggle(ln.line_no)} aria-expanded={isOpen}>
+                {isOpen ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+                {isOpen ? "Hide declaration fields" : "CPC, origin, packages, concession"}
+              </button>
+              {isOpen && (
+                <div className="st-lcard__drawer">
+                  <fieldset className="st-fieldset" disabled={locked}>
+                    <RowDrawer line={ln} refData={refData} onUpdate={p => onPatch(ln.line_no, p)} />
+                  </fieldset>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {!locked && (
+        <button type="button" className="st-addline" onClick={() => { onAdd().catch(() => {}); }}><Plus aria-hidden="true" />Add line</button>
+      )}
+    </div>
+  );
+}
+
+function LineGrid({ lines, refData, locked, onPatch, onAdd, onDelete, onReload }: Props) {
   const [open, setOpen] = useState<Set<number>>(new Set());
   const toggle = (n: number) => setOpen(p => {
     const next = new Set(p);
@@ -128,7 +221,7 @@ export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, o
 
   return (
     <div id="f-lines">
-      {lines.length > 0 && <p className="st-scroll-hint" aria-hidden="true">Swipe the table sideways for HS, values and taxes</p>}
+      {lines.length > 0 && <p className="st-scroll-hint" aria-hidden="true">Scroll the table sideways for values and taxes</p>}
       <div className="st-table-wrap">
         <table className="st-table">
           <thead>
@@ -165,7 +258,11 @@ export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, o
                         {isOpen ? <ChevronDown /> : <ChevronRight />}
                       </button>
                     </td>
-                    <td className="num">{ln.line_no}</td>
+                    <td className="num">
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        {ln.line_no}<SourceNote source={lineOriginOrHand(ln)} compact />
+                      </span>
+                    </td>
                     <td>
                       <HsClassifyCell line={ln} onUpdate={p => onPatch(ln.line_no, p)} onReload={onReload} />
                     </td>
