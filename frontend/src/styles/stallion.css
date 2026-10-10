@@ -65,8 +65,9 @@
 .st-btn:hover { border-color: var(--ink-3); background: #fff; }
 .st-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .st-btn svg { width: 15px; height: 15px; flex: none; }
-.st-btn--primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-.st-btn--primary:hover { background: #AD4C16; border-color: #AD4C16; }
+/* Fill is a shade under the brand orange so white label text clears AA (4.9:1). */
+.st-btn--primary { background: #B5501A; border-color: #B5501A; color: #fff; }
+.st-btn--primary:hover { background: #A34816; border-color: #A34816; }
 .st-btn--ink { background: var(--ink); border-color: var(--ink); color: var(--chrome-text); }
 .st-btn--ink:hover { background: #2C241F; border-color: #2C241F; }
 .st-btn--ghost { background: transparent; border-color: transparent; color: var(--ink-2); }
