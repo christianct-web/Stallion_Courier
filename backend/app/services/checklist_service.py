@@ -241,6 +241,14 @@ def build_presubmission_report(sheet: Dict[str, Any]) -> Dict[str, Any]:
                     "detail": f"Choose the {label} for each line. XML will not generate until you do.",
                 })
 
+        # Rolled 9898 lines take their source lines' CPC: one CPC per group.
+        from .sheet_service import rollup_cpc_conflicts
+        for msg in rollup_cpc_conflicts(sheet):
+            items.append({
+                "field": "cpc", "label": "Effects lines disagree on CPC",
+                "status": "missing", "severity": "critical", "detail": msg[0].upper() + msg[1:] + ".",
+            })
+
         zero_val = [l for l in lines if not _present(l.get("exworks_usd"))]
         if zero_val:
             items.append({

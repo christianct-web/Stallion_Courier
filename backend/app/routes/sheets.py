@@ -311,7 +311,7 @@ def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
         s = sheet_service.update_header(sheet_id, req, source=_manual()) or s
 
     # CPC and origin are chosen per line by a person; never filled for them.
-    gaps = sheet_service.missing_line_codes(s)
+    gaps = sheet_service.missing_line_codes(s) + sheet_service.rollup_cpc_conflicts(s)
     if gaps:
         raise HTTPException(422, {"message": "Choose the CPC and country of origin for every line before generating XML. "
                                   + "; ".join(gaps) + ".", "lines": gaps})

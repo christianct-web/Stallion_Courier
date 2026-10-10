@@ -569,16 +569,37 @@ HS_HOUSEHOLD_EFFECTS = "9898.03.00.201"   # Used Household Effects
 HS_PERSONAL_EFFECTS  = "9898.02.00.000"   # Used Personal Effects
 
 
+def _rollup_groups(sheet: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    groups: Dict[str, List[Dict[str, Any]]] = {"household": [], "personal": []}
+    for ln in sheet.get("lines", []):
+        g = ln.get("effects_group", "household")
+        groups.get(g, groups["household"]).append(ln)
+    return groups
+
+
+def rollup_cpc_conflicts(sheet: Dict[str, Any]) -> List[str]:
+    """A rolled 9898 line takes the CPC chosen on its source lines, so every
+    source line in a group must carry the same CPC. Returns one message per
+    group whose lines disagree (only when the rollup is on)."""
+    if not sheet.get("rollup_9898"):
+        return []
+    out: List[str] = []
+    for key, rows in _rollup_groups(sheet).items():
+        cpcs = sorted({str(r.get("cpc") or "").strip() for r in rows} - {""})
+        if len(cpcs) > 1:
+            lines = ", ".join(str(r.get("line_no")) for r in rows)
+            out.append(f"{key} effects lines ({lines}) have different CPCs ({' / '.join(cpcs)}); "
+                       f"they roll into one 9898 line, so choose one CPC for all of them")
+    return out
+
+
 def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Consolidate itemized lines into the two ACE 9898 effects lines for the XML.
     Grid stays itemized; only the XML payload is rolled up. Groups by each
     line's effects_group (household|personal).
     """
-    groups = {"household": [], "personal": []}
-    for ln in sheet.get("lines", []):
-        g = ln.get("effects_group", "household")
-        groups.get(g, groups["household"]).append(ln)
+    groups = _rollup_groups(sheet)
 
     rolled: List[Dict[str, Any]] = []
     spec = [
@@ -589,10 +610,13 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
         rows = groups[key]
         if not rows:
             continue
+        # The CPC chosen on the source lines (approved; one per group, enforced
+        # by rollup_cpc_conflicts before XML is generated).
+        cpc = next((str(r.get("cpc") or "").strip() for r in rows if str(r.get("cpc") or "").strip()), "")
         rolled.append({
-            "cpc": "4000",
+            "cpc": cpc,
             "additionalCpc": "000",
-            "extendedCustomsProcedure": 4000,
+            "extendedCustomsProcedure": int(_f(cpc, 0)),
             "nationalCustomsProcedure": 0,
             "hsCode": hs,
             "description": desc,

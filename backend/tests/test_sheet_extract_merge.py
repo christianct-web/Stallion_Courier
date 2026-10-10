@@ -165,3 +165,28 @@ def test_xml_refuses_until_every_line_has_cpc_and_origin(monkeypatch):
     assert r.status_code == 422
     detail = r.json()["detail"]
     assert "Line 1: CPC not chosen" in detail["lines"]
+
+
+# ── 9898 rollup takes the CPC chosen on its source lines ────────────────────
+
+def test_rolled_9898_line_uses_the_source_lines_cpc():
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "lines": [
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+    ]})
+    items = sheet_service.to_decl_inputs(sheet_service.get_sheet(sheet["id"]))["items"]
+    assert len(items) == 1
+    assert items[0]["cpc"] == "4070"
+    assert items[0]["extendedCustomsProcedure"] == 4070
+
+
+def test_xml_refuses_when_rolled_lines_disagree_on_cpc(monkeypatch):
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "lines": [
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+        {"cpc": "4000", "country_of_origin": "US", "effects_group": "household"},
+    ]})
+    client = _client(monkeypatch, [])
+
+    r = client.post(f"/sheets/{sheet['id']}/xml", json={})
+    assert r.status_code == 422
+    assert any("different CPCs" in m for m in r.json()["detail"]["lines"])
