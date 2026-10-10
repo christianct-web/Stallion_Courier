@@ -319,7 +319,7 @@ def _blank_sheet() -> Dict[str, Any]:
         "customs_user_fee": 80.0,
         # entry treatment: "dutiable" (default) | "relieved" (returning resident)
         "entry_mode": "dutiable",
-        "rollup_9898": True,   # on XML, consolidate to 9898 personal/household codes
+        "rollup_9898": True,   # relieved entries only: on XML, consolidate to 9898 personal/household codes
         # declaration-level C82 fields (generate-XML modal)
         "customs_regime": "C4",
         "nature_of_transaction": "1",
@@ -569,6 +569,13 @@ HS_HOUSEHOLD_EFFECTS = "9898.03.00.201"   # Used Household Effects
 HS_PERSONAL_EFFECTS  = "9898.02.00.000"   # Used Personal Effects
 
 
+def rollup_active(sheet: Dict[str, Any]) -> bool:
+    """The 9898 effects rollup applies only to relieved (returning-resident)
+    entries with the rollup switched on. Every other entry keeps its itemised
+    lines and real HS codes in the XML (approved 2026-10-10)."""
+    return bool(sheet.get("rollup_9898")) and sheet.get("entry_mode") == "relieved"
+
+
 def _rollup_groups(sheet: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     groups: Dict[str, List[Dict[str, Any]]] = {"household": [], "personal": []}
     for ln in sheet.get("lines", []):
@@ -581,7 +588,7 @@ def rollup_cpc_conflicts(sheet: Dict[str, Any]) -> List[str]:
     """A rolled 9898 line takes the CPC chosen on its source lines, so every
     source line in a group must carry the same CPC. Returns one message per
     group whose lines disagree (only when the rollup is on)."""
-    if not sheet.get("rollup_9898"):
+    if not rollup_active(sheet):
         return []
     out: List[str] = []
     for key, rows in _rollup_groups(sheet).items():
@@ -722,8 +729,9 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
     Build the (header, worksheet, items, containers) tuple-shaped dict that
     declaration_service.build_complete_declaration expects.
 
-    If rollup_9898 is on, items are consolidated into the two ACE 9898 effects
-    lines; otherwise every grid line is emitted individually.
+    For a relieved entry with rollup_9898 on (rollup_active), items are
+    consolidated into the two ACE 9898 effects lines; otherwise every grid
+    line is emitted individually.
     """
     t = sheet.get("totals", {})
     nature = sheet.get("nature_of_transaction", "1")
@@ -773,7 +781,7 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         "grossWeight": _f(sheet.get("gross_weight")),
     }
 
-    if sheet.get("rollup_9898"):
+    if rollup_active(sheet):
         items = _rollup_9898(sheet)
     else:
         conc = sheet.get("concession", {}) or {}

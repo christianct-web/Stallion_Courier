@@ -19,6 +19,12 @@ the line was extracted or not** (no 4000 default).
 - The 9898 rollup's consolidated household / personal effects lines take the
   CPC chosen on their source lines (approved 2026-10-10). Lines in one group
   that disagree block XML until a person picks one CPC for all of them.
+- The 9898 rollup now applies **only to relieved entries** (`entry_mode:
+  relieved` with `rollup_9898` on), approved 2026-10-10. Before this, the
+  switch defaulted on for every sheet and the XML step checked nothing else,
+  so a dutiable commercial import was consolidated into 9898 household /
+  personal effects lines. Dutiable entries are now always itemised with their
+  real HS codes. Verify shows the switch for relieved entries.
 
 ---
 

@@ -170,7 +170,7 @@ def test_xml_refuses_until_every_line_has_cpc_and_origin(monkeypatch):
 # ── 9898 rollup takes the CPC chosen on its source lines ────────────────────
 
 def test_rolled_9898_line_uses_the_source_lines_cpc():
-    sheet = sheet_service.create_sheet({"rollup_9898": True, "lines": [
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "entry_mode": "relieved", "lines": [
         {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
         {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
     ]})
@@ -181,7 +181,7 @@ def test_rolled_9898_line_uses_the_source_lines_cpc():
 
 
 def test_xml_refuses_when_rolled_lines_disagree_on_cpc(monkeypatch):
-    sheet = sheet_service.create_sheet({"rollup_9898": True, "lines": [
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "entry_mode": "relieved", "lines": [
         {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
         {"cpc": "4000", "country_of_origin": "US", "effects_group": "household"},
     ]})
@@ -190,3 +190,18 @@ def test_xml_refuses_when_rolled_lines_disagree_on_cpc(monkeypatch):
     r = client.post(f"/sheets/{sheet['id']}/xml", json={})
     assert r.status_code == 422
     assert any("different CPCs" in m for m in r.json()["detail"]["lines"])
+
+
+def test_dutiable_entries_are_never_rolled_up(monkeypatch):
+    # rollup_9898 defaults on, but a dutiable (commercial) entry keeps its lines.
+    sheet = sheet_service.create_sheet({"lines": [
+        {"cpc": "4000", "country_of_origin": "US", "hs_code": "32089000"},
+        {"cpc": "4000", "country_of_origin": "CN", "hs_code": "38140000"},
+    ]})
+    stored = sheet_service.get_sheet(sheet["id"])
+    assert stored["rollup_9898"] is True and stored["entry_mode"] == "dutiable"
+
+    items = sheet_service.to_decl_inputs(stored)["items"]
+    assert [i["hsCode"] for i in items] == ["32089000", "38140000"]
+    # Disagreeing CPCs only matter when lines are rolled together.
+    assert sheet_service.rollup_cpc_conflicts(stored) == []
