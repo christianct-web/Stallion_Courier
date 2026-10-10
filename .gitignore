@@ -26,3 +26,8 @@ frontend/dist/
 *.backup
 *.bak
 *.before_*
+
+# Impeccable local review captures and roll state
+.impeccable/review/
+.impeccable/questions/
+.impeccable/build/
