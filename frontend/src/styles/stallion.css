@@ -517,3 +517,5 @@
 @media (prefers-reduced-motion: reduce) {
   .st *, .st *::before, .st *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+.st-col-desc { min-width: 340px; }
+@media (max-width: 640px) { .st-col-desc { min-width: 220px; } }

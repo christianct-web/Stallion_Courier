@@ -127,14 +127,14 @@ export function LinesTable({ lines, refData, locked, onPatch, onAdd, onDelete, o
 
   return (
     <div id="f-lines">
-      {lines.length > 0 && <p className="st-scroll-hint" aria-hidden="true">Swipe the table sideways for HS, values and taxes →</p>}
+      {lines.length > 0 && <p className="st-scroll-hint" aria-hidden="true">Swipe the table sideways for HS, values and taxes</p>}
       <div className="st-table-wrap">
         <table className="st-table">
           <thead>
             <tr>
               <th style={{ width: 36 }}><span className="sr-only">Details</span></th>
               <th style={{ width: 36 }}>#</th>
-              <th style={{ minWidth: 340 }}>Description &amp; HS code</th>
+              <th className="st-col-desc">Description &amp; HS code</th>
               <th className="r" style={{ width: 110 }}>Ex-works USD</th>
               <th className="r">Freight</th>
               <th className="r">CIF USD</th>
