@@ -1,916 +1,1011 @@
 /**
- * StallionSheet.tsx — the simplified single-page declaration editor.
+ * StallionSheet.tsx — the job workspace for one declaration (a "sheet").
  *
- * Replaces Workbench + Extract + the old BrokerReview body. Lives inside the
- * BrokerReview shell (keep the existing sidebar; render this where the old
- * review body was). Grid-first, modelled on CourierWorkbench:
+ *   ┌ Job bar: ‹ Docket · reference · type · client ……… payable · lifecycle ┐
+ *   ├ Station rail: 1 Setup · 2 Documents · 3 Verify · 4 Outputs (free jump) ┤
+ *   │ Station body                                         │ Duty rail      │
+ *   └──────────────────────────────────────────────────────┴────────────────┘
  *
- *   ┌ Header strip (inline edit + dropdowns: port, incoterm) ──────────────┐
- *   │ CIF Factor (auto)                                                    │
- *   ├ Line grid (inline edit; HS lookup on description; expand row ▸) ─────┤
- *   │   row drawer: CPC · country of origin · pkg type · supp. unit (all   │
- *   │   dropdowns) · licence no                                            │
- *   ├ Totals panel ───────────────────────────────────────────────────────┤
- *   └ Actions: Upload docs · Download Worksheet · Generate C82 XML ────────┘
+ * Setup      reference, declaration type, client
+ * Documents  upload invoice / BL for extraction; per-upload checklist
+ * Verify     server pre-submission report on top, header fields grouped,
+ *            line grid with HS classification and C84 concession drawer
+ * Outputs    readiness, worksheet preview + downloads, C82 XML preview +
+ *            download, and the hand-off to review
  *
- * Wire route in App.tsx:
- *   <Route path="/stallion/sheet/:sheetId" element={<StallionSheet />} />
- * (and keep a thin list page mirroring CourierManifests — see StallionSheetList.tsx)
+ * The station is kept in ?step= so a job link can open at a station. All
+ * money is the server's computed value; lifecycle moves go through
+ * POST /sheets/{id}/status, which enforces the transition map.
  */
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  getSheet, updateHeader, addLine, updateLine, deleteLine,
-  getReference, worksheetUrl, c84WorksheetUrl, generateXml, uploadExtract,
-  getWarnings, setStatus, listClients,
-  Sheet, SheetLine, RefOption, RefData, Client, Concession,
+  AlertTriangle, ArrowLeft, Check, ChevronRight, Copy, Download, FileCode2,
+  FileSpreadsheet, FileText, Loader2, Lock, UploadCloud, X,
+} from "lucide-react";
+import {
+  addLine, deleteLine, fetchXml, getReference, getSheet, getWarnings, listClients,
+  presubmissionCheck, setStatus, updateHeader, updateLine, uploadExtract,
+  worksheetUrl, c84WorksheetUrl,
+  type ChecklistReport, type Client, type Concession, type RefData, type Sheet, type SheetLine,
 } from "@/services/sheetApi";
-import { HsClassifyCell } from "./HsClassifyCell";
-import { ChecklistModal } from "./ChecklistModal";
-import { presubmissionCheck, type ChecklistReport } from "@/services/sheetApi";
 import { SecureDownloadLink } from "@/components/SecureDownloadLink";
+import {
+  DECL_CHOICES, STATIONS, STATUS_LABEL, choiceFor, currentStation, currentUser, isLocked,
+  money, normStatus, stationsDone, transitionsFor, typeLabel,
+  type StationKey, type Transition,
+} from "@/components/stallion/model";
+import { Checklist, Counts, SelectField, StatusChip, TextField, TypePicker } from "@/components/stallion/ui";
+import { LinesTable } from "@/components/stallion/LinesTable";
+import "@/styles/stallion.css";
 
-// ── design tokens (match BrokerReview) ───────────────────────────────────────
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  void: "#111318", voidMid: "#191D26", voidSurface: "#1F2430", voidBorder: "#2E3748",
-  ghost: "#B8C0CE", ghostDim: "#8A93A3",
-  gold: "#B8860B", amber: "#FFF4D6", amberText: "#8A6D00", amberAction: "#C65911",
-  approved: "#1A5E3A", warn: "#FEF3DC", warnBorder: "#D4A020",
-  critBorder: "#B02020",
-};
-const MONO = "'JetBrains Mono','SFMono-Regular',monospace";
-const SERIF = "'Fraunces',Georgia,serif";
-const fmt = (n: number | undefined) =>
-  (n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const HEADER_FIELDS = new Set([
+  "consignee", "invoice_no", "currency", "freight_usd", "consignor", "bl_number",
+  "arrival_date", "port", "incoterm",
+]);
 
-// ── tiny inputs ───────────────────────────────────────────────────────────────
-function Cell({ value, onCommit, align = "left", width, mono = true, type = "text" }: {
-  value: string | number; onCommit: (v: string) => void; align?: "left" | "right" | "center";
-  width?: number; mono?: boolean; type?: string;
-}) {
-  const [v, setV] = useState(String(value ?? ""));
-  useEffect(() => setV(String(value ?? "")), [value]);
-  return (
-    <input
-      type={type} value={v}
-      onChange={e => setV(e.target.value)}
-      onBlur={() => { if (v !== String(value ?? "")) onCommit(v); }}
-      onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-      style={{
-        fontFamily: mono ? MONO : "inherit", fontSize: 12, textAlign: align,
-        padding: "5px 7px", width: width ?? "100%", boxSizing: "border-box",
-        border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-        background: "#fff", color: C.ink, outline: "none",
-      }}
-    />
-  );
-}
+const TRANSPORT_MODES = [
+  { code: "1", label: "1 - Sea" }, { code: "2", label: "2 - Rail" }, { code: "3", label: "3 - Road" },
+  { code: "4", label: "4 - Air" }, { code: "5", label: "5 - Mail" }, { code: "7", label: "7 - Fixed transport" },
+  { code: "8", label: "8 - Inland waterway" }, { code: "9", label: "9 - Own propulsion" },
+];
 
-function Select({ value, options, onCommit, width }: {
-  value: string; options: RefOption[]; onCommit: (v: string) => void; width?: number;
-}) {
-  return (
-    <select
-      value={value ?? ""} onChange={e => onCommit(e.target.value)}
-      style={{
-        fontFamily: MONO, fontSize: 12, padding: "5px 7px", width: width ?? "100%",
-        boxSizing: "border-box", border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-        background: "#fff", color: C.ink, outline: "none",
-      }}
-    >
-      {options.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}
-    </select>
-  );
-}
+// SecureDownloadLink renders its own <button>; strip its chrome so the inner .st-btn shows.
+const DL_RESET = { background: "transparent", padding: 0, font: "inherit", color: "inherit" } as const;
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 130 }}>
-      <label style={{
-        fontFamily: MONO, fontSize: 9, letterSpacing: "0.1em",
-        color: C.inkLight, textTransform: "uppercase",
-      }}>{label}</label>
-      {children}
-    </div>
-  );
-}
+const errMsg = (e: unknown, fallback: string) => (e instanceof Error && e.message ? e.message : fallback);
 
-// (HS lookup is now handled by HsClassifyCell — see ./HsClassifyCell.tsx,
-//  which brings full parity with the Courier Workbench's ThnClassifyCell.)
-
-
-// ── expandable row drawer (C82-only fields, all dropdowns) ─────────────────────
-function RowDrawer({ line, refData, onUpdate }: {
-  line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => void;
-}) {
-  return (
-    <tr>
-      <td colSpan={11} style={{ background: C.paperAlt, padding: "12px 16px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-          <Field label="CPC">
-            <Select value={line.cpc} options={refData.cpc}
-              onCommit={v => onUpdate({ cpc: v })} width={300} />
-          </Field>
-          <Field label="Country of Origin">
-            <Select value={line.country_of_origin} options={refData.countries}
-              onCommit={v => onUpdate({ country_of_origin: v })} width={200} />
-          </Field>
-          <Field label="Gross Kg">
-            <Cell value={line.gross_kg ?? 0} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ gross_kg: Number(v) })} />
-          </Field>
-          <Field label="Net Kg">
-            <Cell value={line.net_kg ?? 0} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ net_kg: Number(v) })} />
-          </Field>
-          <Field label="Package Type">
-            <Select value={line.package_type} options={refData.package_types}
-              onCommit={v => onUpdate({ package_type: v })} width={160} />
-          </Field>
-          <Field label="Package Name">
-            <Cell value={line.package_type_name || ""} width={150}
-              onCommit={v => onUpdate({ package_type_name: v })} />
-          </Field>
-          <Field label="Package Count">
-            <Cell value={line.package_count} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ package_count: Number(v) })} />
-          </Field>
-          <Field label="Supp. Unit">
-            <Select value={line.supplementary_unit} options={refData.supplementary_units}
-              onCommit={v => onUpdate({ supplementary_unit: v })} width={180} />
-          </Field>
-          <Field label="Supp. Qty">
-            <Cell value={line.supplementary_qty} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ supplementary_qty: Number(v) })} />
-          </Field>
-          <Field label="Licence No.">
-            <Cell value={line.licence_no} width={160}
-              onCommit={v => onUpdate({ licence_no: v })} />
-          </Field>
-          <Field label="National CPC">
-            <Cell value={line.national_customs_procedure || "000"} width={100}
-              onCommit={v => onUpdate({ national_customs_procedure: v })} />
-          </Field>
-          <Field label="Quota Code">
-            <Cell value={line.quota_code || "NEW"} width={100}
-              onCommit={v => onUpdate({ quota_code: v })} />
-          </Field>
-          <Field label="Rate Adj.">
-            <Cell value={line.rate_of_adjustment ?? 1} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ rate_of_adjustment: Number(v) })} />
-          </Field>
-          <Field label="Marks 1">
-            <Cell value={line.marks1 || ""} width={180}
-              onCommit={v => onUpdate({ marks1: v })} />
-          </Field>
-          <Field label="Marks 2">
-            <Cell value={line.marks2 || ""} width={180}
-              onCommit={v => onUpdate({ marks2: v })} />
-          </Field>
-          <Field label="Effects Group">
-            <Select value={line.effects_group || "household"}
-              options={[
-                { code: "household", label: "household" },
-                { code: "personal", label: "personal" },
-              ]}
-              onCommit={v => onUpdate({ effects_group: v as any })} width={160} />
-          </Field>
-          <Field label="Relieved Override">
-            <Select value={line.relieved_override ? "yes" : "no"}
-              options={[
-                { code: "no", label: "No" },
-                { code: "yes", label: "Yes" },
-              ]}
-              onCommit={v => onUpdate({ relieved_override: v === "yes" })} width={110} />
-          </Field>
-        </div>
-
-        {/* C84 concession block */}
-        {(refData.concessions?.length ?? 0) > 0 && (
-          <ConcessionRow line={line} refData={refData} onUpdate={onUpdate} />
-        )}
-      </td>
-    </tr>
-  );
-}
-
-// ── per-line C84 concession controls ──────────────────────────────────────────
-function ConcessionRow({ line, refData, onUpdate }: {
-  line: SheetLine; refData: RefData; onUpdate: (patch: Partial<SheetLine>) => void;
-}) {
-  const cat = refData.concessions?.find(c => c.code === line.concession_code);
-  const quantum = cat?.quantum;
-  const relief = line.relief_total ?? 0;
-  const fmt = (n?: number) =>
-    (n ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  return (
-    <div style={{
-      marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.paperBorder}`,
-      display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end",
-    }}>
-      <Field label="C84 Concession">
-        <Select
-          value={line.concession_code || ""}
-          options={[{ code: "", label: "— none (dutiable) —" },
-            ...(refData.concessions || []).map(c => ({ code: c.code, label: c.label }))]}
-          onCommit={v => onUpdate({ concession_code: v })} width={320} />
-      </Field>
-
-      {quantum === "capped" && (
-        <>
-          <Field label="Engine (cc)">
-            <Cell value={line.engine_cc ?? 0} type="number" align="right" width={90}
-              onCommit={v => onUpdate({ engine_cc: Number(v) })} />
-          </Field>
-          <Field label="Motor Veh. Tax (TT$)">
-            <Cell value={line.mvt_ttd ?? 0} type="number" align="right" width={120}
-              onCommit={v => onUpdate({ mvt_ttd: Number(v) })} />
-          </Field>
-          <Field label="Cap Override (TT$, 0=band)">
-            <Cell value={line.cap_override_ttd ?? 0} type="number" align="right" width={150}
-              onCommit={v => onUpdate({ cap_override_ttd: Number(v) })} />
-          </Field>
-        </>
-      )}
-
-      {quantum === "rate" && (
-        <>
-          <Field label="Conc. Duty %">
-            <Cell value={line.conc_duty_pct ?? 0} type="number" align="right" width={100}
-              onCommit={v => onUpdate({ conc_duty_pct: Number(v) })} />
-          </Field>
-          <Field label="Conc. VAT %">
-            <Cell value={line.conc_vat_pct ?? line.vat_pct} type="number" align="right" width={100}
-              onCommit={v => onUpdate({ conc_vat_pct: Number(v) })} />
-          </Field>
-        </>
-      )}
-
-      {line.concession_code && (
-        <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: C.inkMid,
-          background: "#EBF5EE", border: "1px solid #1A5C3A33", borderRadius: 4,
-          padding: "8px 12px",
-        }}>
-          <span style={{ color: "#1A5C3A", fontWeight: 700 }}>Relief TT$ {fmt(relief)}</span>
-          {quantum === "capped" && (line.cap_applied_ttd ?? 0) > 0 && (
-            <span> · cap applied TT$ {fmt(line.cap_applied_ttd)}</span>
-          )}
-          <span> · payable TT$ {fmt(line.total_tax)}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── C84 concession header panel (beneficiary + qualification) ──────────────────
-function ConcessionHeaderPanel({ sheet, refData, onPatch }: {
-  sheet: Sheet; refData: RefData;
-  onPatch: (patch: Partial<Concession>) => void;
-}) {
-  const c = sheet.concession || ({} as Concession);
-  const t = sheet.totals || ({} as any);
-  const codes = refData.concessions || [];
-  return (
-    <div style={{
-      background: "#fff", border: `1px solid ${C.approved}44`,
-      borderLeft: `3px solid ${C.approved}`, borderRadius: 6, padding: 16, marginBottom: 14,
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.approved }}>
-          C84 — DUTY / TAX CONCESSION
-        </div>
-        {(t.relief_total ?? 0) > 0 && (
-          <div style={{ fontFamily: MONO, fontSize: 12, color: C.approved, fontWeight: 700 }}>
-            Total relief: TT$ {fmt(t.relief_total)}
-          </div>
-        )}
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-        <Field label="Primary Concession">
-          <Select value={c.code || ""} width={300}
-            options={[{ code: "", label: "— select —" },
-              ...codes.map(x => ({ code: x.code, label: x.label }))]}
-            onCommit={v => onPatch({ code: v, active: !!v })} />
-        </Field>
-        <Field label="Beneficiary Name">
-          <Cell value={c.beneficiary_name || ""} mono={false} width={220}
-            onCommit={v => onPatch({ beneficiary_name: v })} /></Field>
-        <Field label="ID / Passport">
-          <Cell value={c.beneficiary_id || ""} width={160}
-            onCommit={v => onPatch({ beneficiary_id: v })} /></Field>
-        <Field label="C84 No.">
-          <Cell value={c.declaration_no || ""} width={130}
-            onCommit={v => onPatch({ declaration_no: v })} /></Field>
-        <Field label="Approval Ref">
-          <Cell value={c.approval_ref || ""} width={150}
-            onCommit={v => onPatch({ approval_ref: v })} /></Field>
-        <Field label="Return Date">
-          <Cell value={c.return_date || ""} type="date" width={150}
-            onCommit={v => onPatch({ return_date: v })} /></Field>
-        <Field label="Abroad From">
-          <Cell value={c.residence_abroad_from || ""} width={110}
-            onCommit={v => onPatch({ residence_abroad_from: v })} /></Field>
-        <Field label="Abroad To">
-          <Cell value={c.residence_abroad_to || ""} width={110}
-            onCommit={v => onPatch({ residence_abroad_to: v })} /></Field>
-      </div>
-      <div style={{ fontFamily: MONO, fontSize: 10, color: C.inkLight, marginTop: 10, fontStyle: "italic" }}>
-        Set the concession per line in each row's drawer. Vehicle relief caps are
-        defaults — confirm against the current Customs notice before filing.
-      </div>
-    </div>
-  );
-}
-
-// ── generate-XML modal (declaration-level dropdowns) ───────────────────────────
-function GenerateModal({ sheet, refData, onClose, onGenerate }: {
-  sheet: Sheet; refData: RefData; onClose: () => void;
-  onGenerate: (patch: Partial<Sheet>) => void;
-}) {
-  const [regime, setRegime] = useState(sheet.customs_regime || "C4");
-  const [nature, setNature] = useState(sheet.nature_of_transaction || "1");
-  const [tin, setTin] = useState(sheet.consignee_tin || "");
-  const [warnings, setWarnings] = useState<string[] | null>(null);
-  useEffect(() => {
-    getWarnings(sheet.id).then(r => setWarnings(r.warnings)).catch(() => setWarnings([]));
-  }, [sheet.id]);
-  return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200,
-      display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <div style={{
-        background: C.paper, borderRadius: 8, padding: 24, width: 480, maxHeight: "88vh",
-        overflowY: "auto", border: `1px solid ${C.paperBorder}`,
-      }}>
-        <h3 style={{ fontFamily: MONO, fontSize: 15, color: C.ink, margin: "0 0 4px" }}>
-          Generate C82 XML
-        </h3>
-        <p style={{ fontFamily: "inherit", fontSize: 12, color: C.inkLight, margin: "0 0 18px" }}>
-          Confirm the declaration-level fields the SAD needs before export.
-        </p>
-        {warnings && warnings.length > 0 && (
-          <div style={{
-            background: C.warn, border: `1px solid ${C.warnBorder}`, borderRadius: 6,
-            padding: "12px 14px", marginBottom: 18,
-          }}>
-            <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, color: C.amberText,
-              textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-              ⚠ {warnings.length} issue{warnings.length === 1 ? "" : "s"} — XML will still
-              generate, but these may make the declaration wrong
-            </div>
-            <ul style={{ margin: 0, paddingLeft: 18, fontFamily: "inherit", fontSize: 12,
-              color: C.inkMid, lineHeight: 1.6 }}>
-              {warnings.map((w, i) => <li key={i}>{w}</li>)}
-            </ul>
-          </div>
-        )}
-        {warnings && warnings.length === 0 && (
-          <div style={{
-            background: "#EBF5EE", border: "1px solid #1A5E3A33", borderRadius: 6,
-            padding: "10px 14px", marginBottom: 18, fontFamily: MONO, fontSize: 12,
-            color: C.approved, fontWeight: 700,
-          }}>✓ Preflight checks passed</div>
-        )}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Field label="Customs Regime">
-            <Select value={regime} options={refData.customs_regimes} onCommit={setRegime} />
-          </Field>
-          <Field label="Nature of Transaction (Box 24)">
-            <Select value={nature} options={refData.nature_of_transaction} onCommit={setNature} />
-          </Field>
-          <Field label="Consignee TIN / Code">
-            <Cell value={tin} onCommit={setTin} />
-          </Field>
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 22 }}>
-          <button onClick={onClose} style={{
-            fontFamily: MONO, fontSize: 12, padding: "8px 16px", cursor: "pointer",
-            border: `1px solid ${C.paperBorder}`, borderRadius: 4, background: "#fff", color: C.ink,
-          }}>Cancel</button>
-          <button onClick={() => onGenerate({
-            customs_regime: regime, nature_of_transaction: nature, consignee_tin: tin,
-          })} style={{
-            fontFamily: MONO, fontSize: 12, padding: "8px 16px", cursor: "pointer",
-            border: "none", borderRadius: 4, background: C.ink, color: "#fff",
-          }}>Generate & Download</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── main page ─────────────────────────────────────────────────────────────────
+/* ══════════════════════════════════════════════════════════════════════════ */
 export default function StallionSheet() {
   const { sheetId = "" } = useParams();
-  const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const user = currentUser();
+
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [refData, setRefData] = useState<RefData | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
-  const [expanded, setExpanded] = useState<Set<number>>(new Set());
-  const [showGen, setShowGen] = useState(false);
-  const [loadError, setLoadError] = useState<string>("");
-  // Checklist: post-extraction review + pre-submission gate share this state.
-  const [checklist, setChecklist] = useState<{ report: ChecklistReport; mode: "extraction" | "presubmission" } | null>(null);
-  const [checking, setChecking] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [loadError, setLoadError] = useState("");
+  const [report, setReport] = useState<ChecklistReport | null>(null);
+  const [pendingFocus, setPendingFocus] = useState<string | null>(null);
+  // updated_at of the newest sheet applied, readable before React re-renders.
+  const stampRef = useRef("");
 
-  useEffect(() => { getReference().then(setRefData); }, []);
+  useEffect(() => { getReference().then(setRefData).catch(e => setLoadError(errMsg(e, "Reference data did not load."))); }, []);
   useEffect(() => { listClients().then(setClients).catch(() => {}); }, []);
   useEffect(() => {
     if (!sheetId) return;
     setLoadError("");
-    getSheet(sheetId)
-      .then(setSheet)
-      .catch((e: any) => setLoadError(e?.message ? String(e.message) : "Failed to load sheet"));
+    getSheet(sheetId).then(s => { stampRef.current = s.updated_at; setSheet(s); })
+      .catch(e => setLoadError(errMsg(e, "The job did not load.")));
   }, [sheetId]);
 
-  const patchHeader = useCallback(async (patch: Partial<Sheet>) => {
-    const s = await updateHeader(sheetId, patch); setSheet(s);
-  }, [sheetId]);
-  const patchConcession = useCallback(async (patch: Partial<Concession>) => {
+  // Keep the server's pre-submission report in step with the sheet.
+  const stamp = sheet?.updated_at;
+  useEffect(() => {
+    if (!sheetId || !stamp) return;
+    const t = window.setTimeout(() => {
+      presubmissionCheck(sheetId).then(r => setReport(r.report)).catch(() => {});
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [sheetId, stamp]);
+
+  const step: StationKey = useMemo(() => {
+    const p = params.get("step") as StationKey | null;
+    if (p && STATIONS.some(s => s.key === p)) return p;
+    return sheet ? currentStation(sheet) : "setup";
+  }, [params, sheet]);
+  const goStep = useCallback((k: StationKey) => {
+    setParams(p => { const n = new URLSearchParams(p); n.set("step", k); return n; }, { replace: false });
+    window.scrollTo({ top: 0 });
+  }, [setParams]);
+
+  /* mutations ────────────────────────────────────────────────────────────── */
+  // Every write goes through track(): responses are applied in the order the
+  // requests were issued (a slow early save never overwrites a later one), and
+  // settle() lets an action wait for every in-flight save before it reads the job.
+  const issued = useRef(0);
+  const applied = useRef(0);
+  const inflight = useRef(new Set<Promise<unknown>>());
+  const track = useCallback(async (fn: () => Promise<Sheet>): Promise<Sheet> => {
+    const seq = ++issued.current;
+    const p = fn();
+    inflight.current.add(p);
+    try {
+      const s = await p;
+      if (seq > applied.current) { applied.current = seq; stampRef.current = s.updated_at; setSheet(s); }
+      return s;
+    } finally { inflight.current.delete(p); }
+  }, []);
+  // Waits for every in-flight save, then returns the stamp of the job as stored.
+  const settle = useCallback(async (): Promise<string> => {
+    while (inflight.current.size) await Promise.allSettled([...inflight.current]);
+    return stampRef.current;
+  }, []);
+  // Report the failure once, then re-throw so callers never confirm a save that
+  // did not happen. Fire-and-forget callers (field blur) swallow the rejection.
+  const guard = useCallback(async (fn: () => Promise<Sheet>, failMsg: string): Promise<void> => {
+    try { await track(fn); } catch (e) {
+      toast.error(`${failMsg}: ${errMsg(e, "error")}`);
+      throw Object.assign(e instanceof Error ? e : new Error(String(e)), { reported: true });
+    }
+  }, [track]);
+  const patchHeader = useCallback((patch: Partial<Sheet>) =>
+    guard(() => updateHeader(sheetId, patch), "Could not save"), [guard, sheetId]);
+  const patchConcession = useCallback((patch: Partial<Concession>) => {
     const merged = { ...(sheet?.concession || {}), ...patch } as Concession;
-    const s = await updateHeader(sheetId, { concession: merged }); setSheet(s);
-  }, [sheetId, sheet]);
-  const patchLine = useCallback(async (lineNo: number, patch: Partial<SheetLine>) => {
-    const s = await updateLine(sheetId, lineNo, patch); setSheet(s);
-  }, [sheetId]);
-  const addRow = useCallback(async () => { setSheet(await addLine(sheetId, {})); }, [sheetId]);
-  const removeRow = useCallback(async (n: number) => { setSheet(await deleteLine(sheetId, n)); }, [sheetId]);
+    return guard(() => updateHeader(sheetId, { concession: merged }), "Could not save");
+  }, [guard, sheetId, sheet]);
+  const patchLine = useCallback((n: number, patch: Partial<SheetLine>) =>
+    guard(() => updateLine(sheetId, n, patch), "Could not save line"), [guard, sheetId]);
+  const addRow = useCallback(() => guard(() => addLine(sheetId, {}), "Could not add line"), [guard, sheetId]);
+  const removeRow = useCallback((n: number) => {
+    if (!window.confirm(`Delete line ${n}?`)) return;
+    guard(() => deleteLine(sheetId, n), "Could not delete line").catch(() => {});
+  }, [guard, sheetId]);
+  const reload = useCallback(async () => { await track(() => getSheet(sheetId)); }, [track, sheetId]);
 
-  // Pick a client -> autofill consignee, TIN, default brokerage fee.
   const pickClient = useCallback(async (clientId: string) => {
     const c = clients.find(x => x.id === clientId);
-    if (!c) { await patchHeader({ client_id: "" }); return; }
-    await patchHeader({
-      client_id: c.id,
-      consignee: c.name,
-      consignee_tin: c.tin || c.consigneeCode || "",
-      consignee_address: c.address || "",
-    });
-    toast.success(`Loaded ${c.name}`);
+    if (!c) { await patchHeader({ client_id: "" }).catch(() => {}); return; }
+    try {
+      await patchHeader({
+      client_id: c.id, consignee: c.name,
+      consignee_tin: c.tin || c.consigneeCode || "", consignee_address: c.address || "",
+      });
+      toast.success(`Loaded ${c.name}`);
+    } catch { /* already reported by guard */ }
   }, [clients, patchHeader]);
 
-  const advance = useCallback(async (status: string) => {
+  const advance = useCallback(async (t: Transition, extra: { notes?: string; receipt_number?: string }) => {
     try {
-      let extra: any = {};
-      if (status === "receipted") {
-        const rn = window.prompt("Receipt number?") || "";
-        extra.receipt_number = rn;
+      const s = await setStatus(sheetId, t.to, { ...extra, actor: user.username || user.role });
+      setSheet(s);
+      toast.success(`${s.reference || "Job"} is now ${STATUS_LABEL[normStatus(s.status)].toLowerCase()}`);
+    } catch (e) {
+      toast.error(`Could not change status: ${errMsg(e, "error")}`);
+    }
+  }, [sheetId, user.username, user.role]);
+
+  const goToField = useCallback((field: string) => {
+    setPendingFocus(HEADER_FIELDS.has(field) ? field : "lines");
+    if (step !== "verify") goStep("verify");
+  }, [goStep, step]);
+  useEffect(() => {
+    if (!pendingFocus || step !== "verify") return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`f-${pendingFocus}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) el.focus({ preventScroll: true });
       }
-      const s = await setStatus(sheetId, status, extra); setSheet(s);
-      toast.success(`Marked ${status}`);
-    } catch (e: any) {
-      toast.error(`Could not change status (${e?.message || "error"})`);
-    }
-  }, [sheetId]);
+      setPendingFocus(null);
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [pendingFocus, step]);
 
-  const onUpload = useCallback(async (file: File) => {
-    try {
-      const { sheet: s, report } = await uploadExtract(sheetId, file);
-      setSheet(s);  // auto-populated grid
-      toast.success("Document extracted");
-      setChecklist({ report, mode: "extraction" });  // show what was / wasn't found
-    } catch (e: any) {
-      toast.error(`Extraction failed: ${e?.message || "error"}`);
-    }
-  }, [sheetId]);
-
-  // Pre-submission gate: run the check, then open the checklist. If clean the
-  // broker can proceed straight to the Generate modal from inside it.
-  const runPresubmission = useCallback(async () => {
-    setChecking(true);
-    try {
-      const { report } = await presubmissionCheck(sheetId);
-      setChecklist({ report, mode: "presubmission" });
-    } catch (e: any) {
-      toast.error(`Check failed: ${e?.message || "error"}`);
-      setShowGen(true);  // fall through to generate if the check itself errors
-    } finally { setChecking(false); }
-  }, [sheetId]);
-
-  const onGenerate = useCallback(async (patch: Partial<Sheet>) => {
-    setShowGen(false);
-    try { await generateXml(sheetId, patch); toast.success("C82 XML generated"); }
-    catch (e: any) { toast.error(`XML failed: ${e?.message || "preflight error"}`); }
-  }, [sheetId]);
-
-  const toggle = (n: number) => setExpanded(p => {
-    const next = new Set(p); next.has(n) ? next.delete(n) : next.add(n); return next;
-  });
-
+  /* render ──────────────────────────────────────────────────────────────── */
   if (loadError) {
-    return <div style={{ padding: 40, fontFamily: MONO, color: C.critBorder }}>
-      Could not load sheet: {loadError}
-    </div>;
+    return (
+      <div className="st"><div className="st-work st-work--solo">
+        <div className="st-banner st-banner--crit" role="alert">
+          <AlertTriangle aria-hidden="true" />
+          <span><b>This job could not be opened.</b> {loadError}{" "}<Link to="/stallion/sheets">Back to the docket</Link></span>
+        </div>
+      </div></div>
+    );
   }
   if (!sheet || !refData) {
-    return <div style={{ padding: 40, fontFamily: MONO, color: C.inkLight }}>Loading sheet…</div>;
+    return <div className="st"><div className="st-work st-work--solo"><p className="st-note"><Loader2 className="st-spin" aria-hidden="true" />Opening job…</p></div></div>;
   }
-  const t = sheet.totals || {} as any;
-  const countryName = (code: string) =>
-    refData.countries.find(c => c.code === code)?.label || code;
 
-  const TH = (label: string, w?: number, align: any = "left") => (
-    <th style={{
-      fontFamily: MONO, fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase",
-      color: "#fff", background: C.ink, padding: "8px 7px", textAlign: align,
-      width: w, position: "sticky", top: 0,
-    }}>{label}</th>
-  );
-
-  // Lifecycle: which transitions are offered from the current status.
-  const NEXT: Record<string, { to: string; label: string }[]> = {
-    draft: [{ to: "pending", label: "Submit for review" }],
-    pending: [{ to: "approved", label: "Approve" }, { to: "correction", label: "Send back" }],
-    correction: [{ to: "pending", label: "Re-submit" }],
-    approved: [{ to: "submitted", label: "Mark submitted" }, { to: "correction", label: "Send back" }],
-    submitted: [{ to: "receipted", label: "Mark receipted" }],
-    receipted: [],
-  };
-  const statusColor: Record<string, string> = {
-    draft: C.inkLight, pending: "#B8860B", correction: "#B02020",
-    approved: "#1A5E3A", submitted: "#2A4D8F", receipted: "#5A3A8A",
-  };
-
-  // Lifecycle track shown as a stepper in the status bar.
-  const LIFECYCLE = ["draft", "pending", "approved", "submitted", "receipted"];
-  const curIdx = LIFECYCLE.indexOf(sheet.status);
+  const locked = isLocked(sheet);
+  const missing = new Map<string, "needed" | "check">(
+    (report?.items || []).filter(i => i.status !== "ok" && i.field)
+      .map(i => [i.field!, i.severity === "critical" ? "needed" : "check"]));
+  const showRail = step !== "setup";
 
   return (
-    <div style={{ background: C.paper, minHeight: "100%", padding: 20 }}>
-      {/* ── two-tier status bar: breadcrumb + lifecycle track + actions ── */}
-      <div style={{
-        background: C.void, borderRadius: 8, padding: "14px 18px", marginBottom: 16,
-        display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-      }}>
-        <button onClick={() => nav("/stallion/sheets")} style={{
-          fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "6px 12px", cursor: "pointer",
-          border: `1px solid ${C.voidBorder}`, borderRadius: 4, background: "transparent", color: C.ghost,
-        }}>‹ Declarations</button>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0 }}>
-          <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>
-            {sheet.reference || "(untitled)"}</span>
-          {sheet.consignee && (
-            <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.ghost }}>
-              · {sheet.consignee}</span>
+    <div className="st">
+      <JobBar sheet={sheet} role={user.role} blocking={report?.counts.critical ?? 0} onAdvance={advance} />
+      <StationRail sheet={sheet} step={step} report={report} onPick={goStep} />
+
+      <div className={`st-work${showRail ? "" : " st-work--solo"}`}>
+        <main className="st-main">
+          <StatusBanner sheet={sheet} role={user.role} />
+          {step === "setup" && (
+            <SetupStep sheet={sheet} clients={clients} locked={locked}
+              onPatch={patchHeader} onClient={pickClient} onNext={() => goStep("documents")} />
           )}
-        </div>
-        {/* lifecycle stepper */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
-          {curIdx >= 0 && LIFECYCLE.map((st, i) => (
-            <div key={st} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{
-                fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-                textTransform: "uppercase", padding: "3px 9px", borderRadius: 3,
-                color: i === curIdx ? "#fff" : i < curIdx ? C.ghost : C.ghostDim,
-                background: i === curIdx ? (statusColor[st] || C.inkLight) : "transparent",
-                border: i === curIdx ? "none" : `1px solid ${C.voidBorder}`,
-              }}>{st}</span>
-              {i < LIFECYCLE.length - 1 && (
-                <span style={{ color: i < curIdx ? C.ghost : C.voidBorder, fontSize: 11 }}>›</span>
-              )}
-            </div>
-          ))}
-          {sheet.status === "correction" && (
-            <span style={{
-              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-              textTransform: "uppercase", padding: "3px 9px", borderRadius: 3, color: "#fff",
-              background: statusColor.correction,
-            }}>correction</span>
+          {step === "documents" && (
+            <DocumentsStep sheet={sheet} locked={locked} track={track}
+              onGo={goToField} onNext={() => goStep("verify")} />
           )}
-        </div>
-        {/* action buttons */}
-        {(NEXT[sheet.status] || []).length > 0 && (
-          <div style={{ display: "flex", gap: 8, width: "100%", justifyContent: "flex-end" }}>
-            {(NEXT[sheet.status] || []).map(t => (
-              <button key={t.to} onClick={() => advance(t.to)} style={{
-                fontFamily: MONO, fontSize: 12, fontWeight: 600, padding: "7px 16px", cursor: "pointer",
-                borderRadius: 4, textTransform: "uppercase", letterSpacing: "0.04em",
-                border: t.to === "correction" ? `1px solid ${C.voidBorder}` : "none",
-                background: t.to === "correction" ? "transparent" : C.amberAction,
-                color: t.to === "correction" ? C.ghost : "#fff",
-              }}>{t.label}</button>
-            ))}
-          </div>
-        )}
-      </div>
-      {/* ── header strip ── */}
-      <div style={{
-        background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6,
-        padding: 16, marginBottom: 14,
-      }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-          <Field label="Client">
-            <Select value={sheet.client_id || ""} width={220}
-              options={[{ code: "", label: "— select client —" },
-                ...clients.map(c => ({ code: c.id, label: c.name }))]}
-              onCommit={pickClient} />
-          </Field>
-          <Field label="Consignee"><Cell value={sheet.consignee} mono={false} width={220}
-            onCommit={v => patchHeader({ consignee: v })} /></Field>
-          <Field label="Consignee TIN / Code"><Cell value={sheet.consignee_tin} width={140}
-            onCommit={v => patchHeader({ consignee_tin: v })} /></Field>
-          <Field label="Consignee Address"><Cell value={sheet.consignee_address || ""} mono={false} width={240}
-            onCommit={v => patchHeader({ consignee_address: v })} /></Field>
-          <Field label="Reference #"><Cell value={sheet.reference} width={130}
-            onCommit={v => patchHeader({ reference: v })} /></Field>
-          <Field label="Vessel"><Cell value={sheet.vessel} width={140}
-            onCommit={v => patchHeader({ vessel: v })} /></Field>
-          <Field label="Bill of Lading"><Cell value={sheet.bl_number} width={150}
-            onCommit={v => patchHeader({ bl_number: v })} /></Field>
-          <Field label="B/L Date"><Cell value={sheet.bl_date || ""} type="date" width={150}
-            onCommit={v => patchHeader({ bl_date: v })} /></Field>
-          <Field label="Rotation No"><Cell value={sheet.rotation_no || ""} width={130}
-            onCommit={v => patchHeader({ rotation_no: v })} /></Field>
-          <Field label="Port"><Select value={sheet.port} options={refData.ports} width={170}
-            onCommit={v => patchHeader({ port: v })} /></Field>
-          <Field label="Arrival Date"><Cell value={sheet.arrival_date} type="date" width={150}
-            onCommit={v => patchHeader({ arrival_date: v })} /></Field>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 12 }}>
-          <Field label="Consignor / Supplier"><Cell value={sheet.consignor} mono={false} width={220}
-            onCommit={v => patchHeader({ consignor: v })} /></Field>
-          <Field label="Consignor Address"><Cell value={sheet.consignor_address || ""} mono={false} width={240}
-            onCommit={v => patchHeader({ consignor_address: v })} /></Field>
-          <Field label="Declarant Name"><Cell value={sheet.declarant_name || ""} mono={false} width={180}
-            onCommit={v => patchHeader({ declarant_name: v })} /></Field>
-          <Field label="Declarant TIN"><Cell value={sheet.declarant_tin || ""} width={130}
-            onCommit={v => patchHeader({ declarant_tin: v })} /></Field>
-          <Field label="Invoice No"><Cell value={sheet.invoice_no || ""} width={130}
-            onCommit={v => patchHeader({ invoice_no: v })} /></Field>
-          <Field label="Invoice Date"><Cell value={sheet.invoice_date || ""} type="date" width={150}
-            onCommit={v => patchHeader({ invoice_date: v })} /></Field>
-          <Field label="Currency"><Cell value={sheet.currency || "USD"} width={90}
-            onCommit={v => patchHeader({ currency: v.toUpperCase() })} /></Field>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14 }}>
-          <Field label="Transport Mode">
-            <Select
-              value={String(sheet.mode_of_transport ?? 1)}
-              options={[
-                { code: "1", label: "1 - Sea" },
-                { code: "2", label: "2 - Rail" },
-                { code: "3", label: "3 - Road" },
-                { code: "4", label: "4 - Air" },
-                { code: "5", label: "5 - Mail" },
-                { code: "7", label: "7 - Fixed transport" },
-                { code: "8", label: "8 - Inland waterway" },
-                { code: "9", label: "9 - Own propulsion" },
-              ]}
-              width={170}
-              onCommit={v => patchHeader({ mode_of_transport: Number(v) })}
-            />
-          </Field>
-          <Field label="Incoterm"><Select value={sheet.incoterm} options={refData.incoterms} width={150}
-            onCommit={v => patchHeader({ incoterm: v })} /></Field>
-          <Field label="Exchange Rate"><Cell value={sheet.exchange_rate} type="number" align="right" width={120}
-            onCommit={v => patchHeader({ exchange_rate: Number(v) })} /></Field>
-          <Field label="Freight (USD)"><Cell value={sheet.freight_usd} type="number" align="right" width={120}
-            onCommit={v => patchHeader({ freight_usd: Number(v) })} /></Field>
-          <Field label="Insurance (USD)"><Cell value={sheet.insurance_usd} type="number" align="right" width={120}
-            onCommit={v => patchHeader({ insurance_usd: Number(v) })} /></Field>
-          <Field label="Gross Weight (kg)"><Cell value={sheet.gross_weight} type="number" align="right" width={120}
-            onCommit={v => patchHeader({ gross_weight: Number(v) })} /></Field>
-          <Field label="Total Packages"><Cell value={sheet.total_packages} type="number" align="right" width={110}
-            onCommit={v => patchHeader({ total_packages: Number(v) })} /></Field>
-          <Field label="Customs User Fee"><Cell value={sheet.customs_user_fee} type="number" align="right" width={120}
-            onCommit={v => patchHeader({ customs_user_fee: Number(v) })} /></Field>
-          <Field label="Entry Mode">
-            <Select
-              value={(sheet.entry_mode || "dutiable") as string}
-              options={[
-                { code: "dutiable", label: "Dutiable" },
-                { code: "relieved", label: "Relieved" },
-              ]}
-              width={150}
-              onCommit={v => patchHeader({ entry_mode: v as any })}
-            />
-          </Field>
-          <Field label="Export Country">
-            <Select value={sheet.export_country_code || "US"} options={refData.countries} width={180}
-              onCommit={v => patchHeader({ export_country_code: v, export_country_name: countryName(v) })} />
-          </Field>
-          <Field label="Trading Country">
-            <Select value={sheet.trading_country || "US"} options={refData.countries} width={180}
-              onCommit={v => patchHeader({ trading_country: v })} />
-          </Field>
-          <Field label="First Destination">
-            <Select value={sheet.country_first_destination || "US"} options={refData.countries} width={180}
-              onCommit={v => patchHeader({ country_first_destination: v })} />
-          </Field>
-          <Field label="Origin Name">
-            <Cell value={sheet.country_of_origin_name || "United States"} mono={false} width={170}
-              onCommit={v => patchHeader({ country_of_origin_name: v })} />
-          </Field>
-          <Field label="Bank Code">
-            <Cell value={sheet.bank_code ?? 1} type="number" align="right" width={90}
-              onCommit={v => patchHeader({ bank_code: Number(v) })} />
-          </Field>
-          <Field label="Payment">
-            <Select
-              value={sheet.mode_of_payment || "CASH"}
-              options={[
-                { code: "CASH", label: "CASH" },
-                { code: "CREDIT", label: "CREDIT" },
-                { code: "OTHER", label: "OTHER" },
-              ]}
-              width={120}
-              onCommit={v => patchHeader({ mode_of_payment: v })}
-            />
-          </Field>
-          <Field label="Terms Code">
-            <Cell value={sheet.terms_code ?? 99} type="number" align="right" width={95}
-              onCommit={v => patchHeader({ terms_code: Number(v) })} />
-          </Field>
-          <Field label="Terms Desc">
-            <Cell value={sheet.terms_description || "Basic"} width={130}
-              onCommit={v => patchHeader({ terms_description: v })} />
-          </Field>
-          <div style={{
-            display: "flex", flexDirection: "column", gap: 3, justifyContent: "flex-end",
-            padding: "0 12px", background: C.amber, borderRadius: 4, border: `1px solid ${C.warnBorder}`,
-          }}>
-            <label style={{ fontFamily: MONO, fontSize: 9, color: C.amberText, textTransform: "uppercase", paddingTop: 6 }}>
-              CIF Factor</label>
-            <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: C.amberText, paddingBottom: 6 }}>
-              {(sheet.cif_factor ?? 0).toFixed(12)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── C84 concession panel (shown for C84 declarations) ── */}
-      {(sheet.declaration_type === "c84" || sheet.concession?.active) &&
-        (refData.concessions?.length ?? 0) > 0 && (
-        <ConcessionHeaderPanel sheet={sheet} refData={refData} onPatch={patchConcession} />
-      )}
-
-      {/* ── grid + sticky duty rail: true two-column layout ── */}
-      <div style={{ display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
-      {/* ── line grid (left column) ── */}
-      <div style={{ flex: "1 1 520px", minWidth: 0, background: "#fff", border: `1px solid ${C.paperBorder}`, borderRadius: 6, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              {TH("", 28)}{TH("#", 32, "center")}
-              {TH("Description & HS Code")}{TH("EX-WORKS", 90, "right")}{TH("Freight", 80, "right")}
-              {TH("CIF USD", 90, "right")}{TH("CIF TTD", 100, "right")}
-              {TH("Duty %", 60, "center")}{TH("Duty", 90, "right")}{TH("VAT", 90, "right")}
-              {TH("Total Tax", 100, "right")}
-            </tr>
-          </thead>
-          <tbody>
-            {sheet.lines.map((ln, i) => {
-              const cellTd: React.CSSProperties = { padding: "3px 5px", borderBottom: `1px solid ${C.paperAlt}`, verticalAlign: "middle" };
-              const num = (v: number) => (
-                <td style={{ ...cellTd, textAlign: "right", fontFamily: MONO, fontSize: 12, color: C.inkMid }}>{fmt(v)}</td>
-              );
-              return (
-                <>
-                  <tr key={ln.id} style={{ background: i % 2 ? C.paperAlt + "55" : "#fff" }}>
-                    <td style={{ ...cellTd, textAlign: "center" }}>
-                      <button onClick={() => toggle(ln.line_no)} title="More fields"
-                        style={{ border: "none", background: "none", cursor: "pointer", color: C.gold, fontSize: 13 }}>
-                        {expanded.has(ln.line_no) ? "▾" : "▸"}</button>
-                    </td>
-                    <td style={{ ...cellTd, textAlign: "center", fontFamily: MONO, fontSize: 11, color: C.inkLight }}>{ln.line_no}</td>
-                    <td style={{ ...cellTd, minWidth: 320 }}>
-                      <HsClassifyCell
-                        line={ln}
-                        onUpdate={p => patchLine(ln.line_no, p)}
-                        onReload={() => getSheet(sheetId).then(setSheet)}
-                      />
-                    </td>
-                    <td style={cellTd}><Cell value={ln.exworks_usd} type="number" align="right"
-                      onCommit={v => patchLine(ln.line_no, { exworks_usd: Number(v) })} /></td>
-                    {num(ln.freight_usd)}{num(ln.cif_usd)}{num(ln.cif_ttd)}
-                    <td style={cellTd}><Cell value={ln.duty_pct} type="number" align="center"
-                      onCommit={v => patchLine(ln.line_no, { duty_pct: Number(v) })} /></td>
-                    {num(ln.duty)}{num(ln.vat)}
-                    <td style={{ ...cellTd, textAlign: "right", fontFamily: MONO, fontSize: 12, fontWeight: 700, color: C.ink }}>
-                      {fmt(ln.total_tax)}
-                      <button onClick={() => removeRow(ln.line_no)} title="Delete line"
-                        style={{ border: "none", background: "none", cursor: "pointer", color: "#B02020", marginLeft: 8 }}>×</button>
-                    </td>
-                  </tr>
-                  {expanded.has(ln.line_no) &&
-                    <RowDrawer key={ln.id + "-d"} line={ln} refData={refData}
-                      onUpdate={p => patchLine(ln.line_no, p)} />}
-                </>
-              );
-            })}
-          </tbody>
-        </table>
-        </div>
-        <button onClick={addRow} style={{
-          width: "100%", padding: "10px", fontFamily: MONO, fontSize: 12, cursor: "pointer",
-          border: "none", borderTop: `1px solid ${C.paperBorder}`, background: C.paperAlt, color: C.inkMid,
-        }}>+ Add line</button>
-      </div>
-
-      {/* ── sticky dark duty rail (right column) ── */}
-        <div style={{
-          width: 264, flexShrink: 0, position: "sticky", top: 16,
-          background: C.void, borderRadius: 8, padding: "18px 18px", color: C.ghost,
-        }}>
-          <div style={{
-            fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: C.ghostDim, marginBottom: 14,
-          }}>Duties &amp; Totals</div>
-
-          {[["Total CIF", t.cif_ttd], ["Import Duty", t.duty], ["Surcharge", t.surcharge],
-            ...((t.mvt ?? 0) > 0 ? [["Motor Vehicle Tax", t.mvt] as [string, number]] : []),
-            ["VAT", t.vat], ["Customs User Fee", t.customs_user_fee]].map(([l, v]) => (
-            <div key={l as string} style={{
-              display: "flex", justifyContent: "space-between", marginBottom: 9,
-              fontFamily: MONO, fontSize: 11, fontWeight: 600,
-            }}>
-              <span style={{ color: C.ghostDim }}>{l}</span>
-              <span style={{ color: "#fff" }}>{fmt(v as number)}</span>
-            </div>
-          ))}
-
-          {(t.relief_total ?? 0) > 0 && (
-            <div style={{
-              display: "flex", justifyContent: "space-between", marginBottom: 9,
-              fontFamily: MONO, fontSize: 11, fontWeight: 700,
-            }}>
-              <span style={{ color: "#5DCAA5" }}>C84 Relief (R)</span>
-              <span style={{ color: "#5DCAA5" }}>− {fmt(t.relief_total)}</span>
-            </div>
+          {step === "verify" && (
+            <VerifyStep sheet={sheet} refData={refData} clients={clients} locked={locked}
+              report={report} missing={missing} onGo={goToField}
+              onPatch={patchHeader} onConcession={patchConcession} onClient={pickClient}
+              onPatchLine={patchLine} onAddLine={addRow} onDeleteLine={removeRow} onReload={reload}
+              onNext={() => goStep("outputs")} />
           )}
-
-          <div style={{ height: 1, background: C.voidBorder, margin: "14px 0" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 18 }}>
-            <span style={{
-              fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em",
-              textTransform: "uppercase", color: C.ghostDim,
-            }}>Payable</span>
-            <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 700, color: C.amberAction, letterSpacing: "-0.01em" }}>
-              {fmt(t.total_payable)}</span>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input ref={fileRef} type="file" hidden accept=".pdf,.png,.jpg,.jpeg"
-              onChange={e => e.target.files?.[0] && onUpload(e.target.files[0])} />
-            <button onClick={() => fileRef.current?.click()} style={railBtn(C, "ghost")}>Upload documents</button>
-            <SecureDownloadLink href={worksheetUrl(sheetId)} style={{ ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none" }}>
-              Download worksheet</SecureDownloadLink>
-            {(sheet.declaration_type === "c84" || sheet.concession?.active ||
-              sheet.lines?.some(l => l.concession_code)) && (
-              <SecureDownloadLink href={c84WorksheetUrl(sheetId)} style={{
-                ...railBtn(C, "ghost"), textAlign: "center", textDecoration: "none",
-                borderColor: "#2E7D52", color: "#5DCAA5",
-              }}>Download C84 claim</SecureDownloadLink>
-            )}
-            <button onClick={runPresubmission} disabled={checking} style={railBtn(C, "solid")}>
-              {checking ? "Checking…" : "Generate C82 XML"}</button>
-          </div>
-        </div>
+          {step === "outputs" && (
+            <OutputsStep sheet={sheet} refData={refData} report={report} role={user.role} locked={locked}
+              onGo={goToField} onPatch={patchHeader} settle={settle} onAdvance={advance} />
+          )}
+        </main>
+        {showRail && <DutyRail sheet={sheet} />}
       </div>
-
-      {checklist && (
-        <ChecklistModal
-          report={checklist.report}
-          mode={checklist.mode}
-          onClose={() => setChecklist(null)}
-          onProceed={() => {
-            const wasPresub = checklist.mode === "presubmission";
-            setChecklist(null);
-            if (wasPresub) setShowGen(true);  // proceed to XML generation
-            // extraction mode: "Start working" just closes — sheet is already populated
-          }}
-        />
-      )}
-
-      {showGen && <GenerateModal sheet={sheet} refData={refData}
-        onClose={() => setShowGen(false)} onGenerate={onGenerate} />}
     </div>
   );
 }
 
-function btn(c: typeof C, kind: "solid" | "outline"): React.CSSProperties {
-  return {
-    fontFamily: MONO, fontSize: 12, padding: "11px 16px", cursor: "pointer", borderRadius: 4,
-    border: kind === "solid" ? "none" : `1px solid ${c.paperMid}`,
-    background: kind === "solid" ? c.ink : "#fff",
-    color: kind === "solid" ? "#fff" : c.ink,
+/* ── job bar ─────────────────────────────────────────────────────────────── */
+function JobBar({ sheet, role, blocking, onAdvance }: {
+  sheet: Sheet; role: ReturnType<typeof currentUser>["role"]; blocking: number;
+  onAdvance: (t: Transition, extra: { notes?: string; receipt_number?: string }) => Promise<void>;
+}) {
+  const status = normStatus(sheet.status);
+  const moves = transitionsFor(status, role);
+  const [confirm, setConfirm] = useState<Transition | null>(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const start = (t: Transition) => {
+    if (t.needs) { setConfirm(t); setText(""); return; }
+    setBusy(true);
+    onAdvance(t, {}).finally(() => setBusy(false));
   };
+  const finish = async () => {
+    if (!confirm) return;
+    if (confirm.needs === "receipt" && !text.trim()) return;
+    setBusy(true);
+    await onAdvance(confirm, confirm.needs === "receipt" ? { receipt_number: text.trim() } : { notes: text.trim() });
+    setBusy(false);
+    setConfirm(null);
+  };
+
+  return (
+    <>
+      <div className="st-jobbar st-on-dark">
+        <div className="st-jobbar__in">
+          <Link className="st-jobbar__back" to="/stallion/sheets"><ArrowLeft aria-hidden="true" />Docket</Link>
+          <div className="st-jobbar__id">
+            <h1 className="st-jobbar__ref" style={{ margin: 0 }}>{sheet.reference || "Untitled job"}</h1>
+            <span className="st-jobbar__type">{typeLabel(sheet)}</span>
+            {sheet.consignee && <span className="st-jobbar__who">{sheet.consignee}</span>}
+          </div>
+          <div className="st-jobbar__right">
+            <div className="st-jobbar__pay">
+              <span>Payable TT$</span>
+              <b>{money(sheet.totals?.total_payable)}</b>
+            </div>
+            <StatusChip status={sheet.status} />
+            {blocking > 0 && moves.some(t => t.to === "pending") && (
+              <span className="st-jobbar__hint" role="note">
+                <AlertTriangle aria-hidden="true" />{blocking} blocking item{blocking === 1 ? "" : "s"} open
+              </span>
+            )}
+            {moves.length > 0 && (
+              <div className="st-jobbar__actions">
+                {moves.map(t => (
+                  <button key={t.to} type="button" disabled={busy}
+                    className={`st-btn ${t.tone === "primary" ? "st-btn--primary" : "st-btn--on-dark"}`}
+                    aria-expanded={t.needs ? confirm?.to === t.to : undefined}
+                    onClick={() => start(t)}>{t.label}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      {confirm && (
+        <form className="st-confirm st-on-dark" onSubmit={e => { e.preventDefault(); finish(); }}>
+          <div className="st-confirm__in">
+            <div className="st-field">
+              <label htmlFor="confirm-text">
+                {confirm.needs === "receipt" ? "Customs receipt number" : "What needs fixing? The clerk sees this note."}
+              </label>
+              {confirm.needs === "receipt" ? (
+                <input id="confirm-text" className="st-input" autoFocus value={text} onChange={e => setText(e.target.value)} />
+              ) : (
+                <textarea id="confirm-text" className="st-textarea prose" rows={2} autoFocus value={text}
+                  onChange={e => setText(e.target.value)} />
+              )}
+            </div>
+            <button type="button" className="st-btn st-btn--on-dark" onClick={() => setConfirm(null)}>Cancel</button>
+            <button type="submit" className="st-btn st-btn--primary"
+              disabled={busy || (confirm.needs === "receipt" && !text.trim())}>
+              {confirm.needs === "receipt" ? "Record receipt" : "Send back"}
+            </button>
+          </div>
+        </form>
+      )}
+    </>
+  );
 }
 
-function railBtn(c: typeof C, kind: "solid" | "ghost"): React.CSSProperties {
-  return {
-    fontFamily: MONO, fontSize: 10, fontWeight: 600, padding: kind === "solid" ? "10px 12px" : "9px 12px",
-    cursor: "pointer", borderRadius: 4, letterSpacing: "0.06em", textTransform: "uppercase",
-    textAlign: "center" as const, display: "block",
-    border: kind === "solid" ? "none" : `1px solid ${c.voidBorder}`,
-    background: kind === "solid" ? c.amberAction : "transparent",
-    color: kind === "solid" ? "#fff" : c.ghost,
+function StatusBanner({ sheet, role }: { sheet: Sheet; role: ReturnType<typeof currentUser>["role"] }) {
+  const status = normStatus(sheet.status);
+  const reviewer = role === "broker" || role === "admin";
+  if (status === "correction") {
+    const last = [...(sheet.status_history || [])].reverse().find(h => h.to === "correction");
+    return (
+      <div className="st-banner st-banner--crit" role="status">
+        <AlertTriangle aria-hidden="true" />
+        <span><b>Sent back{last?.actor ? ` by ${last.actor}` : ""}.</b>{" "}
+          {last?.notes ? <>“{last.notes}”</> : "Fix the flagged items and re-submit for review."}</span>
+      </div>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <div className="st-banner st-banner--warn" role="status">
+        <AlertTriangle aria-hidden="true" />
+        <span>{reviewer ? <><b>Waiting on your review.</b> Approve it or send it back from the bar above.</>
+          : <><b>With the broker for review.</b> You can still correct it while it waits.</>}</span>
+      </div>
+    );
+  }
+  if (isLocked(sheet)) {
+    return (
+      <div className="st-banner st-banner--info" role="status">
+        <Lock aria-hidden="true" />
+        <span><b>{STATUS_LABEL[status]}. Editing is locked.</b>{" "}
+          {status === "approved" ? (reviewer ? "Send it back to make changes." : "Ask the broker to send it back for changes.")
+            : status === "submitted" ? "This declaration is with Customs." : `Receipt ${sheet.receipt_number || "recorded"}.`}</span>
+      </div>
+    );
+  }
+  return null;
+}
+
+/* ── station rail ────────────────────────────────────────────────────────── */
+function StationRail({ sheet, step, report, onPick }: {
+  sheet: Sheet; step: StationKey; report: ChecklistReport | null; onPick: (k: StationKey) => void;
+}) {
+  const done = stationsDone(sheet);
+  const n = (sheet.lines || []).length;
+  const crit = report?.counts.critical ?? 0;
+  const warn = report?.counts.warn ?? 0;
+  const status = normStatus(sheet.status);
+  const rail = useRef<HTMLDivElement>(null);
+  // On narrow screens the rail scrolls; keep the active station in view.
+  useEffect(() => {
+    const el = rail.current?.querySelector<HTMLElement>('[aria-current="step"]');
+    const box = rail.current;
+    if (el && box && box.scrollWidth > box.clientWidth) {
+      box.scrollTo({ left: el.offsetLeft - (box.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
+    }
+  }, [step]);
+  const sub: Record<StationKey, string> = {
+    setup: done.setup ? typeLabel(sheet) : "Reference needed",
+    documents: n ? `${n} line${n === 1 ? "" : "s"} on the job` : "Upload invoice / BL",
+    verify: !report ? (done.verify ? "Done" : "Fill the gaps") : crit ? `${crit} blocking` : warn ? `${warn} to check` : "Nothing missing",
+    outputs: status === "draft" || status === "correction" ? "Worksheet · XML" : STATUS_LABEL[status],
   };
+  return (
+    <nav className="st-stations" aria-label="Job stations">
+      <div className="st-stations__in" ref={rail}>
+        {STATIONS.map((s, i) => {
+          const isDone = done[s.key] && !(s.key === "verify" && crit > 0);
+          return (
+            <button key={s.key} type="button" onClick={() => onPick(s.key)}
+              className={`st-station${isDone ? " is-done" : ""}${s.key === "verify" && crit > 0 ? " is-attn" : ""}`}
+              aria-current={step === s.key ? "step" : undefined}>
+              <span className="st-station__pip" aria-hidden="true">{isDone && step !== s.key ? <Check /> : i + 1}</span>
+              <span>
+                <span className="st-station__name">{s.label}</span>
+                <span className="st-station__sub">{sub[s.key]}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function StepHead({ title, lede, aside }: { title: string; lede: ReactNode; aside?: ReactNode }) {
+  return (
+    <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
+      <div>
+        <h2 className="st-step-title">{title}</h2>
+        <p className="st-step-lede">{lede}</p>
+      </div>
+      {aside}
+    </header>
+  );
+}
+
+/* ── 1 · setup ───────────────────────────────────────────────────────────── */
+function SetupStep({ sheet, clients, locked, onPatch, onClient, onNext }: {
+  sheet: Sheet; clients: Client[]; locked: boolean;
+  onPatch: (p: Partial<Sheet>) => Promise<void>; onClient: (id: string) => Promise<void>; onNext: () => void;
+}) {
+  const setType = (dt: string) => {
+    const c = DECL_CHOICES.find(x => x.declaration_type === dt);
+    if (c) onPatch({ declaration_type: c.declaration_type, customs_regime: c.regime }).catch(() => {});
+  };
+  const manual = choiceFor(sheet).key === "manual";
+  return (
+    <>
+      <StepHead title="Set up the job" lede="The reference number and declaration type decide where this job lives and which outputs it produces." />
+      <fieldset className="st-fieldset" disabled={locked}>
+        <section className="st-panel">
+          <div className="st-panel__body" style={{ paddingTop: 22 }}>
+            <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+              <TextField label="Reference number" fieldKey="reference" value={sheet.reference}
+                flag={sheet.reference?.trim() ? undefined : "needed"} onCommit={v => onPatch({ reference: v.trim() })} />
+              <SelectField label="Client" value={sheet.client_id || ""} placeholder="No saved client"
+                options={clients.map(c => ({ code: c.id, label: c.name }))} onCommit={onClient}
+                hint="Picking a client fills the consignee, TIN and address." />
+            </div>
+            <div className="st-subhead">Declaration type</div>
+            <TypePicker value={sheet.declaration_type || "import_c82"} onChange={setType} disabled={locked} />
+          </div>
+          <div className="st-panel__foot">
+            <button type="button" className="st-btn st-btn--primary" onClick={onNext} disabled={!sheet.reference?.trim()}>
+              {manual ? "Continue" : "Continue to documents"}<ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+      </fieldset>
+    </>
+  );
+}
+
+/* ── 2 · documents ───────────────────────────────────────────────────────── */
+type Upload = { id: number; name: string; state: "queued" | "extracting" | "done" | "failed"; note?: string };
+
+function DocumentsStep({ sheet, locked, track, onGo, onNext }: {
+  sheet: Sheet; locked: boolean; track: (fn: () => Promise<Sheet>) => Promise<Sheet>;
+  onGo: (f: string) => void; onNext: () => void;
+}) {
+  const [uploads, setUploads] = useState<Upload[]>([]);
+  const [lastReport, setLastReport] = useState<ChecklistReport | null>(null);
+  const [over, setOver] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const seq = useRef(0);
+  const running = useRef(false);
+  const queue = useRef<{ id: number; file: File }[]>([]);
+  const n = (sheet.lines || []).length;
+
+  const pump = useCallback(async () => {
+    if (running.current) return;
+    running.current = true;
+    while (queue.current.length) {
+      const job = queue.current.shift()!;
+      setUploads(u => u.map(x => x.id === job.id ? { ...x, state: "extracting" } : x));
+      try {
+        let report: ChecklistReport | null = null;
+        const s = await track(async () => {
+          const out = await uploadExtract(sheet.id, job.file);
+          report = out.report;
+          return out.sheet;
+        });
+        const added = (s.lines || []).length;
+        setLastReport(report);
+        setUploads(u => u.map(x => x.id === job.id ? { ...x, state: "done", note: `${added} line${added === 1 ? "" : "s"} on the job` } : x));
+      } catch (e) {
+        setUploads(u => u.map(x => x.id === job.id ? { ...x, state: "failed", note: errMsg(e, "Extraction failed") } : x));
+      }
+    }
+    running.current = false;
+  }, [sheet.id, track]);
+
+  const add = (files: FileList | File[] | null) => {
+    if (!files || locked) return;
+    const list = Array.from(files).filter(f => /\.(pdf|png|jpe?g)$/i.test(f.name));
+    if (!list.length) { toast.error("Upload a PDF, PNG or JPG."); return; }
+    const jobs = list.map(file => ({ id: ++seq.current, file }));
+    queue.current.push(...jobs);
+    setUploads(u => [...u, ...jobs.map(j => ({ id: j.id, name: j.file.name, state: "queued" as const }))]);
+    pump();
+  };
+
+  const busy = uploads.some(u => u.state === "queued" || u.state === "extracting");
+  const manual = choiceFor(sheet).key === "manual";
+
+  return (
+    <>
+      <StepHead title="Upload the documents"
+        lede={<>Commercial invoice, bill of lading or airway bill. Stallion reads each one, adds its line items to this job and fills the header fields it finds.{manual && " This is a manual worksheet, so documents are optional."}</>}
+        aside={<span className="st-panel__aside">{n} line{n === 1 ? "" : "s"} on the job</span>} />
+
+      {!locked && (
+        <section className="st-panel">
+          <div className="st-panel__body" style={{ paddingTop: 22 }}>
+            <label className={`st-drop${over ? " is-over" : ""}`}
+              onDragOver={e => { e.preventDefault(); setOver(true); }}
+              onDragLeave={() => setOver(false)}
+              onDrop={e => { e.preventDefault(); setOver(false); add(e.dataTransfer.files); }}>
+              <UploadCloud aria-hidden="true" />
+              <strong>Drop documents here</strong>
+              <span>or click to choose · PDF, PNG, JPG · one or several</span>
+              <input ref={input} type="file" multiple accept=".pdf,.png,.jpg,.jpeg" className="sr-only"
+                onChange={e => { add(e.target.files); e.target.value = ""; }} />
+            </label>
+            {uploads.length > 0 && (
+              <ul className="st-files" aria-live="polite">
+                {uploads.map(u => (
+                  <li key={u.id} className={`st-file is-${u.state}`}>
+                    {u.state === "extracting" ? <Loader2 className="st-spin" aria-hidden="true" />
+                      : u.state === "done" ? <Check aria-hidden="true" style={{ color: "var(--ok)" }} />
+                      : u.state === "failed" ? <X aria-hidden="true" style={{ color: "var(--crit)" }} />
+                      : <FileText aria-hidden="true" style={{ color: "var(--ink-3)" }} />}
+                    <span className="st-file__name">{u.name}</span>
+                    <span className="st-file__state">
+                      {u.state === "queued" ? "Waiting" : u.state === "extracting" ? "Reading…" : u.note}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      )}
+
+      {lastReport && (
+        <section className="st-panel" aria-labelledby="extract-title">
+          <div className="st-panel__head">
+            <h3 id="extract-title" className="st-panel__title">What the last document gave us</h3>
+            <span className="st-counts">
+              {lastReport.confidence !== null && lastReport.confidence !== undefined && (
+                <span className="st-count"><b>{Math.round(lastReport.confidence * 100)}%</b> confidence</span>
+              )}
+              <Counts critical={lastReport.counts.critical} warn={lastReport.counts.warn} ok={lastReport.counts.ok} />
+            </span>
+          </div>
+          <div className="st-panel__body">
+            <Checklist items={lastReport.items} onGo={onGo} />
+          </div>
+        </section>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, flexWrap: "wrap" }}>
+        {n === 0 && !busy && (
+          <button type="button" className="st-btn st-btn--ghost" onClick={onNext}>No documents? Enter lines by hand</button>
+        )}
+        <button type="button" className="st-btn st-btn--primary" onClick={onNext} disabled={busy || (n === 0 && !manual)}>
+          {busy ? "Reading documents…" : "Continue to verify"}<ChevronRight aria-hidden="true" />
+        </button>
+      </div>
+    </>
+  );
+}
+
+/* ── 3 · verify ──────────────────────────────────────────────────────────── */
+function VerifyStep(p: {
+  sheet: Sheet; refData: RefData; clients: Client[]; locked: boolean;
+  report: ChecklistReport | null; missing: Map<string, "needed" | "check">; onGo: (f: string) => void;
+  onPatch: (x: Partial<Sheet>) => Promise<void>; onConcession: (x: Partial<Concession>) => Promise<void>;
+  onClient: (id: string) => Promise<void>;
+  onPatchLine: (n: number, x: Partial<SheetLine>) => Promise<void>; onAddLine: () => Promise<void>; onDeleteLine: (n: number) => void;
+  onReload: () => Promise<void>; onNext: () => void;
+}) {
+  const { sheet: s, refData: r, missing: m, onPatch } = p;
+  const num = (k: keyof Sheet) => (v: string) => onPatch({ [k]: Number(v) } as Partial<Sheet>);
+  const txt = (k: keyof Sheet) => (v: string) => onPatch({ [k]: v } as Partial<Sheet>);
+  const countryName = (code: string) => r.countries.find(c => c.code === code)?.label || code;
+  const open = (p.report?.items || []).filter(i => i.status !== "ok");
+  const showConcession = (s.declaration_type === "c84" || s.concession?.active) && (r.concessions?.length ?? 0) > 0;
+
+  return (
+    <>
+      <StepHead title="Fill the gaps and verify"
+        lede="Anything extraction missed is flagged. Every figure on the right is recalculated by the server as you save." />
+
+      {p.report && (
+        <section className="st-panel" aria-labelledby="attn-title">
+          <div className="st-panel__head">
+            <h3 id="attn-title" className="st-panel__title">
+              {open.length === 0 ? "Nothing missing" : p.report.counts.critical ? "Needs your attention" : "Worth a second look"}
+            </h3>
+            <Counts critical={p.report.counts.critical} warn={p.report.counts.warn} />
+          </div>
+          <div className="st-panel__body">
+            {open.length ? <Checklist items={p.report.items} hideOk onGo={p.onGo} />
+              : <p className="st-note" style={{ margin: 0 }}><Check aria-hidden="true" style={{ color: "var(--ok)" }} />The pre-submission check found nothing blocking. Head to Outputs when you're ready.</p>}
+          </div>
+        </section>
+      )}
+
+      <fieldset className="st-fieldset" disabled={p.locked}>
+        <section className="st-panel">
+          <div className="st-panel__body" style={{ paddingTop: 22 }}>
+            <div className="st-subhead">Parties</div>
+            <div className="st-grid">
+              <SelectField label="Client" value={s.client_id || ""} placeholder="No saved client"
+                options={p.clients.map(c => ({ code: c.id, label: c.name }))} onCommit={p.onClient} />
+              <TextField label="Consignee" fieldKey="consignee" prose flag={m.get("consignee")} value={s.consignee} onCommit={txt("consignee")} />
+              <TextField label="Consignee TIN / code" fieldKey="consignee_tin" value={s.consignee_tin} onCommit={txt("consignee_tin")} />
+              <TextField label="Consignee address" className="span-2" prose value={s.consignee_address || ""} onCommit={txt("consignee_address")} />
+              <TextField label="Consignor / supplier" fieldKey="consignor" prose flag={m.get("consignor")} value={s.consignor} onCommit={txt("consignor")} />
+              <TextField label="Consignor address" className="span-2" prose value={s.consignor_address || ""} onCommit={txt("consignor_address")} />
+              <TextField label="Declarant name" prose value={s.declarant_name || ""} onCommit={txt("declarant_name")} />
+              <TextField label="Declarant TIN" value={s.declarant_tin || ""} onCommit={txt("declarant_tin")} />
+            </div>
+
+            <div className="st-subhead">Shipment</div>
+            <div className="st-grid">
+              <TextField label="Vessel / flight" value={s.vessel} onCommit={txt("vessel")} />
+              <TextField label="Bill of lading / AWB" fieldKey="bl_number" flag={m.get("bl_number")} value={s.bl_number} onCommit={txt("bl_number")} />
+              <TextField label="B/L date" type="date" value={s.bl_date || ""} onCommit={txt("bl_date")} />
+              <TextField label="Rotation no." value={s.rotation_no || ""} onCommit={txt("rotation_no")} />
+              <SelectField label="Port" fieldKey="port" flag={m.get("port")} value={s.port} options={r.ports}
+                placeholder="Select port" onCommit={txt("port")} />
+              <TextField label="Arrival date" fieldKey="arrival_date" type="date" flag={m.get("arrival_date")} value={s.arrival_date} onCommit={txt("arrival_date")} />
+              <SelectField label="Transport mode" value={s.mode_of_transport ?? ""} options={TRANSPORT_MODES}
+                placeholder="Select mode" onCommit={v => onPatch({ mode_of_transport: Number(v) })} />
+            </div>
+
+            <div className="st-subhead">Invoice &amp; valuation</div>
+            <div className="st-grid">
+              <TextField label="Invoice no." fieldKey="invoice_no" flag={m.get("invoice_no")} value={s.invoice_no || ""} onCommit={txt("invoice_no")} />
+              <TextField label="Invoice date" type="date" value={s.invoice_date || ""} onCommit={txt("invoice_date")} />
+              <TextField label="Currency" fieldKey="currency" flag={m.get("currency")} value={s.currency || ""} onCommit={v => onPatch({ currency: v.toUpperCase() })} />
+              <SelectField label="Incoterm" fieldKey="incoterm" flag={m.get("incoterm")} value={s.incoterm} options={r.incoterms}
+                placeholder="Select incoterm" onCommit={txt("incoterm")} />
+              <TextField label="Exchange rate" type="number" align="right" value={s.exchange_rate} onCommit={num("exchange_rate")} />
+              <TextField label="Freight USD" fieldKey="freight_usd" type="number" align="right" flag={m.get("freight_usd")} value={s.freight_usd} onCommit={num("freight_usd")} />
+              <TextField label="Insurance USD" type="number" align="right" value={s.insurance_usd} onCommit={num("insurance_usd")} />
+              <TextField label="Gross weight kg" type="number" align="right" value={s.gross_weight} onCommit={num("gross_weight")} />
+              <TextField label="Total packages" type="number" align="right" value={s.total_packages} onCommit={num("total_packages")} />
+              <TextField label="Customs user fee" type="number" align="right" value={s.customs_user_fee} onCommit={num("customs_user_fee")} />
+              <SelectField label="Entry mode" value={s.entry_mode || "dutiable"}
+                options={[{ code: "dutiable", label: "Dutiable" }, { code: "relieved", label: "Relieved" }]}
+                onCommit={v => onPatch({ entry_mode: v as Sheet["entry_mode"] })} />
+              <div className="st-readout">
+                <span className="st-label">CIF factor</span>
+                <b>{(s.cif_factor ?? 0).toFixed(12)}</b>
+              </div>
+            </div>
+
+            <div className="st-subhead">Countries &amp; payment</div>
+            <div className="st-grid">
+              <SelectField label="Export country" value={s.export_country_code || ""} options={r.countries} placeholder="Select country"
+                onCommit={v => onPatch({ export_country_code: v, export_country_name: countryName(v) })} />
+              <SelectField label="Trading country" value={s.trading_country || ""} options={r.countries} placeholder="Select country"
+                onCommit={txt("trading_country")} />
+              <SelectField label="First destination" value={s.country_first_destination || ""} options={r.countries} placeholder="Select country"
+                onCommit={txt("country_first_destination")} />
+              <TextField label="Origin name" prose value={s.country_of_origin_name || ""} onCommit={txt("country_of_origin_name")} />
+              <TextField label="Bank code" type="number" align="right" value={s.bank_code ?? ""} onCommit={num("bank_code")} />
+              <SelectField label="Payment" value={s.mode_of_payment || ""} placeholder="Select"
+                options={[{ code: "CASH", label: "CASH" }, { code: "CREDIT", label: "CREDIT" }, { code: "OTHER", label: "OTHER" }]}
+                onCommit={txt("mode_of_payment")} />
+              <TextField label="Terms code" type="number" align="right" value={s.terms_code ?? ""} onCommit={num("terms_code")} />
+              <TextField label="Terms description" value={s.terms_description || ""} onCommit={txt("terms_description")} />
+            </div>
+          </div>
+        </section>
+
+        {showConcession && <ConcessionPanel sheet={s} refData={r} onPatch={p.onConcession} />}
+
+        <section className="st-panel" aria-labelledby="lines-title">
+          <div className="st-panel__head">
+            <h3 id="lines-title" className="st-panel__title">Line items</h3>
+            <span className="st-panel__aside">Open a line for CPC, origin, packages and concession</span>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <LinesTable lines={s.lines || []} refData={r} locked={p.locked}
+              onPatch={p.onPatchLine} onAdd={p.onAddLine} onDelete={p.onDeleteLine} onReload={p.onReload} />
+          </div>
+        </section>
+      </fieldset>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button type="button" className="st-btn st-btn--primary" onClick={p.onNext}>
+          Continue to outputs<ChevronRight aria-hidden="true" />
+        </button>
+      </div>
+    </>
+  );
+}
+
+function ConcessionPanel({ sheet, refData, onPatch }: {
+  sheet: Sheet; refData: RefData; onPatch: (p: Partial<Concession>) => Promise<void>;
+}) {
+  const c = sheet.concession || ({} as Concession);
+  const relief = sheet.totals?.relief_total ?? 0;
+  return (
+    <section className="st-panel" aria-labelledby="c84-title">
+      <div className="st-panel__head">
+        <h3 id="c84-title" className="st-panel__title">C84 concession</h3>
+        {relief > 0 && <span className="mono" style={{ color: "var(--ok)", fontWeight: 700 }}>Total relief TT$ {money(relief)}</span>}
+        <p className="st-panel__lede">Set the concession per line in each line's drawer. Vehicle relief caps are defaults; confirm them against the current Customs notice before filing.</p>
+      </div>
+      <div className="st-panel__body">
+        <div className="st-grid">
+          <SelectField label="Primary concession" className="span-2" value={c.code || ""} placeholder="Select concession"
+            options={(refData.concessions || []).map(x => ({ code: x.code, label: x.label }))}
+            onCommit={v => onPatch({ code: v, active: !!v })} />
+          <TextField label="Beneficiary name" prose value={c.beneficiary_name || ""} onCommit={v => onPatch({ beneficiary_name: v })} />
+          <TextField label="ID / passport" value={c.beneficiary_id || ""} onCommit={v => onPatch({ beneficiary_id: v })} />
+          <TextField label="C84 no." value={c.declaration_no || ""} onCommit={v => onPatch({ declaration_no: v })} />
+          <TextField label="Approval ref" value={c.approval_ref || ""} onCommit={v => onPatch({ approval_ref: v })} />
+          <TextField label="Return date" type="date" value={c.return_date || ""} onCommit={v => onPatch({ return_date: v })} />
+          <TextField label="Abroad from" value={c.residence_abroad_from || ""} onCommit={v => onPatch({ residence_abroad_from: v })} />
+          <TextField label="Abroad to" value={c.residence_abroad_to || ""} onCommit={v => onPatch({ residence_abroad_to: v })} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── 4 · outputs ─────────────────────────────────────────────────────────── */
+function OutputsStep({ sheet, refData, report, role, locked, onGo, onPatch, settle, onAdvance }: {
+  sheet: Sheet; refData: RefData; report: ChecklistReport | null; role: ReturnType<typeof currentUser>["role"];
+  locked: boolean; onGo: (f: string) => void;
+  onPatch: (p: Partial<Sheet>) => Promise<void>; settle: () => Promise<string>;
+  onAdvance: (t: Transition, extra: { notes?: string; receipt_number?: string }) => Promise<void>;
+}) {
+  const t = sheet.totals || ({} as Sheet["totals"]);
+  const lines = sheet.lines || [];
+  const hasC84 = sheet.declaration_type === "c84" || !!sheet.concession?.active || lines.some(l => l.concession_code);
+  const crit = report?.counts.critical ?? 0;
+  const handoff = transitionsFor(normStatus(sheet.status), role).find(x => x.to === "pending");
+
+  return (
+    <>
+      <StepHead title="Worksheet and XML"
+        lede="Preview what goes to Customs, download the worksheet, and generate the C82 XML." />
+
+      {report && (crit > 0 ? (
+        <section className="st-panel" aria-labelledby="ready-title">
+          <div className="st-panel__head">
+            <h3 id="ready-title" className="st-panel__title">Not ready yet</h3>
+            <Counts critical={crit} warn={report.counts.warn} />
+          </div>
+          <div className="st-panel__body"><Checklist items={report.items.filter(i => i.severity === "critical")} hideOk onGo={onGo} /></div>
+        </section>
+      ) : (
+        <div className="st-banner st-banner--ok" role="status">
+          <Check aria-hidden="true" />
+          <span><b>Pre-submission check passed.</b>{report.counts.warn > 0 && <> {report.counts.warn} item{report.counts.warn === 1 ? "" : "s"} worth a second look on <button type="button" className="st-linkbtn" onClick={() => onGo("lines")}>Verify</button>.</>}</span>
+        </div>
+      ))}
+
+      <section className="st-panel" aria-labelledby="ws-title">
+        <div className="st-panel__head">
+          <h3 id="ws-title" className="st-panel__title">Worksheet preview</h3>
+          <span className="st-panel__aside">Rate of exchange {sheet.exchange_rate ? sheet.exchange_rate.toFixed(4) : "not set"}</span>
+        </div>
+        <div className="st-panel__body">
+          <div className="st-table-wrap">
+            <table className="st-table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Description</th><th>HS code</th><th className="r">CIF TT$</th>
+                  <th className="r">Duty</th><th className="r">Surcharge</th><th className="r">VAT</th><th className="r">Total tax</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lines.length === 0 && (
+                  <tr><td colSpan={8} style={{ padding: 20, textAlign: "center", color: "var(--ink-3)" }}>No lines on this job yet.</td></tr>
+                )}
+                {lines.map(l => (
+                  <tr key={l.id}>
+                    <td className="num">{l.line_no}</td>
+                    <td style={{ maxWidth: 320 }}>{l.description || <span style={{ color: "var(--ink-3)" }}>No description</span>}</td>
+                    <td className="num">{l.hs_code || <span style={{ color: "var(--accent-ink)" }}>missing</span>}</td>
+                    <td className="num r">{money(l.cif_ttd)}</td>
+                    <td className="num r">{money(l.duty)}</td>
+                    <td className="num r">{money(l.surcharge)}</td>
+                    <td className="num r">{money(l.vat)}</td>
+                    <td className="num r strong">{money(l.total_tax)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              {lines.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <td colSpan={3}>Totals</td>
+                    <td className="r">{money(t.cif_ttd)}</td><td className="r">{money(t.duty)}</td>
+                    <td className="r">{money(t.surcharge)}</td><td className="r">{money(t.vat)}</td>
+                    <td className="r">{money(t.payable_taxes)}</td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+        <div className="st-panel__foot" style={{ justifyContent: "space-between" }}>
+          <span className="st-note">Payable incl. user fee: <b className="mono">TT$ {money(t.total_payable)}</b></span>
+          <span style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {hasC84 && (
+              <SecureDownloadLink href={c84WorksheetUrl(sheet.id)} style={DL_RESET}>
+                <span className="st-btn"><FileText aria-hidden="true" />C84 claim</span>
+              </SecureDownloadLink>
+            )}
+            <SecureDownloadLink href={worksheetUrl(sheet.id)} style={DL_RESET}>
+              <span className="st-btn st-btn--ink"><FileSpreadsheet aria-hidden="true" />Download worksheet</span>
+            </SecureDownloadLink>
+          </span>
+        </div>
+      </section>
+
+      <XmlPanel sheet={sheet} refData={refData} locked={locked} onPatch={onPatch} settle={settle} />
+
+      {handoff && (
+        <section className="st-panel">
+          <div className="st-panel__head" style={{ paddingBottom: 18 }}>
+            <div>
+              <h3 className="st-panel__title">Hand it to the broker</h3>
+              <p className="st-panel__lede">{crit > 0 ? "You can submit with blocking items, but the broker will likely send it back." : "The broker reviews the worksheet and XML, then approves or sends it back."}</p>
+            </div>
+            <button type="button" className="st-btn st-btn--primary" onClick={() => onAdvance(handoff, {})}>
+              {handoff.label}<ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+      )}
+    </>
+  );
+}
+
+function XmlPanel({ sheet, refData, locked, onPatch, settle }: {
+  sheet: Sheet; refData: RefData; locked: boolean;
+  onPatch: (p: Partial<Sheet>) => Promise<void>; settle: () => Promise<string>;
+}) {
+  // The declaration-level fields are ordinary saved fields read from the sheet,
+  // so they always show what is stored and can never write back an old value.
+  const [warnings, setWarnings] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<{ xml: string; filename: string; stamp: string } | null>(null);
+  const stamp = sheet.updated_at;
+  // XML is built from the whole job: any saved change after generation makes it stale.
+  const stale = !!result && result.stamp !== stamp;
+  const current = result && !stale ? result : null;
+  const save = (patch: Partial<Sheet>) => { onPatch(patch).catch(() => {}); };
+
+  useEffect(() => {
+    getWarnings(sheet.id).then(r => setWarnings(r.warnings)).catch(() => setWarnings(null));
+  }, [sheet.id, stamp]);
+
+  const generate = async () => {
+    setBusy(true); setError("");
+    try {
+      // Let any save still in flight (a field just blurred, on this station or
+      // the last) land first, then generate from what is stored. No overrides
+      // are sent, so generating never mutates the job.
+      const before = await settle();
+      const out = await fetchXml(sheet.id, {});
+      setResult({ ...out, stamp: before });
+      toast.success("C82 XML generated");
+    } catch (e) {
+      setError(errMsg(e, "XML generation failed"));
+      setResult(null);
+    } finally { setBusy(false); }
+  };
+  const download = () => {
+    if (!current) return;
+    const url = URL.createObjectURL(new Blob([current.xml], { type: "application/xml" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = current.filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+  const copy = () => {
+    if (!current) return;
+    navigator.clipboard?.writeText(current.xml).then(() => toast.success("XML copied")).catch(() => toast.error("Copy failed"));
+  };
+
+  return (
+    <section className="st-panel" aria-labelledby="xml-title">
+      <div className="st-panel__head">
+        <h3 id="xml-title" className="st-panel__title">C82 XML</h3>
+        <span className="st-panel__aside">ASYCUDA SAD</span>
+        <p className="st-panel__lede">{locked
+          ? "This job is locked, so these fields are read-only. Generating reads the stored declaration and changes nothing."
+          : "Confirm the declaration-level fields (they save like any other field), then generate. The XML is previewed here before you download it."}</p>
+      </div>
+      <div className="st-panel__body">
+        {warnings && warnings.length > 0 && (
+          <div className="st-banner st-banner--warn">
+            <AlertTriangle aria-hidden="true" />
+            <span>
+              <b>{warnings.length} issue{warnings.length === 1 ? "" : "s"} could make the declaration wrong.</b> The XML still generates.
+              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>{warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+            </span>
+          </div>
+        )}
+        <fieldset className="st-fieldset" disabled={locked || busy}>
+          <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
+            <SelectField label="Customs regime" value={sheet.customs_regime} options={refData.customs_regimes}
+              placeholder="Select regime" onCommit={v => save({ customs_regime: v })} />
+            <SelectField label="Nature of transaction (box 24)" value={sheet.nature_of_transaction}
+              options={refData.nature_of_transaction} placeholder="Select" onCommit={v => save({ nature_of_transaction: v })} />
+            <TextField label="Consignee TIN / code" value={sheet.consignee_tin} onCommit={v => save({ consignee_tin: v.trim() })} />
+          </div>
+        </fieldset>
+        {error && (
+          <div className="st-banner st-banner--crit" role="alert" style={{ marginTop: 16, marginBottom: 0 }}>
+            <AlertTriangle aria-hidden="true" /><span><b>The XML was not generated.</b> {error}</span>
+          </div>
+        )}
+        {stale && (
+          <div className="st-banner st-banner--warn" role="status" style={{ marginTop: 16, marginBottom: 0 }}>
+            <AlertTriangle aria-hidden="true" />
+            <span><b>The job changed after this XML was generated.</b> Regenerate it before you download or copy.</span>
+          </div>
+        )}
+        {current && (
+          <div style={{ marginTop: 18 }}>
+            <XmlPreview xml={current.xml} />
+          </div>
+        )}
+      </div>
+      <div className="st-panel__foot">
+        {current && <span className="st-note mono" style={{ marginRight: "auto" }}>{current.filename}</span>}
+        {current && <button type="button" className="st-btn" onClick={copy}><Copy aria-hidden="true" />Copy</button>}
+        {current && <button type="button" className="st-btn st-btn--ink" onClick={download}><Download aria-hidden="true" />Download XML</button>}
+        <button type="button" className={`st-btn ${current ? "" : "st-btn--primary"}`} onClick={generate} disabled={busy}>
+          {busy ? <Loader2 className="st-spin" aria-hidden="true" /> : <FileCode2 aria-hidden="true" />}
+          {busy ? "Generating…" : result ? "Regenerate" : "Generate XML"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/** Minimal XML colouring: tags, attribute names, quoted values. */
+function XmlPreview({ xml }: { xml: string }) {
+  const pretty = useMemo(() => {
+    if (xml.includes("\n")) return xml;
+    // Single-line XML: break between tags so it is readable.
+    let depth = 0;
+    return xml.replace(/>\s*</g, ">\n<").split("\n").map(line => {
+      if (/^<\//.test(line)) depth = Math.max(0, depth - 1);
+      const out = "  ".repeat(depth) + line;
+      if (/^<[^!?/][^>]*[^/]>$/.test(line) && !/<\/[^>]+>$/.test(line)) depth += 1;
+      return out;
+    }).join("\n");
+  }, [xml]);
+  const lines = pretty.split("\n");
+  const shown = lines.slice(0, 2000);
+  return (
+    <>
+      <pre className="st-code" aria-label="XML preview">
+        {shown.map((ln, i) => (
+          <span key={i} className="ln">
+            {ln.split(/(<\/?[\w:.-]+|\/?>|\s[\w:.-]+=|"[^"]*")/g).map((tok, j) => {
+              if (!tok) return null;
+              if (/^<\/?[\w:.-]+$/.test(tok) || /^\/?>$/.test(tok)) return <span key={j} className="t">{tok}</span>;
+              if (/^\s[\w:.-]+=$/.test(tok)) return <span key={j} className="a">{tok}</span>;
+              if (/^"[^"]*"$/.test(tok)) return <span key={j} className="v">{tok}</span>;
+              return tok;
+            })}
+          </span>
+        ))}
+      </pre>
+      {lines.length > shown.length && <p className="st-footnote">Showing the first {shown.length} of {lines.length} lines. Download for the full file.</p>}
+    </>
+  );
+}
+
+/* ── duty rail ───────────────────────────────────────────────────────────── */
+function DutyRail({ sheet }: { sheet: Sheet }) {
+  const t = sheet.totals || ({} as Sheet["totals"]);
+  const rows: [string, number | undefined][] = [
+    ["Total CIF", t.cif_ttd], ["Import duty", t.duty], ["Surcharge", t.surcharge],
+    ...((t.mvt ?? 0) > 0 ? [["Motor vehicle tax", t.mvt] as [string, number]] : []),
+    ["VAT", t.vat], ["Customs user fee", t.customs_user_fee],
+  ];
+  return (
+    <aside className="st-rail" aria-label="Duties and totals">
+      <h2 className="st-rail__title">Duties &amp; totals</h2>
+      <dl>
+        {rows.map(([l, v]) => (
+          <div key={l} style={{ display: "contents" }}><dt>{l}</dt><dd>{money(v)}</dd></div>
+        ))}
+        {(t.relief_total ?? 0) > 0 && (
+          <div style={{ display: "contents" }}><dt className="relief">C84 relief</dt><dd className="relief">− {money(t.relief_total)}</dd></div>
+        )}
+      </dl>
+      <div className="st-rail__total"><span>Payable TT$</span><b>{money(t.total_payable)}</b></div>
+      <p className="st-rail__factor">CIF factor <b>{(sheet.cif_factor ?? 0).toFixed(6)}</b></p>
+      <p className="st-rail__note">Calculated by the server from the tariff database. Figures update when you save a field.</p>
+    </aside>
+  );
 }

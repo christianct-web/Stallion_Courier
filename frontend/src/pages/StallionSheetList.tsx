@@ -1,574 +1,381 @@
 /**
- * StallionSheetList.tsx — "Trade Declarations" module landing page.
+ * StallionSheetList.tsx — Trade Declarations hub, laid out as an arrivals docket.
  *
- * Redesigned to match the operational weight of CourierManifests:
- *   header eyebrow + title + subtitle, primary/secondary actions,
- *   stat cards, status tabs, search + filters, and a full declaration table.
+ * Jobs are grouped by when their goods land (landed-but-open first, then today,
+ * tomorrow, this week, later, undated, and cleared arrivals last), so the work
+ * runs in the order vessels arrive. Each row carries its four-station track and
+ * opens the job at its next station. "New job" asks for the reference number
+ * and the declaration type, then drops the clerk on Documents.
  *
- * Lives at /stallion/sheets inside StallionShell (which already provides TopNav),
- * so this component does NOT render its own TopNav — it starts at the content band.
- *
- * Positioning:
- *   Trade Declarations  = full customs entries (C82 / C84 / C75 / C76 / C86), ASYCUDA output
- *   Courier Worksheets  = non-trade express shipments
+ * Lives at /stallion/sheets inside StallionShell (which renders TopNav).
  */
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createSheet, deleteSheet, listSheets, Sheet } from "@/services/sheetApi";
-import { StatusPill } from "@/components/StatusPill";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AlertTriangle, ChevronRight, Plus, Search, Trash2, X } from "lucide-react";
+import { createSheet, deleteSheet, listSheets, type Sheet } from "@/services/sheetApi";
+import {
+  DECL_CHOICES, currentStation, currentUser, dayDiff, localDay, money, normStatus,
+  relTime, startOfToday, stationsDone, typeLabel, type Status,
+} from "@/components/stallion/model";
+import { StationTrack, StatusChip, TypePicker } from "@/components/stallion/ui";
+import "@/styles/stallion.css";
 
-/* ------------------------------------------------------------------ tokens */
-const C = {
-  paper: "#F6F3EE", paperAlt: "#EFECE6", paperBorder: "#E2DDD6", paperMid: "#CCC7BE",
-  ink: "#18150F", inkMid: "#2C2820", inkLight: "#4A453D",
-  green: "#1A5C3A", greenLight: "#EBF5EE",
-  amber: "#C65911", amberLight: "#FDF2E5",
-  blue: "#1E4A8C", blueLight: "#EEF2FA",
-  gold: "#B8860B",
-  warn: "#FEF3DC", warnBorder: "#D4A020", warnText: "#7A5000",
-  critical: "#FEE8E8", critBorder: "#B02020",
-  purple: "#5A3A8A", purpleLight: "#F0EBF7",
+/* ── queues ──────────────────────────────────────────────────────────────── */
+type QueueKey = "open" | "review" | "correction" | "draft" | "approved" | "submitted" | "receipted" | "all";
+const QUEUE_MATCH: Record<QueueKey, (s: Status) => boolean> = {
+  open: s => s !== "receipted",
+  review: s => s === "pending",
+  correction: s => s === "correction",
+  draft: s => s === "draft",
+  approved: s => s === "approved",
+  submitted: s => s === "submitted",
+  receipted: s => s === "receipted",
+  all: () => true,
 };
-const MONO = "'JetBrains Mono', monospace";
-const SERIF = "'Fraunces', serif";
 
-/* ------------------------------------------------- declaration-type derivation */
-const REGIME_LABEL: Record<string, string> = {
-  C4: "Import C82", C7: "Warehouse C75", C5: "Temp Import",
-  E1: "Export C82", E2: "Temp Export", E3: "Re-Export",
+/* ── docket groups ───────────────────────────────────────────────────────── */
+type GroupKey = "landed" | "today" | "tomorrow" | "week" | "later" | "undated" | "cleared";
+const GROUP_ORDER: GroupKey[] = ["landed", "today", "tomorrow", "week", "later", "undated", "cleared"];
+const GROUP_NAME: Record<GroupKey, string> = {
+  landed: "Landed, not yet submitted", today: "Today", tomorrow: "Tomorrow",
+  week: "This week", later: "Later", undated: "No arrival date", cleared: "Earlier arrivals",
 };
-const TYPE_LABEL: Record<string, string> = {
-  import_c82: "Import C82", export_c82: "Export C82",
-  c84: "C84 Concession", c75: "C75 Warehouse", c76: "C76 Ex-Warehouse",
-  c86: "C86 Bill of Sight", manual: "Worksheet",
-};
-type DashboardDeclaration = Record<string, any>;
 
-function normalizeStatus(status?: string) {
-  const s = String(status || "draft").toLowerCase();
-  if (s === "pending_review") return "pending";
-  if (s === "needs_correction") return "correction";
-  if (s === "exported") return "submitted";
-  return s;
+const DAY_FMT = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" });
+const SHORT_FMT = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
+
+function groupOf(s: Sheet, today: Date): GroupKey {
+  const d = localDay(s.arrival_date);
+  const st = normStatus(s.status);
+  const cleared = st === "submitted" || st === "receipted";
+  if (!d) return "undated";
+  const diff = dayDiff(d, today);
+  if (diff < 0) return cleared ? "cleared" : "landed";
+  if (diff === 0) return "today";
+  if (diff === 1) return "tomorrow";
+  if (diff <= 7) return "week";
+  return "later";
 }
 
-function declType(d: DashboardDeclaration): string {
-  const rawType = d.declaration_type || d.header?.declaration_type || d.payload_json?.declaration_type;
-  if (rawType && TYPE_LABEL[rawType]) return TYPE_LABEL[rawType];
-  const regime = d.customs_regime || d.header?.customsRegime || d.header?.customs_regime || d.payload_json?.customs_regime;
-  return REGIME_LABEL[regime] || "Import C82";
+function groupDate(key: GroupKey, today: Date): string {
+  if (key === "today") return DAY_FMT.format(today).toUpperCase();
+  if (key === "tomorrow") return DAY_FMT.format(new Date(today.getTime() + 86400000)).toUpperCase();
+  return "";
 }
 
-/* -------------------------------------------------------------- confidence */
-function getConfidence(d: DashboardDeclaration): number | null {
-  const raw =
-    d?.confidence ??
-    d?.confidence_score ??
-    d?.extraction_confidence ??
-    d?.payload_json?.confidence ??
-    d?.payload_json?.confidence_score ??
-    d?.review?.confidence;
-
-  const n = Number(raw);
-  if (!Number.isFinite(n)) return null;
-  return n > 1 ? Math.max(0, Math.min(100, n)) : Math.max(0, Math.min(100, n * 100));
-}
-
-function rowConfidence(d: DashboardDeclaration): { label: string; fg: string; bg: string; border: string } | null {
-  const conf = getConfidence(d);
-  if (conf == null) return null;
-  if (conf >= 90) return { label: `${Math.round(conf)}%`, fg: C.green, bg: C.greenLight, border: C.green + "44" };
-  if (conf >= 70) return { label: `${Math.round(conf)}%`, fg: C.warnText, bg: C.warn, border: C.warnBorder };
-  return { label: `${Math.round(conf)}%`, fg: C.critBorder, bg: C.critical, border: C.critBorder };
-}
-
-/* --------------------------------------------------------------- utilities */
-function relTime(iso?: string): string {
-  if (!iso) return "—";
-  const then = new Date(iso).getTime();
-  if (isNaN(then)) return "—";
-  const d = Math.round((Date.now() - then) / 86400000);
-  const h = Math.round((Date.now() - then) / 3600000);
-  const m = Math.round((Date.now() - then) / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  if (h < 24) return `${h}h ago`;
-  if (d < 30) return `${d}d ago`;
-  const mo = Math.round(d / 30);
-  if (mo < 12) return `${mo}mo ago`;
-  return new Date(iso).toLocaleDateString();
-}
-function fmtTtd(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-/* ===================================================== New Declaration modal */
-type DeclChoice = {
-  key: string; title: string; desc: string;
-  regime: string; declaration_type: string; accent: string;
-};
-const DECL_CHOICES: DeclChoice[] = [
-  { key: "import", title: "Import Declaration",
-    desc: "C82 home-use entry — invoice extraction, classification, duty cascade, ASYCUDA XML.",
-    regime: "C4", declaration_type: "import_c82", accent: C.green },
-  { key: "export", title: "Export Declaration",
-    desc: "C82 export (EX1/EX3) — outbound shipment documentation and declaration.",
-    regime: "E1", declaration_type: "export_c82", accent: C.blue },
-  { key: "c84", title: "C84 — Duty Concession",
-    desc: "Returning nationals, vehicles, diplomats and approved-undertaking waivers.",
-    regime: "C4", declaration_type: "c84", accent: C.green },
-  { key: "c75", title: "C75 — Warehousing",
-    desc: "Goods entering a bonded warehouse with duty deferred until removal.",
-    regime: "C7", declaration_type: "c75", accent: C.amber },
-  { key: "c76", title: "C76 — Ex-Warehouse",
-    desc: "Removal from bond — triggers the duty deferred at C75 entry.",
-    regime: "C7", declaration_type: "c76", accent: C.amber },
-  { key: "c86", title: "C86 — Bill of Sight",
-    desc: "Provisional clearance under bond when documents are incomplete; perfected later.",
-    regime: "C4", declaration_type: "c86", accent: C.purple },
-  { key: "manual", title: "Manual Worksheet",
-    desc: "Start from a blank costing worksheet and build the declaration by hand.",
-    regime: "C4", declaration_type: "manual", accent: C.inkLight },
-];
-
-function NewDeclarationModal({ onPick, onClose, busy }: {
-  onPick: (c: DeclChoice) => void; onClose: () => void; busy: boolean;
-}) {
+// The day rule already says Today / Tomorrow; the cell always carries the date.
+function whenCell(s: Sheet, today: Date) {
+  const d = localDay(s.arrival_date);
+  if (!d) return <span className="st-row__when">—</span>;
+  const diff = dayDiff(d, today);
   return (
-    <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
-      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 24,
-    }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{
-        width: 620, maxWidth: "100%", maxHeight: "88vh", overflowY: "auto",
-        background: C.paper, borderRadius: 6, border: `1px solid ${C.paperBorder}`,
-        padding: 28, boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
-      }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-          color: C.amber, textTransform: "uppercase", marginBottom: 9 }}>
-          Stallion · Trade Module
-        </div>
-        <h2 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 26, color: C.ink, margin: 0, letterSpacing: "-0.01em" }}>
-          New Declaration
-        </h2>
-        <p style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid, margin: "7px 0 20px 0", lineHeight: 1.5 }}>
-          Choose a declaration type. Stallion routes you into the right workflow and
-          pre-sets the ASYCUDA regime.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {DECL_CHOICES.map(c => (
-            <button key={c.key} disabled={busy} onClick={() => onPick(c)}
-              style={{
-                textAlign: "left", cursor: busy ? "wait" : "pointer",
-                background: "#fff", border: `1px solid ${C.paperBorder}`,
-                borderLeft: `4px solid ${c.accent}`, borderRadius: 6, padding: "14px 16px",
-                transition: "background 0.12s, transform 0.12s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.paperAlt; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "#fff"; }}
-            >
-              <div style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 700, color: C.ink, marginBottom: 5, letterSpacing: "-0.01em" }}>
-                {c.title}
-              </div>
-              <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, color: C.inkMid, lineHeight: 1.5 }}>
-                {c.desc}
-              </div>
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 22 }}>
-          <button onClick={onClose} disabled={busy} style={{
-            padding: "8px 16px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.06em",
-            textTransform: "uppercase", background: "transparent",
-            border: `1px solid ${C.paperBorder}`, borderRadius: 4, color: C.inkMid,
-            cursor: "pointer",
-          }}>Cancel</button>
-        </div>
-      </div>
-    </div>
+    <span className="st-row__when">
+      <b>{SHORT_FMT.format(d)}</b>
+      {diff < 0 && diff > -60 && <small>{-diff}d ago</small>}
+    </span>
   );
 }
 
-/* ============================================================ main component */
-function refLabel(d: DashboardDeclaration): string {
-  return d.reference_number || d.header?.declarationRef || d.reference || d.id?.slice(0, 12) || "—";
-}
-
-function consigneeLabel(d: DashboardDeclaration): string {
-  return d.header?.consigneeName || d.header?.consignee_name || d.consignee || d.payload_json?.consigneeName || "—";
-}
-
-function lineCount(d: DashboardDeclaration): number {
-  return (d.items || d.payload_json?.items || d.lines || []).length;
-}
-
-const TABS: { key: string; label: string; match: (d: DashboardDeclaration) => boolean }[] = [
-  { key: "all",        label: "All",            match: () => true },
-  { key: "draft",      label: "Draft",          match: d => normalizeStatus(d.status) === "draft" },
-  { key: "pending",    label: "Broker Review",  match: d => normalizeStatus(d.status) === "pending" },
-  { key: "correction", label: "Corrections",    match: d => normalizeStatus(d.status) === "correction" },
-  { key: "submitted",  label: "Submitted",      match: d => normalizeStatus(d.status) === "submitted" },
-  { key: "approved",   label: "Approved",       match: d => normalizeStatus(d.status) === "approved" },
-  { key: "receipted",  label: "Receipted",      match: d => normalizeStatus(d.status) === "receipted" },
-];
+// A job with no lines has no computed payable yet: that is unknown, not zero.
+const payable = (s: Sheet): number | null => {
+  const v = s.totals?.total_payable;
+  return (s.lines || []).length > 0 && v !== null && v !== undefined ? v : null;
+};
 
 export default function StallionSheetList() {
   const nav = useNavigate();
-  const [declarations, setDeclarations] = useState<DashboardDeclaration[]>([]);
+  const user = currentUser();
+  const reviewer = user.role === "broker" || user.role === "admin";
+
+  const [sheets, setSheets] = useState<Sheet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("all");
+  const [loadError, setLoadError] = useState("");
+  const [queue, setQueue] = useState<QueueKey | null>(null);
   const [q, setQ] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+
   const [showNew, setShowNew] = useState(false);
+  const [ref, setRef] = useState("");
+  const [dtype, setDtype] = useState(DECL_CHOICES[0].declaration_type);
   const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string>("");
+  const [createError, setCreateError] = useState("");
+  const refInput = useRef<HTMLInputElement>(null);
 
   const load = () => {
     setLoading(true);
+    setLoadError("");
     listSheets()
-      .then(items => setDeclarations(items))
+      .then(setSheets)
+      .catch((e: unknown) => setLoadError(e instanceof Error ? e.message : "Could not load jobs."))
       .finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(load, []);
+  useEffect(() => { if (showNew) refInput.current?.focus(); }, [showNew]);
 
-  const createFrom = async (c: DeclChoice) => {
+  const counts = useMemo(() => {
+    const c = {} as Record<QueueKey, number>;
+    (Object.keys(QUEUE_MATCH) as QueueKey[]).forEach(k => {
+      c[k] = sheets.filter(s => QUEUE_MATCH[k](normStatus(s.status))).length;
+    });
+    return c;
+  }, [sheets]);
+
+  // Brokers land on their review queue when something is waiting for them.
+  const activeQueue: QueueKey = queue ?? (reviewer && counts.review > 0 ? "review" : "open");
+
+  const today = startOfToday();
+  const groups = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    const rows = sheets
+      .filter(s => QUEUE_MATCH[activeQueue](normStatus(s.status)))
+      .filter(s => !needle || [s.reference, s.consignee, s.consignor, s.vessel, s.bl_number, s.invoice_no, typeLabel(s)]
+        .filter(Boolean).join(" ").toLowerCase().includes(needle));
+    const byGroup = new Map<GroupKey, Sheet[]>();
+    rows.forEach(s => {
+      const g = groupOf(s, today);
+      byGroup.set(g, [...(byGroup.get(g) || []), s]);
+    });
+    return GROUP_ORDER.filter(g => byGroup.has(g)).map(g => {
+      const items = byGroup.get(g)!.sort((a, b) => {
+        const da = a.arrival_date || "", db = b.arrival_date || "";
+        if (da !== db) return g === "cleared" || g === "landed" ? db.localeCompare(da) : da.localeCompare(db);
+        return (b.updated_at || "").localeCompare(a.updated_at || "");
+      });
+      const costed = items.map(payable).filter((v): v is number => v !== null);
+      const total = costed.length ? costed.reduce((a, b) => a + b, 0) : null;
+      return { key: g, items, total, uncosted: items.length - costed.length };
+    });
+    // `today` is derived per render; the day only changes at midnight.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sheets, activeQueue, q]);
+  const shown = groups.reduce((n, g) => n + g.items.length, 0);
+
+  const trimmedRef = ref.trim();
+  const duplicate = trimmedRef
+    ? sheets.find(s => (s.reference || "").trim().toLowerCase() === trimmedRef.toLowerCase())
+    : undefined;
+
+  const openNew = () => { setShowNew(true); setCreateError(""); };
+  const closeNew = () => { setShowNew(false); setRef(""); setCreateError(""); };
+
+  const create = async () => {
+    if (!trimmedRef || creating) return;
+    const choice = DECL_CHOICES.find(c => c.declaration_type === dtype) ?? DECL_CHOICES[0];
     setCreating(true);
     setCreateError("");
     try {
       const s = await createSheet({
-        customs_regime: c.regime,
-        ...( { declaration_type: c.declaration_type } as Partial<Sheet> ),
+        reference: trimmedRef, customs_regime: choice.regime, declaration_type: choice.declaration_type,
       });
-      setShowNew(false);
-      nav(`/stallion/sheet/${s.id}`);
-    } catch (e: any) {
-      const msg = e?.message ? String(e.message) : "Could not create declaration.";
-      setCreateError(msg);
-      window.alert(`Could not create declaration.\n\n${msg}\n\nAPI: ${window.location.protocol}//${window.location.hostname}:8022`);
-    } finally {
+      nav(`/stallion/sheet/${s.id}?step=${choice.key === "manual" ? "verify" : "documents"}`);
+    } catch (e: unknown) {
+      setCreateError(e instanceof Error ? e.message : "The server did not accept the new job.");
       setCreating(false);
     }
   };
 
-  const remove = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm("Delete this declaration?")) return;
-    await deleteSheet(id);
-    setDeclarations(prev => prev.filter(d => d.id !== id));
+  const remove = async (s: Sheet) => {
+    if (!window.confirm(`Delete job ${s.reference || s.id}? This cannot be undone.`)) return;
+    try {
+      await deleteSheet(s.id);
+      setSheets(prev => prev.filter(x => x.id !== s.id));
+    } catch (e: unknown) {
+      window.alert(`Could not delete the job. ${e instanceof Error ? e.message : ""}`);
+    }
   };
 
-  const summary = useMemo(() => ({
-    total:      declarations.length,
-    draft:      declarations.filter(d => normalizeStatus(d.status) === "draft").length,
-    pending:    declarations.filter(d => normalizeStatus(d.status) === "pending").length,
-    correction: declarations.filter(d => normalizeStatus(d.status) === "correction").length,
-    approved:   declarations.filter(d => normalizeStatus(d.status) === "approved").length,
-    receipted:  declarations.filter(d => normalizeStatus(d.status) === "receipted").length,
-  }), [declarations]);
+  const queueDefs: { key: QueueKey; label: string; hot?: boolean }[] = [
+    ...(reviewer ? [{ key: "review" as QueueKey, label: "Waiting on your review", hot: true }] : []),
+    { key: "open", label: "Open jobs" },
+    { key: "correction", label: "Sent back", hot: true },
+    { key: "draft", label: "Drafts" },
+    ...(!reviewer ? [{ key: "review" as QueueKey, label: "With the broker" }] : []),
+    { key: "approved", label: "Approved" },
+    { key: "submitted", label: "Submitted" },
+    { key: "receipted", label: "Receipted" },
+    { key: "all", label: "All" },
+  ];
 
-  const typeOptions = useMemo(() => {
-    const set = new Set<string>();
-    declarations.forEach(d => set.add(declType(d)));
-    return Array.from(set).sort();
-  }, [declarations]);
-
-  const rows = useMemo(() => {
-    const tabDef = TABS.find(t => t.key === tab)!;
-    const needle = q.trim().toLowerCase();
-    return declarations
-      .filter(tabDef.match)
-      .filter(s => !typeFilter || declType(s) === typeFilter)
-      .filter(d => {
-        if (!needle) return true;
-        return [refLabel(d), consigneeLabel(d), d.status, d.header?.blNumber, d.header?.vesselName, d.header?.portOfEntry]
-          .filter(Boolean).join(" ").toLowerCase().includes(needle);
-      })
-      .sort((a, b) => {
-        const priority = (status: string) => {
-          const s = normalizeStatus(status);
-          if (s === "pending") return 0;
-          if (s === "correction") return 1;
-          if (s === "approved") return 2;
-          if (s === "receipted") return 3;
-          return 4;
-        };
-        const pa = priority(a.status);
-        const pb = priority(b.status);
-        if (pa !== pb) return pa - pb;
-
-        const ca = getConfidence(a);
-        const cb = getConfidence(b);
-        if (ca != null || cb != null) {
-          if (ca == null) return 1;
-          if (cb == null) return -1;
-          if (ca !== cb) return ca - cb;
-        }
-
-        return (b.updated_at || "").localeCompare(a.updated_at || "");
-      });
-  }, [declarations, tab, q, typeFilter]);
+  const landedOpen = sheets.filter(s => groupOf(s, today) === "landed").length;
+  const todayCount = sheets.filter(s => groupOf(s, today) === "today").length;
 
   return (
-    <div style={{ background: C.paperAlt, minHeight: "100%" }}>
-      {/* Page header band (full-width, matches Clients/Log) */}
-      <div style={{ padding: "32px 40px 24px", borderBottom: `1px solid ${C.paperBorder}`, background: C.paper }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between",
-          gap: 16, flexWrap: "wrap" }}>
+    <div className="st">
+      <div className="st-hub">
+        <header className="st-hub__head">
           <div>
-            <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 700, letterSpacing: "0.14em",
-              color: C.amber, textTransform: "uppercase", marginBottom: 8 }}>
-              Stallion · Trade Module
-            </div>
-            <h1 style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 30, color: C.ink,
-              margin: 0, letterSpacing: "-0.02em", lineHeight: 1.08 }}>
-              Trade Declarations
-            </h1>
-            <p style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: C.inkMid,
-              margin: "8px 0 0 0", maxWidth: 660, lineHeight: 1.5 }}>
-              Prepare import/export declarations, C82 worksheets, C84 concessions,
-              C75/C76 warehousing, and ASYCUDA-ready submissions.
+            <h1 className="st-h1">Trade Declarations</h1>
+            <p className="st-hub__sub">
+              <span className="mono">{DAY_FMT.format(today)}</span>
+              {" · "}
+              {loading ? "Loading the docket…" : (
+                <>
+                  {todayCount === 0 ? "Nothing lands today" : `${todayCount} job${todayCount === 1 ? "" : "s"} land today`}
+                  {landedOpen > 0 && <>, {landedOpen} landed and not yet submitted</>}
+                  {reviewer && counts.review > 0 && <>, {counts.review} waiting on your review</>}
+                  .
+                </>
+              )}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button onClick={() => nav("/stallion/courier/tariff")} style={{
-              padding: "10px 16px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
-              textTransform: "uppercase", background: "transparent",
-              border: `1px solid ${C.paperMid}`, borderRadius: 4, color: C.inkMid,
-              cursor: "pointer", fontWeight: 700,
-            }}>⊞ Tariff Database</button>
-            <button onClick={() => setShowNew(true)} style={{
-              padding: "10px 18px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
-              textTransform: "uppercase", background: C.amber, border: `1px solid ${C.amber}`,
-              borderRadius: 4, color: "#fff", cursor: "pointer", fontWeight: 700,
-            }}>+ New Declaration</button>
+          <div className="st-hub__actions">
+            <div className="st-search">
+              <Search aria-hidden="true" />
+              <input className="st-input prose" type="search" value={q} onChange={e => setQ(e.target.value)}
+                placeholder="Reference, client, vessel, BL…" aria-label="Search jobs" />
+            </div>
+            <button type="button" className="st-btn st-btn--primary" onClick={showNew ? closeNew : openNew}
+              aria-expanded={showNew}>
+              {showNew ? <X aria-hidden="true" /> : <Plus aria-hidden="true" />}
+              {showNew ? "Cancel" : "New job"}
+            </button>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Content */}
-      <div style={{ margin: "24px 40px 48px" }}>
-
-        {createError && (
-          <div style={{
-            marginBottom: 14,
-            background: C.critical,
-            border: `1px solid ${C.critBorder}55`,
-            color: C.critBorder,
-            borderRadius: 4,
-            padding: "10px 12px",
-            fontFamily: MONO,
-            fontSize: 11,
-            letterSpacing: "0.02em",
-          }}>
-            Create failed: {createError}
-          </div>
+        {showNew && (
+          <form className="st-newjob" onSubmit={e => { e.preventDefault(); create(); }} aria-label="New job">
+            <div className="st-newjob__body">
+              <div className="st-newjob__ref">
+                <h2 className="st-newjob__title">Open a job</h2>
+                <p className="st-newjob__lede">Give it your reference number and pick the declaration. Next you'll upload the documents.</p>
+                <div className="st-field">
+                  <label htmlFor="new-ref">Reference number</label>
+                  <input id="new-ref" ref={refInput} className="st-input" value={ref} autoComplete="off"
+                    onChange={e => setRef(e.target.value)} placeholder="e.g. JOB-2026-0412"
+                    onKeyDown={e => { if (e.key === "Escape") closeNew(); }} />
+                </div>
+                {duplicate && (
+                  <p className="st-note st-note--warn" style={{ marginTop: 10 }}>
+                    <AlertTriangle aria-hidden="true" />
+                    <span><b>{duplicate.reference}</b> already exists. <Link to={`/stallion/sheet/${duplicate.id}?step=${currentStation(duplicate)}`}>Open it</Link> instead?</span>
+                  </p>
+                )}
+              </div>
+              <div className="st-field">
+                <span className="st-label" id="new-type-label">Declaration type</span>
+                <TypePicker value={dtype} onChange={setDtype} name="new-type" />
+              </div>
+            </div>
+            <div className="st-newjob__foot">
+              <span className={`st-note${createError ? " st-note--crit" : ""}`}>
+                {createError ? <>Could not open the job: {createError}</> : trimmedRef
+                  ? <>Opens <b className="mono">{trimmedRef}</b> as {typeLabel({ declaration_type: dtype })}.</>
+                  : "A reference number is required."}
+              </span>
+              <button type="submit" className="st-btn st-btn--primary" disabled={!trimmedRef || creating}>
+                {creating ? "Opening…" : duplicate ? "Open a second job" : "Open job"}
+                <ChevronRight aria-hidden="true" />
+              </button>
+            </div>
+          </form>
         )}
 
-        {/* Stat cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 22 }}>
-          {[
-            { label: "Total",         value: summary.total,      color: C.ink },
-            { label: "Draft",         value: summary.draft,      color: C.inkLight },
-            { label: "Broker Review", value: summary.pending,    color: C.warnText },
-            { label: "Corrections",   value: summary.correction, color: C.critBorder },
-            { label: "Approved",      value: summary.approved,   color: C.green },
-            { label: "Receipted",     value: summary.receipted,  color: C.purple },
-          ].map(card => (
-            <div key={card.label} style={{
-              background: C.paper, border: `1px solid ${C.paperBorder}`,
-              borderRadius: 4, padding: "13px 16px",
-            }}>
-              <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.1em",
-                color: C.inkLight, textTransform: "uppercase", marginBottom: 4 }}>
-                {card.label}
-              </div>
-              <div style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 600, color: card.color }}>
-                {card.value}
-              </div>
-            </div>
+        <nav className="st-queues" aria-label="Queues">
+          {queueDefs.map(d => (
+            <button key={d.key} type="button" className={`st-queue${d.hot && counts[d.key] > 0 ? " is-hot" : ""}`}
+              aria-pressed={activeQueue === d.key} onClick={() => setQueue(d.key)}>
+              {d.label}<span className="count">{counts[d.key] ?? 0}</span>
+            </button>
           ))}
-        </div>
+        </nav>
 
-        {/* Status tabs */}
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 14 }}>
-          {TABS.map(t => {
-            const active = tab === t.key;
-            const count = t.key === "all" ? declarations.length : declarations.filter(t.match).length;
-            return (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                fontFamily: MONO, fontSize: 11, letterSpacing: "0.05em", textTransform: "uppercase",
-                padding: "7px 13px", borderRadius: 4, cursor: "pointer", fontWeight: active ? 700 : 500,
-                background: active ? C.ink : "transparent",
-                color: active ? C.paper : C.inkMid,
-                border: `1px solid ${active ? C.ink : C.paperMid}`,
-              }}>
-                {t.label}<span style={{ opacity: 0.6, marginLeft: 6 }}>{count}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search + filters */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-          <input
-            value={q} onChange={e => setQ(e.target.value)}
-            placeholder="Search reference, client, consignor, BL, vessel…"
-            style={{
-              flex: 1, minWidth: 260, fontFamily: MONO, fontSize: 13, padding: "9px 12px",
-              border: `1px solid ${C.paperBorder}`, borderRadius: 4, background: "#fff",
-              color: C.ink, outline: "none",
-            }}
-          />
-          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{
-            fontFamily: MONO, fontSize: 12, padding: "9px 12px",
-            border: `1px solid ${C.paperBorder}`, borderRadius: 4, background: "#fff",
-            color: C.inkMid, cursor: "pointer",
-          }}>
-            <option value="">All types</option>
-            {typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-
-        {/* Declaration table */}
-        <div style={{ background: C.paper, border: `1px solid ${C.paperBorder}`,
-          borderRadius: 4, overflow: "hidden" }}>
-          {loading ? (
-            <div style={{ padding: 48, textAlign: "center", fontFamily: SERIF, color: C.inkLight }}>
-              Loading…
+        {loadError ? (
+          <div className="st-banner st-banner--crit" role="alert">
+            <AlertTriangle aria-hidden="true" />
+            <span><b>The docket did not load.</b> {loadError}{" "}
+              <button type="button" className="st-linkbtn" onClick={load}>Try again</button></span>
+          </div>
+        ) : loading ? (
+          <div className="st-docket" aria-busy="true">
+            <section>
+              <div className="st-day__rule"><span className="st-day__name">Loading</span></div>
+              <div className="st-rows">{[0, 1, 2].map(i => <div key={i} className="st-skeleton" />)}</div>
+            </section>
+          </div>
+        ) : shown === 0 ? (
+          <div className="st-empty">
+            <h2>{sheets.length === 0 ? "No jobs yet" : q ? "No job matches that search" : "This queue is clear"}</h2>
+            <p>{sheets.length === 0
+              ? "Open a job with its reference number, upload the invoice and bill of lading, and Stallion fills in the declaration."
+              : q ? "Check the reference or try the client's name." : "Nothing is waiting here. Pick another queue above."}</p>
+            {sheets.length === 0 ? (
+              <button type="button" className="st-btn st-btn--primary" onClick={openNew}><Plus aria-hidden="true" />New job</button>
+            ) : (
+              <button type="button" className="st-btn" onClick={() => { setQ(""); setQueue("all"); }}>Show all jobs</button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="st-docket__head" aria-hidden="true">
+              <span>Arrives</span><span className="c-vessel">Vessel</span><span>Reference</span><span>Client</span>
+              <span>Type</span><span>Progress</span><span>Status</span><span className="r">Payable TT$</span><span />
             </div>
-          ) : rows.length === 0 ? (
-            <div style={{ padding: 60, textAlign: "center" }}>
-              <div style={{ fontFamily: SERIF, fontSize: 20, color: C.inkLight, marginBottom: 8 }}>
-                {declarations.length === 0 ? "No trade declarations yet" : "Nothing matches this view"}
-              </div>
-              <div style={{ fontFamily: SERIF, fontSize: 13, color: C.inkLight,
-                fontStyle: "italic", maxWidth: 460, margin: "0 auto 18px" }}>
-                {declarations.length === 0
-                  ? "Create your first import/export declaration. Stallion will extract the invoice, classify items, and prepare the worksheet."
-                  : "Try clearing the search box, the type filter, or switching tabs."}
-              </div>
-              {declarations.length === 0 && (
-                <button onClick={() => setShowNew(true)} style={{
-                  padding: "10px 18px", fontFamily: MONO, fontSize: 12, letterSpacing: "0.08em",
-                  textTransform: "uppercase", background: C.ink, border: `1px solid ${C.ink}`,
-                  borderRadius: 4, color: C.paper, cursor: "pointer", fontWeight: 600,
-                }}>+ New Declaration</button>
-              )}
+            <div className="st-docket">
+              {groups.map(g => {
+                const dateText = groupDate(g.key, today);
+                const tone = g.key === "landed" ? " st-day--alert" : g.key === "today" ? " st-day--today"
+                  : g.key === "undated" || g.key === "cleared" ? " st-day--quiet" : "";
+                return (
+                  <section key={g.key} className={`st-day${tone}`} aria-labelledby={`grp-${g.key}`}>
+                    <div className="st-day__rule">
+                      <h2 id={`grp-${g.key}`} className="st-day__name" style={{ margin: 0 }}>
+                        {g.key === "landed" && <AlertTriangle aria-hidden="true" className="st-day__icon" />}
+                        {GROUP_NAME[g.key]}
+                      </h2>
+                      {dateText && <span className="st-day__date">{dateText}</span>}
+                      <span className="st-day__meta">
+                        <b>{g.items.length}</b> job{g.items.length === 1 ? "" : "s"}
+                        {g.total !== null && <> · TT$ <b>{money(g.total)}</b></>}
+                        {g.uncosted > 0 && <> · {g.uncosted} not costed yet</>}
+                      </span>
+                    </div>
+                    <ul className="st-rows">
+                      {g.items.map(s => {
+                        const done = stationsDone(s);
+                        const cur = currentStation(s);
+                        const st = normStatus(s.status);
+                        const deletable = st === "draft" || st === "correction";
+                        return (
+                          <li key={s.id} className={`st-row${deletable ? " has-del" : ""}`}>
+                            <Link className="st-row__link" to={`/stallion/sheet/${s.id}?step=${cur}`}
+                              aria-label={`${s.reference || "Untitled job"}${s.consignee ? `, ${s.consignee}` : ""}`}>
+                              {whenCell(s, today)}
+                              <span className="st-row__vessel">
+                                {s.vessel || "—"}
+                                {s.bl_number && <small>BL {s.bl_number}</small>}
+                              </span>
+                              <span className="st-row__ref">{s.reference || "Untitled"}</span>
+                              <span className={`st-row__client${s.consignee ? "" : " is-empty"}`}>
+                                {s.consignee || "Client not set"}
+                              </span>
+                              <span className="st-row__type"><span className="st-tag">{typeLabel(s)}</span></span>
+                              <span className="st-row__track"><StationTrack done={done} current={cur} label /></span>
+                              <span className="st-row__status"><StatusChip status={s.status} /></span>
+                              <span className="st-row__money">
+                                {money(payable(s))}
+                                <small>{(s.lines || []).length} line{(s.lines || []).length === 1 ? "" : "s"} · {relTime(s.updated_at)}</small>
+                              </span>
+                              <span className="st-row__go" aria-hidden="true"><ChevronRight /></span>
+                            </Link>
+                            {deletable && (
+                              <button type="button" className="st-iconbtn st-iconbtn--danger st-row__del"
+                                onClick={() => remove(s)} aria-label={`Delete job ${s.reference || s.id}`} title="Delete job">
+                                <Trash2 />
+                              </button>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                );
+              })}
             </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1040 }}>
-                <thead>
-                  <tr style={{ background: C.ink, borderBottom: `2px solid ${C.ink}` }}>
-                    {["REFERENCE", "CLIENT / CONSIGNEE", "TYPE", "PORT", "STATUS",
-                      "LINES", "CIF (TTD)", "TAXES (TTD)", "CONF.", "UPDATED", ""]
-                      .map((h, i) => (
-                        <th key={h + i} style={{
-                          textAlign: i >= 5 && i <= 7 ? "right" : "left",
-                          padding: "11px 14px", fontFamily: MONO, fontSize: 9.5,
-                          letterSpacing: "0.1em", color: C.paperMid, fontWeight: 700,
-                          textTransform: "uppercase", whiteSpace: "nowrap",
-                          position: "sticky", top: 0,
-                        }}>{h}</th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((s, rowIdx) => {
-                    const conf = rowConfidence(s);
-                    const cifTtd = s.totals?.cif_ttd ?? s.worksheet?.cif_ttd ?? s.header?.cif_ttd;
-                    const taxes =
-                      s.totals?.total_payable ??
-                      s.worksheet?.total_payable ??
-                      ((s.totals?.duty ?? 0) + (s.totals?.surcharge ?? 0) + (s.totals?.vat ?? 0));
-                    const port = s.header?.portOfEntry || s.header?.port || s.port || "—";
-                    const zebra = rowIdx % 2 === 1 ? C.paperAlt : C.paper;
-                    return (
-                      <tr key={s.id}
-                        onClick={() => nav(`/stallion/sheet/${s.id}`)}
-                        onMouseEnter={e => e.currentTarget.style.background = "#F2EDE4"}
-                        onMouseLeave={e => e.currentTarget.style.background = zebra}
-                        style={{ background: zebra, borderBottom: `1px solid ${C.paperBorder}`,
-                          cursor: "pointer", transition: "background 0.1s" }}
-                      >
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 13,
-                          color: C.ink, fontWeight: 700, whiteSpace: "nowrap" }}>
-                          {refLabel(s)}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: SERIF, fontSize: 13,
-                          color: C.inkMid, maxWidth: 220, overflow: "hidden",
-                          textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {consigneeLabel(s)}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 11.5,
-                          color: C.inkMid, whiteSpace: "nowrap" }}>
-                          {declType(s)}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 12,
-                          color: C.inkMid }}>
-                          {port}
-                        </td>
-                        <td style={{ padding: "12px 14px" }}>
-                          <StatusPill status={s.status} />
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 13,
-                          color: C.inkMid, textAlign: "right" }}>
-                          {lineCount(s)}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 12.5,
-                          color: C.inkMid, textAlign: "right" }}>
-                          {fmtTtd(cifTtd)}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 12.5,
-                          color: C.ink, textAlign: "right" }}>
-                          {fmtTtd(taxes || s.totals?.total_payable)}
-                        </td>
-                        <td style={{ padding: "12px 14px" }}>
-                          {conf ? (
-                            <span style={{ fontFamily: MONO, fontSize: 9.5, fontWeight: 700,
-                              letterSpacing: "0.05em", color: conf.fg, background: conf.bg,
-                              border: `1px solid ${conf.border}`,
-                              padding: "3px 7px", borderRadius: 3, whiteSpace: "nowrap" }}>
-                              {conf.label}
-                            </span>
-                          ) : <span style={{ color: C.inkLight, fontFamily: MONO, fontSize: 11 }}>—</span>}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: MONO, fontSize: 11,
-                          color: C.inkLight, whiteSpace: "nowrap" }}>
-                          {relTime(s.updated_at)}
-                        </td>
-                        <td style={{ padding: "12px 14px", textAlign: "right" }}
-                          onClick={e => e.stopPropagation()}>
-                          <button onClick={e => remove(s.id, e)} title="Delete declaration" style={{
-                            fontFamily: MONO, fontSize: 10, letterSpacing: "0.06em",
-                            textTransform: "uppercase", color: C.critBorder, background: "transparent",
-                            padding: "4px 8px", border: `1px solid ${C.critBorder}33`,
-                            borderRadius: 3, cursor: "pointer",
-                          }}>Del</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div style={{ fontFamily: MONO, fontSize: 11, color: C.inkLight, marginTop: 12 }}>
-          {rows.length} of {declarations.length} declaration{declarations.length === 1 ? "" : "s"}
-          {tab !== "all" || typeFilter || q ? " (filtered)" : ""}
-        </div>
+            <p className="st-footnote">
+              {shown} of {sheets.length} job{sheets.length === 1 ? "" : "s"}{q ? ` matching “${q.trim()}”` : ""}
+            </p>
+          </>
+        )}
       </div>
-
-      {showNew && (
-        <NewDeclarationModal
-          busy={creating}
-          onPick={createFrom}
-          onClose={() => setShowNew(false)}
-        />
-      )}
     </div>
   );
 }

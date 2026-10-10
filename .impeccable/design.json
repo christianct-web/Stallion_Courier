@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T01:10:03+00:00",
+  "title": "Design System: Stallion Trade Declarations",
+  "extensions": {
+    "scope": "Tokens live under the .st scope in frontend/src/styles/stallion.css (Trade Declarations hub and job workspace). The rest of the app is not yet on this system; see drift.",
+    "colorMeta": {
+      "chrome": {
+        "role": "neutral",
+        "displayName": "Soot",
+        "canonical": "#14100E",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#262322",
+          "#433F3D",
+          "#625C5A",
+          "#817C79",
+          "#A39D9A",
+          "#C7C3C1",
+          "#F0EEED"
+        ],
+        "cssVar": "--chrome"
+      },
+      "chrome-2": {
+        "role": "neutral",
+        "displayName": "Banked Soot",
+        "canonical": "#1F1915",
+        "tonalRamp": [
+          "#0D0B0A",
+          "#272321",
+          "#443E3B",
+          "#635C57",
+          "#837C76",
+          "#A59D97",
+          "#C8C3BF",
+          "#F0EEEC"
+        ],
+        "cssVar": "--chrome-2"
+      },
+      "chrome-line": {
+        "role": "neutral",
+        "displayName": "Soot Rule",
+        "canonical": "#3A302A",
+        "tonalRamp": [
+          "#0D0A09",
+          "#28231F",
+          "#463E39",
+          "#665B54",
+          "#867B74",
+          "#A89C94",
+          "#CBC2BD",
+          "#F1EDEB"
+        ],
+        "cssVar": "--chrome-line"
+      },
+      "chrome-text": {
+        "role": "neutral",
+        "displayName": "Lamplight",
+        "canonical": "#F1EAE0",
+        "tonalRamp": [
+          "#0C0B09",
+          "#26241F",
+          "#443F38",
+          "#635D54",
+          "#827C73",
+          "#A49D94",
+          "#C8C3BD",
+          "#F0EEEB"
+        ],
+        "cssVar": "--chrome-text"
+      },
+      "chrome-dim": {
+        "role": "neutral",
+        "displayName": "Ash",
+        "canonical": "#B3A596",
+        "tonalRamp": [
+          "#0E0B07",
+          "#29231C",
+          "#483E33",
+          "#685B4E",
+          "#887B6C",
+          "#AA9C8D",
+          "#CCC2B8",
+          "#F2EEE9"
+        ],
+        "cssVar": "--chrome-dim"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Harbour Paper",
+        "canonical": "#EFE9DF",
+        "tonalRamp": [
+          "#0C0B09",
+          "#26241F",
+          "#433F39",
+          "#625D54",
+          "#827C74",
+          "#A39E94",
+          "#C7C3BD",
+          "#F0EEEB"
+        ],
+        "cssVar": "--paper"
+      },
+      "sheet": {
+        "role": "neutral",
+        "displayName": "Sheet",
+        "canonical": "#F8F4ED",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#252421",
+          "#423F3B",
+          "#605D57",
+          "#807D77",
+          "#A29E97",
+          "#C6C4BF",
+          "#EFEEEC"
+        ],
+        "cssVar": "--sheet"
+      },
+      "field": {
+        "role": "neutral",
+        "displayName": "Field White",
+        "canonical": "#FFFDF9",
+        "tonalRamp": [
+          "#0B0B0A",
+          "#252422",
+          "#41403D",
+          "#5F5D5A",
+          "#7F7D79",
+          "#A09E9A",
+          "#C5C4C1",
+          "#EFEEED"
+        ],
+        "cssVar": "--field"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#DCD2C4",
+        "tonalRamp": [
+          "#0D0B08",
+          "#28231D",
+          "#453F35",
+          "#655C50",
+          "#857C6F",
+          "#A69D90",
+          "#CAC3BA",
+          "#F1EEEA"
+        ],
+        "cssVar": "--line"
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#C3B5A3",
+        "tonalRamp": [
+          "#0E0B07",
+          "#29231B",
+          "#483E32",
+          "#685B4B",
+          "#887B6A",
+          "#AA9C8B",
+          "#CCC3B6",
+          "#F2EEE8"
+        ],
+        "cssVar": "--line-strong"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1A1512",
+        "tonalRamp": [
+          "#0C0B0A",
+          "#262321",
+          "#433F3C",
+          "#625C58",
+          "#827C78",
+          "#A49D99",
+          "#C8C3C0",
+          "#F0EEED"
+        ],
+        "cssVar": "--ink"
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#3D342D",
+        "tonalRamp": [
+          "#0D0B09",
+          "#28231F",
+          "#463E38",
+          "#655B54",
+          "#857B73",
+          "#A79C94",
+          "#CAC2BD",
+          "#F1EEEB"
+        ],
+        "cssVar": "--ink-2"
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#66594D",
+        "tonalRamp": [
+          "#0E0A08",
+          "#29231D",
+          "#483E34",
+          "#685B4F",
+          "#887A6E",
+          "#AA9C8E",
+          "#CCC2B9",
+          "#F2EDE9"
+        ],
+        "cssVar": "--ink-3"
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Burnt Ember",
+        "canonical": "#C2571B",
+        "tonalRamp": [
+          "#1B0300",
+          "#441000",
+          "#722000",
+          "#9F3700",
+          "#C4591E",
+          "#EA7B45",
+          "#FCAF8D",
+          "#FFE6D6"
+        ],
+        "cssVar": "--accent"
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Banked Ember",
+        "canonical": "#A34816",
+        "tonalRamp": [
+          "#1A0400",
+          "#421200",
+          "#6E2400",
+          "#9B3B00",
+          "#C05D2B",
+          "#E57F4E",
+          "#F8B191",
+          "#FFE7D8"
+        ],
+        "note": "Literal in stallion.css (no custom property); reused across rules."
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Ember Ink",
+        "canonical": "#9C4413",
+        "tonalRamp": [
+          "#190500",
+          "#401400",
+          "#6B2800",
+          "#973F0C",
+          "#BB6034",
+          "#E18256",
+          "#F4B395",
+          "#FFE7DA"
+        ],
+        "cssVar": "--accent-ink"
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Ember Wash",
+        "canonical": "#F5E2D3",
+        "tonalRamp": [
+          "#0E0A07",
+          "#2A221C",
+          "#493D33",
+          "#6A5A4D",
+          "#8B7A6C",
+          "#AC9B8D",
+          "#CEC2B8",
+          "#F3EDE9"
+        ],
+        "cssVar": "--accent-wash"
+      },
+      "accent-on-dark": {
+        "role": "primary",
+        "displayName": "Ember on Dark",
+        "canonical": "#F3A16F",
+        "tonalRamp": [
+          "#180600",
+          "#3D1800",
+          "#662D00",
+          "#90460D",
+          "#B36735",
+          "#D88857",
+          "#EEB696",
+          "#FFE9DA"
+        ],
+        "note": "Literal in stallion.css (no custom property); reused across rules."
+      },
+      "ok": {
+        "role": "secondary",
+        "displayName": "Forest Ledger",
+        "canonical": "#1F5232",
+        "tonalRamp": [
+          "#040E06",
+          "#112A1A",
+          "#224930",
+          "#386A49",
+          "#588B68",
+          "#79AD88",
+          "#ACCEB5",
+          "#E4F3E8"
+        ],
+        "cssVar": "--ok"
+      },
+      "ok-wash": {
+        "role": "secondary",
+        "displayName": "Forest Wash",
+        "canonical": "#DFEADC",
+        "tonalRamp": [
+          "#0A0C09",
+          "#212620",
+          "#3B4239",
+          "#576155",
+          "#778174",
+          "#98A295",
+          "#BFC7BD",
+          "#ECEFEB"
+        ],
+        "cssVar": "--ok-wash"
+      },
+      "ok-on-dark": {
+        "role": "secondary",
+        "displayName": "Forest on Dark",
+        "canonical": "#8FCBA4",
+        "tonalRamp": [
+          "#030F06",
+          "#0D2B1A",
+          "#1C4A30",
+          "#316B49",
+          "#528C68",
+          "#73AE88",
+          "#A8CFB5",
+          "#E2F4E8"
+        ],
+        "note": "Literal in stallion.css (no custom property); reused across rules."
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Customs Amber",
+        "canonical": "#7E5300",
+        "tonalRamp": [
+          "#130900",
+          "#341F00",
+          "#593800",
+          "#7F5401",
+          "#A07430",
+          "#C49553",
+          "#DEBE94",
+          "#FBECD9"
+        ],
+        "cssVar": "--warn"
+      },
+      "warn-wash": {
+        "role": "tertiary",
+        "displayName": "Amber Wash",
+        "canonical": "#F5E8C6",
+        "tonalRamp": [
+          "#0E0B05",
+          "#292315",
+          "#483F28",
+          "#685D3F",
+          "#887C5D",
+          "#AA9E7E",
+          "#CCC4AE",
+          "#F2EEE4"
+        ],
+        "cssVar": "--warn-wash"
+      },
+      "crit": {
+        "role": "tertiary",
+        "displayName": "Seal Red",
+        "canonical": "#A3241B",
+        "tonalRamp": [
+          "#1D0101",
+          "#480705",
+          "#77130D",
+          "#A7281E",
+          "#CD4D3F",
+          "#F37060",
+          "#FFA99B",
+          "#FFE3DC"
+        ],
+        "cssVar": "--crit"
+      },
+      "crit-wash": {
+        "role": "tertiary",
+        "displayName": "Seal Wash",
+        "canonical": "#F5DDD8",
+        "tonalRamp": [
+          "#0F0A09",
+          "#2B211F",
+          "#4B3C38",
+          "#6C5854",
+          "#8D7873",
+          "#AF9994",
+          "#D0C0BD",
+          "#F4EDEB"
+        ],
+        "cssVar": "--crit-wash"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hub page title only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Step titles; job reference in the job bar (24px)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel, day, station, rail and card titles (16-22px)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Prose, client names, ledes; ledes cap at 62-66ch."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "References, codes, dates, money, inputs, buttons, chips; tabular numerals."
+      },
+      "money-total": {
+        "displayName": "Money Total",
+        "purpose": "Payable figure on chrome, in accent-on-dark."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase field labels and column heads."
+      }
+    },
+    "shadows": [
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px rgba(194, 87, 27, 0.18)",
+        "purpose": "Focused input, select, textarea."
+      },
+      {
+        "name": "selected-ring",
+        "value": "inset 0 0 0 1px #C2571B",
+        "purpose": "Checked declaration-type card."
+      },
+      {
+        "name": "receipted-ring",
+        "value": "inset 0 0 0 1px rgba(31, 82, 50, 0.45)",
+        "purpose": "Receipted status chip."
+      },
+      {
+        "name": "scroll-edge",
+        "value": "radial-gradient(farthest-side at 0 50%, rgba(26, 21, 18, 0.18), transparent)",
+        "purpose": "Overflow cue on the horizontally scrolling lines table."
+      }
+    ],
+    "focus": {
+      "outline": "2px solid #C2571B",
+      "outlineOffset": "2px"
+    },
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Station pip state changes (0.4s) and the new-job reveal (0.42s)."
+      },
+      {
+        "name": "state-fast",
+        "value": "0.15s",
+        "purpose": "Button, input, chip colour and border transitions."
+      },
+      {
+        "name": "row-hover",
+        "value": "0.12s",
+        "purpose": "Docket row hover and delete-button reveal."
+      },
+      {
+        "name": "reveal",
+        "value": "st-reveal 0.42s: opacity 0, translateY(-6px), clip-path inset(0 0 100% 0) to rest",
+        "purpose": "New-job panel opening."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation/transition-duration 0.001ms",
+        "purpose": "Applied to everything under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "520px",
+        "purpose": "Two-column field spans collapse."
+      },
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Lines-table description column narrows."
+      },
+      {
+        "name": "md",
+        "value": "720px",
+        "purpose": "Queue chips become a horizontal scroller; hub actions go full width."
+      },
+      {
+        "name": "new-job",
+        "value": "860px",
+        "purpose": "New-job panel stacks."
+      },
+      {
+        "name": "lg",
+        "value": "900px",
+        "purpose": "Docket rows become two-column cards; column head hides; table scroll hint shows."
+      },
+      {
+        "name": "rail",
+        "value": "1180px",
+        "purpose": "Duty rail drops below the main column and stops sticking."
+      },
+      {
+        "name": "xl",
+        "value": "1240px",
+        "purpose": "Vessel column drops from the docket grid."
+      }
+    ],
+    "drift": [
+      "Dashboard, Clients, Log, Courier, and the shared TopNav still use older inline styles from components/courier/tokens.ts and styles/workbench.css: paper #F6F3EE, chrome #111318, amber #C65911. Not repaired.",
+      "HsClassifyCell (src/pages/HsClassifyCell.tsx), embedded in the lines table, is a legacy inline-styled component: Fraunces 13px in its input and courier-token colours inside the .st world.",
+      "src/index.css global type layer forces font-weight 600 on every input, select, textarea, and button under #root, including .st controls."
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one ember action per view: New job, Submit for review, Continue.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg>New job</button>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.04em;border:1px solid var(--line-strong);background:var(--field);color:var(--ink);cursor:pointer;white-space:nowrap;transition:background 0.15s,border-color 0.15s,color 0.15s;} .ds-btn svg{width:15px;height:15px;} .ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;} .ds-btn-primary{background:#B5501A;border-color:#B5501A;color:#fff;} .ds-btn-primary:hover{background:#A34816;border-color:#A34816;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Default stamped-label button on paper.",
+      "html": "<button class=\"ds-btn\">Download worksheet</button>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.04em;border:1px solid var(--line-strong);background:var(--field);color:var(--ink);cursor:pointer;white-space:nowrap;transition:background 0.15s,border-color 0.15s,color 0.15s;} .ds-btn svg{width:15px;height:15px;} .ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;} .ds-btn:hover{border-color:var(--ink-3);background:#fff;}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis action inside panels.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Cancel</button>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.04em;border:1px solid var(--line-strong);background:var(--field);color:var(--ink);cursor:pointer;white-space:nowrap;transition:background 0.15s,border-color 0.15s,color 0.15s;} .ds-btn svg{width:15px;height:15px;} .ds-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;} .ds-btn-ghost{background:transparent;border-color:transparent;color:var(--ink-2);} .ds-btn-ghost:hover{background:rgba(26,21,18,0.06);}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Mono label over a field-white control; ember focus halo; needed state shown.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-a\">Bill of lading</label><input id=\"ds-a\" class=\"ds-input\" value=\"MEDU4412107\"></div><div class=\"ds-field ds-needed\"><label for=\"ds-b\">Invoice no. <span>· needed</span></label><input id=\"ds-b\" class=\"ds-input\" aria-invalid=\"true\"></div>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;max-width:280px;} .ds-field label{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);} .ds-field span{font-size:10px;font-weight:700;} .ds-needed label{color:var(--accent-ink);} .ds-input{min-height:36px;padding:7px 10px;font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--field);border:1px solid var(--line-strong);border-radius:4px;caret-color:var(--accent);transition:border-color 0.15s,box-shadow 0.15s;} .ds-input:hover{border-color:var(--ink-3);} .ds-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(194,87,27,0.18);} .ds-input[aria-invalid=\"true\"]{border-color:var(--accent);background:#FFF8F2;}"
+    },
+    {
+      "name": "Queue Chips",
+      "kind": "chip",
+      "refersTo": "queue-chip",
+      "description": "Pill filters with counts above the docket; pressed inverts to ink.",
+      "html": "<div class=\"ds-queues\"><button class=\"ds-queue\" aria-pressed=\"true\">Open jobs <b>7</b></button><button class=\"ds-queue ds-hot\" aria-pressed=\"false\">Sent back <b>1</b></button><button class=\"ds-queue\" aria-pressed=\"false\">Drafts <b>3</b></button></div>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-queues{display:flex;gap:6px;flex-wrap:wrap;} .ds-queue{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;} .ds-queue b{font-weight:700;color:var(--ink-3);} .ds-queue:hover{border-color:var(--ink-3);color:var(--ink);} .ds-queue:focus-visible{outline:2px solid var(--accent);outline-offset:2px;} .ds-queue[aria-pressed=\"true\"]{background:var(--ink);border-color:var(--ink);color:var(--chrome-text);} .ds-queue[aria-pressed=\"true\"] b{color:var(--chrome-dim);} .ds-hot b{color:var(--accent-ink);}"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "status-approved",
+      "description": "Lifecycle status vocabulary with currentColor dot.",
+      "html": "<div class=\"ds-row\"><span class=\"ds-st ds-draft\">Draft</span><span class=\"ds-st ds-pending\">In review</span><span class=\"ds-st ds-corr\">Sent back</span><span class=\"ds-st ds-appr\">Approved</span><span class=\"ds-st ds-sub\">Submitted</span><span class=\"ds-st ds-rec\">Receipted</span></div>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-row{display:flex;gap:8px;flex-wrap:wrap;} .ds-st{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;font-family:var(--mono);font-size:11px;font-weight:600;border-radius:3px;white-space:nowrap;} .ds-st::before{content:\"\";width:6px;height:6px;border-radius:50%;background:currentColor;} .ds-draft{color:var(--ink-2);background:rgba(26,21,18,0.06);} .ds-pending{color:var(--warn);background:var(--warn-wash);} .ds-corr{color:var(--crit);background:var(--crit-wash);} .ds-appr{color:var(--ok);background:var(--ok-wash);} .ds-sub{color:var(--chrome-text);background:var(--ink);} .ds-rec{color:var(--ok);box-shadow:inset 0 0 0 1px rgba(31,82,50,0.45);}"
+    },
+    {
+      "name": "Station Track",
+      "kind": "custom",
+      "description": "Signature four-pip route: done green, current ember, rest hollow.",
+      "html": "<span class=\"ds-track\" role=\"img\" aria-label=\"At Verify, 2 of 4 done\"><span class=\"ds-pip ds-done\"></span><span class=\"ds-bar ds-done\"></span><span class=\"ds-pip ds-done\"></span><span class=\"ds-bar ds-done\"></span><span class=\"ds-pip ds-cur\"></span><span class=\"ds-bar\"></span><span class=\"ds-pip\"></span><span class=\"ds-lbl\">Verify</span></span>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-track{display:inline-flex;align-items:center;} .ds-pip{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--line-strong);transition:background 0.4s var(--ease-out),border-color 0.4s var(--ease-out);} .ds-bar{width:10px;height:1.5px;background:var(--line-strong);} .ds-pip.ds-done{background:var(--ok);border-color:var(--ok);} .ds-bar.ds-done{background:var(--ok);} .ds-cur{background:var(--accent);border-color:var(--accent);outline:1.5px solid var(--accent);outline-offset:1.5px;} .ds-lbl{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);margin-left:10px;}"
+    },
+    {
+      "name": "Day Rule with Docket Row",
+      "kind": "card",
+      "refersTo": "day-rule",
+      "description": "Chrome day band over a sheet of arrival rows.",
+      "html": "<div class=\"ds-day\"><div class=\"ds-rule\"><span class=\"ds-name\">Today</span><span class=\"ds-date\">SAT, 10 OCT</span><span class=\"ds-meta\"><b>2</b> jobs · TT$ <b>14,533.94</b></span></div><a class=\"ds-r\" href=\"#\"><span class=\"ds-when\">10 Oct</span><span class=\"ds-ref\">JOB-2026-0405</span><span class=\"ds-client\">Ansa Coatings</span><span class=\"ds-money\">2,888.28</span></a></div>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-rule{display:flex;align-items:baseline;gap:14px;background:var(--chrome);color:var(--chrome-text);padding:10px 18px;border-radius:5px 5px 0 0;} .ds-name{display:inline-flex;align-items:center;gap:10px;font-family:var(--serif);font-size:18px;font-weight:700;} .ds-name::before{content:\"\";width:9px;height:9px;border-radius:50%;background:var(--accent);outline:1.5px solid var(--accent);outline-offset:2px;} .ds-date,.ds-meta{font-family:var(--mono);font-size:12px;color:var(--chrome-dim);letter-spacing:0.04em;} .ds-meta{margin-left:auto;} .ds-meta b{color:var(--chrome-text);font-weight:600;} .ds-r{display:grid;grid-template-columns:72px 150px 1fr 120px;gap:14px;align-items:center;padding:12px 18px;min-height:58px;background:var(--sheet);border:1px solid var(--line);border-top:0;border-radius:0 0 5px 5px;color:var(--ink);text-decoration:none;transition:background 0.12s;} .ds-r:hover{background:#FFFCF7;} .ds-r:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;} .ds-when{font-family:var(--mono);font-size:12.5px;font-weight:700;} .ds-ref{font-family:var(--mono);font-weight:700;font-size:13.5px;} .ds-client{font-family:var(--sans);font-size:14px;} .ds-money{font-family:var(--mono);font-size:13px;text-align:right;font-variant-numeric:tabular-nums;}"
+    },
+    {
+      "name": "Duty Rail",
+      "kind": "card",
+      "refersTo": "duty-rail",
+      "description": "Chrome summary of server-computed duties with ember payable total.",
+      "html": "<aside class=\"ds-rail\"><h3>Duties &amp; totals</h3><dl><dt>Total CIF</dt><dd>22,466.21</dd><dt>VAT</dt><dd>2,808.28</dd><dt class=\"ds-rel\">C84 relief</dt><dd class=\"ds-rel\">− 0.00</dd></dl><div class=\"ds-total\"><span>Payable TT$</span><b>2,888.28</b></div></aside>",
+      "css": ":host{--chrome:#14100E;--chrome-2:#1F1915;--chrome-line:#3A302A;--chrome-text:#F1EAE0;--chrome-dim:#B3A596;--paper:#EFE9DF;--sheet:#F8F4ED;--field:#FFFDF9;--line:#DCD2C4;--line-strong:#C3B5A3;--ink:#1A1512;--ink-2:#3D342D;--ink-3:#66594D;--accent:#C2571B;--accent-ink:#9C4413;--accent-wash:#F5E2D3;--ok:#1F5232;--ok-wash:#DFEADC;--warn:#7E5300;--warn-wash:#F5E8C6;--crit:#A3241B;--crit-wash:#F5DDD8;--serif:\"Fraunces\",Georgia,serif;--mono:\"JetBrains Mono\",\"SFMono-Regular\",ui-monospace,monospace;--sans:\"Instrument Sans\",system-ui,sans-serif;--ease-out:cubic-bezier(0.16,1,0.3,1);} .ds-rail{width:300px;background:var(--chrome);color:var(--chrome-text);border-radius:6px;padding:20px 20px 18px;} .ds-rail h3{font-family:var(--serif);font-size:17px;font-weight:700;margin:0 0 14px;} .ds-rail dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:9px 12px;font-family:var(--mono);font-size:12.5px;} .ds-rail dt{color:var(--chrome-dim);} .ds-rail dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;} .ds-rel{color:#8FCBA4 !important;} .ds-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:14px;border-top:1px solid var(--chrome-line);} .ds-total span{font-family:var(--mono);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--chrome-dim);} .ds-total b{font-family:var(--mono);font-size:22px;font-weight:700;color:#F3A16F;font-variant-numeric:tabular-nums;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Arrivals Docket",
+    "overview": "The Stallion declarations world reads like a harbour-office ledger: near-black chrome bands frame warm paper sheets, and every job is filed under the day its goods land. Near-black is the frame, paper is the working surface, and burnt orange is the single ember that says \"act here\". Forest green says \"done\". Nothing else carries hue except the status vocabulary.\n\nDensity is operational, not airy. Rows are 58px tall, panels pad at 22px, labels are small uppercase mono, and every reference, code, and figure is set in tabular JetBrains Mono so columns of money align. Fraunces carries headings only: the page title, step titles, panel titles, day names, station names. Instrument Sans carries prose. The pairing is fixed by Stallion's brand commitment (PRODUCT.md) and must not drift toward another family.\n\nThe signature is the station track: four pips joined by hairlines, green when done, orange when current, hollow otherwise. It appears small in each docket row and full-size as the sticky, clickable station rail inside a job. Problems surface first and in place: blocking fields flag their own label and border rather than raising a separate alert surface.",
+    "keyCharacteristics": [
+      "Near-black chrome bands (top bar, job bar, day rules, duty rail, XML preview) over a warm paper canvas.",
+      "One accent: burnt orange for the primary action, current station, today marker, focus ring, and \"needed\" flags.",
+      "Forest green only for done and receipted states.",
+      "Monospace for anything countable or codable; Fraunces only for headings; Instrument Sans for prose.",
+      "Flat: depth comes from tonal paper layers and 1px warm-grey rules, never drop shadows.",
+      "Squared, editorial corners (3-6px); the only full pill is the queue chip."
+    ],
+    "rules": [
+      {
+        "name": "The One Ember Rule",
+        "body": "Burnt orange is the only accent. It marks exactly one thing per context: the primary action, where the job is now, today, or what is needed. Status hues (amber, red) appear only inside status chips, counts, flags, and banners, never as decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Green Means Done Rule",
+        "body": "Forest green is reserved for completed stations, approved and receipted states, and relief. Never use it for links, selection, or emphasis.",
+        "section": "colors"
+      },
+      {
+        "name": "The Chrome Frames, Paper Works Rule",
+        "body": "Near-black is for bands that frame or summarize (top bar, job bar, day rules, duty rail, code). Editable content always sits on paper, sheet, or field.",
+        "section": "colors"
+      },
+      {
+        "name": "The Countable Is Mono Rule",
+        "body": "If it can be counted, keyed, or matched against a document (reference, HS code, BL, date, amount, status), it is JetBrains Mono with tabular numerals. Prose inputs opt out explicitly.",
+        "section": "typography"
+      },
+      {
+        "name": "The Serif Is For Headings Rule",
+        "body": "Fraunces is used only for headings and names of places in the route (stations, days, panels). Never in inputs, tables, or labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Docket Rule",
+        "body": "Surfaces never lift. If something needs to stand out, change its ground (sheet to chrome) or its rule weight, not its shadow.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep burnt orange to one role per context: primary action, current station, today, or needed.",
+      "Do set references, codes, dates, and money in JetBrains Mono with tabular numerals, right-aligned in columns.",
+      "Do use Ember Ink (accent-ink) for orange text on paper and Ember on Dark (accent-on-dark) for orange text on chrome; reserve Burnt Ember itself for fills, rules, pips, and focus.",
+      "Do flag problems on the field itself (label colour, flag word, border, fill) and list them first in the checklist, blocking before \"to check\".",
+      "Do reuse the station track wherever a job's progress is shown.",
+      "Do separate surfaces with 1px Hairline rules and tonal steps (paper, sheet, field).",
+      "Do honour reduced motion; every transition and reveal collapses to near-zero duration."
+    ],
+    "donts": [
+      "Don't add drop shadows to panels, rows, or cards; the system is flat.",
+      "Don't introduce a second accent hue, or use amber and red outside status chips, counts, flags, and banners.",
+      "Don't use green for anything that is not done, approved, receipted, or relief.",
+      "Don't set Fraunces in inputs, table cells, or labels.",
+      "Don't put a mono label above a Fraunces heading as an eyebrow or kicker; headings stand alone, and uppercase mono labels name fields, columns, and field groups only.",
+      "Don't build a stat-card row or a zebra-striped status table for the hub; jobs are grouped by arrival day.",
+      "Don't round containers past 6px or use pills for anything but queue chips."
+    ]
+  }
+}
