@@ -214,7 +214,9 @@ export async function calculateWorksheet(payload: {
   }>("/worksheet/calculate", { method: "POST", body: JSON.stringify(payload) });
 }
 
-export async function generatePack(payload: {
+// With a declaration_id the server generates from the stored approved
+// snapshot and ignores any content sent; content is only for ad-hoc packs.
+export async function generatePack(payload: { declaration_id: string } | {
   declaration_id?: string;
   header: Record<string, unknown>;
   worksheet: Record<string, unknown>;

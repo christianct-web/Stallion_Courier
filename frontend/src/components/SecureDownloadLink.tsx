@@ -5,10 +5,12 @@ export function SecureDownloadLink({
   href,
   children,
   style,
+  className,
 }: {
   href: string;
   children: ReactNode;
   style?: CSSProperties;
+  className?: string;
 }) {
   const [busy, setBusy] = useState(false);
 
@@ -27,6 +29,7 @@ export function SecureDownloadLink({
   return (
     <button
       type="button"
+      className={className}
       onClick={open}
       disabled={busy}
       style={{
