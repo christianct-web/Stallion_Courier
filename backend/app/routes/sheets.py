@@ -62,7 +62,7 @@ def sheets_list():
 
 @router.post("")
 def sheets_create(req: Dict[str, Any] | None = None):
-    return sheet_service.create_sheet(req or {})
+    return sheet_service.create_sheet(req or {}, source=_manual())
 
 
 @router.get("/{sheet_id}")
@@ -121,7 +121,11 @@ def sheets_recompute(sheet_id: str):
 # ── line ops ─────────────────────────────────────────────────────────────────
 @router.post("/{sheet_id}/lines")
 def lines_add(sheet_id: str, req: Dict[str, Any] | None = None):
-    s = sheet_service.add_line(sheet_id, req or {})
+    req = req or {}
+    # Values the caller supplied are a person's choice; defaults stay unattributed.
+    who = _manual()
+    s = sheet_service.add_line(sheet_id, req, sources={
+        k: who for k in req if k not in ("field_sources", "id", "line_no")})
     if not s:
         raise HTTPException(404, "Sheet not found")
     return s
@@ -171,6 +175,12 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
         parsed = await _extract_with_claude([file])
     except Exception:
         parsed = _fallback_extract(file)
+        # The text fallback never reads a currency (it always says USD) and
+        # reports 0 when it finds no amount. Neither is something the document
+        # said, so neither is written or attributed to it.
+        parsed.pop("currency", None)
+        if not parsed.get("invoiceValueForeign"):
+            parsed.pop("invoiceValueForeign", None)
 
     doc = {"source": "extracted", "doc": file.filename or "document"}
 
@@ -313,7 +323,7 @@ def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
     # CPC and origin are chosen per line by a person; never filled for them.
     gaps = sheet_service.missing_line_codes(s) + sheet_service.rollup_cpc_conflicts(s)
     if gaps:
-        raise HTTPException(422, {"message": "Choose the CPC and country of origin for every line before generating XML. "
+        raise HTTPException(422, {"message": "Every line needs a CPC, a country of origin and (unless rolled up to 9898) a valid HS code before XML is generated. "
                                   + "; ".join(gaps) + ".", "lines": gaps})
 
     inputs = sheet_service.to_decl_inputs(s)

@@ -220,13 +220,15 @@ def build_presubmission_report(sheet: Dict[str, Any]) -> Dict[str, Any]:
         })
 
         # Per-line checks: HS code present, value > 0, low-confidence flag.
-        missing_hs = [l for l in lines if not _present(l.get("hs_code"))]
+        # Same rule as the XML gate: the builder drops lines without a usable code.
+        from .sheet_service import hs_code_ok, rollup_active
+        missing_hs = [] if rollup_active(sheet) else [l for l in lines if not hs_code_ok(l.get("hs_code"))]
         if missing_hs:
             items.append({
                 "field": "hs_code",
-                "label": f"{len(missing_hs)} line{'' if len(missing_hs) == 1 else 's'} missing an HS code",
+                "label": f"{len(missing_hs)} line{'' if len(missing_hs) == 1 else 's'} without a valid HS code",
                 "status": "missing", "severity": "critical",
-                "detail": "Every line needs a classification before XML.",
+                "detail": "Every line needs an HS code of 8+ digits. XML will not generate until it has one.",
             })
 
         # CPC and origin are chosen per line by a person; blank blocks XML.

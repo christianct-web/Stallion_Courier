@@ -107,6 +107,8 @@ export const STATIONS: { key: StationKey; label: string }[] = [
   { key: "outputs", label: "Outputs" },
 ];
 
+// Mirrors the server's XML gate: an HS code needs at least 8 digits.
+const hsOk = (v: unknown) => (String(v ?? "").match(/\d/g) || []).length >= 8;
 const filled = (v: unknown) => v !== null && v !== undefined && String(v).trim() !== "";
 
 export function stationsDone(s: Sheet): Record<StationKey, boolean> {
@@ -116,7 +118,7 @@ export function stationsDone(s: Sheet): Record<StationKey, boolean> {
     setup: filled(s.reference),
     documents: lines.length > 0,
     verify: lines.length > 0 && filled(s.consignee) && filled(s.invoice_no) && filled(s.currency)
-      && lines.every(l => filled(l.hs_code) && filled(l.cpc) && filled(l.country_of_origin)),
+      && lines.every(l => hsOk(l.hs_code) && filled(l.cpc) && filled(l.country_of_origin)),
     outputs: ["pending", "approved", "submitted", "receipted"].includes(status),
   };
 }

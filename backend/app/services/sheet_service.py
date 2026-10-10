@@ -396,16 +396,26 @@ def get_sheet(sheet_id: str) -> Optional[Dict[str, Any]]:
     return _migrate_sheet(s) if s else None
 
 
-def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def create_sheet(payload: Dict[str, Any] | None = None,
+                 source: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Create a sheet. `source` is recorded as provenance for every header and
+    line value the caller supplied; defaults stay unattributed."""
     from ..repository import sheets_repo
+    record = _stamp(source)
     sheet = _blank_sheet()
     if payload:
         for k, v in payload.items():
-            if k in sheet and k not in ("id", "lines", "totals", "field_sources"):
+            if k in sheet and k not in ("id", "lines", "totals", "field_sources",
+                                        "created_at", "updated_at"):
                 sheet[k] = v
+                if record:
+                    sheet["field_sources"][k] = record
         for ln in payload.get("lines", []):
             row = _blank_line()
-            row.update({k: v for k, v in ln.items() if k in row and k != "field_sources"})
+            given = {k: v for k, v in ln.items() if k in row and k not in ("field_sources", "id", "line_no")}
+            row.update(given)
+            if record:
+                row["field_sources"] = {k: record for k in given}
             sheet["lines"].append(row)
         _renumber(sheet["lines"])
     recompute(sheet)
@@ -655,14 +665,26 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
     return rolled
 
 
+def hs_code_ok(code: Any) -> bool:
+    """An HS code the declaration builder will emit: at least 8 digits. The
+    builder silently drops a line whose code has no digits, which would leave
+    goods (and their value) out of the XML while the invoice total stays."""
+    return sum(ch.isdigit() for ch in str(code or "")) >= 8
+
+
 def missing_line_codes(sheet: Dict[str, Any]) -> List[str]:
-    """Lines that cannot go into XML: CPC or country of origin not chosen."""
+    """Lines that cannot go into XML: CPC or country of origin not chosen, or
+    (itemised entries) no valid HS code. Rolled 9898 lines take the 9898 code."""
     out: List[str] = []
+    itemised = not rollup_active(sheet)
     for ln in sheet.get("lines", []):
         gaps = [label for key, label in (("cpc", "CPC"), ("country_of_origin", "country of origin"))
                 if not str(ln.get(key) or "").strip()]
-        if gaps:
-            out.append(f"Line {ln.get('line_no')}: {' and '.join(gaps)} not chosen")
+        parts = [f"{' and '.join(gaps)} not chosen"] if gaps else []
+        if itemised and not hs_code_ok(ln.get("hs_code")):
+            parts.append("no valid HS code (8+ digits)")
+        if parts:
+            out.append(f"Line {ln.get('line_no')}: {'; '.join(parts)}")
     return out
 
 
