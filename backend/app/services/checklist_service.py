@@ -229,6 +229,18 @@ def build_presubmission_report(sheet: Dict[str, Any]) -> Dict[str, Any]:
                 "detail": "Every line needs a classification before XML.",
             })
 
+        # CPC and origin are chosen per line by a person; blank blocks XML.
+        for key, label in (("cpc", "CPC"), ("country_of_origin", "country of origin")):
+            blank = [l for l in lines if not _present(l.get(key))]
+            if blank:
+                n = len(blank)
+                items.append({
+                    "field": key,
+                    "label": f"{n} line{'' if n == 1 else 's'} without a {label}",
+                    "status": "missing", "severity": "critical",
+                    "detail": f"Choose the {label} for each line. XML will not generate until you do.",
+                })
+
         zero_val = [l for l in lines if not _present(l.get("exworks_usd"))]
         if zero_val:
             items.append({

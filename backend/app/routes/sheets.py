@@ -185,7 +185,7 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
                 "description": li.get("description") or "",
                 "hs_code": li.get("hsCode") or "",
                 "exworks_usd": li.get("lineTotal") or li.get("unitPrice") or 0,
-                "country_of_origin": li.get("countryOfOrigin") or parsed.get("countryOfOrigin") or "TT",
+                "country_of_origin": li.get("countryOfOrigin") or parsed.get("countryOfOrigin") or "",
                 "gross_kg": li.get("grossKg") or li.get("grossWeightKg") or 0,
                 "net_kg": li.get("netKg") or li.get("netWeightKg") or 0,
             }
@@ -205,7 +205,7 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
             "description": parsed.get("description", ""),
             "hs_code": parsed.get("hsCode", ""),
             "exworks_usd": parsed.get("invoiceValueForeign", 0),
-            "country_of_origin": parsed.get("countryOfOrigin", "TT"),
+            "country_of_origin": parsed.get("countryOfOrigin") or "",
             "gross_kg": parsed.get("grossKg") or parsed.get("grossWeightKg") or 0,
             "net_kg": parsed.get("netKg") or parsed.get("netWeightKg") or 0,
         }, sources=_sources({
@@ -309,6 +309,12 @@ def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
     # the generate modal may pass last-minute declaration-level fields
     if req:
         s = sheet_service.update_header(sheet_id, req, source=_manual()) or s
+
+    # CPC and origin are chosen per line by a person; never filled for them.
+    gaps = sheet_service.missing_line_codes(s)
+    if gaps:
+        raise HTTPException(422, {"message": "Choose the CPC and country of origin for every line before generating XML. "
+                                  + "; ".join(gaps) + ".", "lines": gaps})
 
     inputs = sheet_service.to_decl_inputs(s)
     decl = declaration_service.build_complete_declaration(

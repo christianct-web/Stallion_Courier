@@ -106,9 +106,13 @@ def test_line_fallbacks_are_not_marked_extracted(monkeypatch):
     line_src = out["lines"][0]["field_sources"]
     assert line_src["description"]["source"] == "extracted"
     assert line_src["exworks_usd"]["source"] == "extracted"
-    # Origin was filled by the extractor's fallback, not by the document.
+    # The document gave no origin: nothing is filled in for it, and nothing is attributed.
+    assert out["lines"][0]["country_of_origin"] == ""
     assert "country_of_origin" not in line_src
     assert "hs_code" not in line_src
+    # Extraction never chooses a CPC.
+    assert out["lines"][0]["cpc"] == ""
+    assert "cpc" not in line_src
 
 
 def test_hand_edits_are_marked_manual_and_sources_are_server_owned(monkeypatch):
@@ -124,3 +128,40 @@ def test_hand_edits_are_marked_manual_and_sources_are_server_owned(monkeypatch):
 
     out = client.patch(f"/sheets/{sheet['id']}/lines/1", json={"hs_code": "32089000"}).json()
     assert out["lines"][0]["field_sources"]["hs_code"]["source"] == "manual"
+
+
+# ── CPC and origin are chosen per line, never defaulted ─────────────────────
+
+def test_new_lines_have_no_cpc_or_origin_default():
+    sheet = sheet_service.create_sheet({})
+    out = sheet_service.add_line(sheet["id"], {})
+    line = out["lines"][0]
+    assert line["cpc"] == ""
+    assert line["country_of_origin"] == ""
+
+
+def test_presubmission_blocks_on_unchosen_cpc_and_origin(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {"hs_code": "32089000"})
+    client = _client(monkeypatch, [])
+
+    report = client.get(f"/sheets/{sheet['id']}/presubmission").json()["report"]
+    blocking = {i["field"] for i in report["items"] if i["severity"] == "critical" and i["status"] != "ok"}
+    assert {"cpc", "country_of_origin"} <= blocking
+    assert report["ready"] is False
+
+    client.patch(f"/sheets/{sheet['id']}/lines/1", json={"cpc": "4000", "country_of_origin": "US"})
+    report = client.get(f"/sheets/{sheet['id']}/presubmission").json()["report"]
+    blocking = {i["field"] for i in report["items"] if i["severity"] == "critical" and i["status"] != "ok"}
+    assert not ({"cpc", "country_of_origin"} & blocking)
+
+
+def test_xml_refuses_until_every_line_has_cpc_and_origin(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {"hs_code": "32089000", "country_of_origin": "US"})
+    client = _client(monkeypatch, [])
+
+    r = client.post(f"/sheets/{sheet['id']}/xml", json={})
+    assert r.status_code == 422
+    detail = r.json()["detail"]
+    assert "Line 1: CPC not chosen" in detail["lines"]

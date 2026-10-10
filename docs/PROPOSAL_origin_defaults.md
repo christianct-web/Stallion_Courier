@@ -1,6 +1,31 @@
 # Proposal: stop defaulting line country of origin to TT
 
-Status: **proposed, not applied**. Under AGENTS.md this needs broker approval.
+Status: **approved and applied** (2026-10-10, by the project owner): no TT
+origin fallback, and **CPC is chosen per line by the clerk or broker, whether
+the line was extracted or not** (no 4000 default).
+
+### What was applied
+- New lines and extracted lines start with blank `cpc` and `country_of_origin`;
+  extraction fills origin only when the document states it and never sets CPC.
+- The pre-submission check lists blank CPC / origin as **blocking**, and
+  `POST /sheets/{id}/xml` refuses (422) while any line lacks either.
+- Verify shows a CPC and an origin picker on every line (table row and phone
+  card), flagged "needed" until chosen; each records who chose it.
+- Existing sheets keep their stored values. Where a stored CPC or origin was
+  never chosen by a person or a document, the XML preflight warns
+  ("never confirmed") rather than blocks.
+- Worksheet XLSX shows the line's CPC as stored (blank if blank), not 4000.
+
+### Still open (not changed)
+- The returning-resident 9898 rollup (`entry_mode: relieved`, `rollup_9898`)
+  emits its consolidated household / personal effects lines with a fixed
+  CPC 4000 in `sheet_service.to_decl_inputs`. That is the rollup's own rule,
+  not a per-item default, so it was left as is. Should the rolled line take
+  the CPC chosen on its source lines (e.g. 4070 returning resident) instead?
+
+---
+
+Original proposal follows.
 
 ## Finding
 

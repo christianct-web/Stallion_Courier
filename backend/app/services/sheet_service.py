@@ -220,7 +220,10 @@ def _blank_line() -> Dict[str, Any]:
         "id": _new_id(),
         "line_no": 0,
         # grid fields
-        "cpc": "4000",
+        # No regulatory defaults: CPC and origin are chosen per line by the
+        # clerk/broker (approved by the broker, see docs/PROPOSAL_origin_defaults.md).
+        # XML generation refuses while either is blank.
+        "cpc": "",
         "hs_code": "",
         "description": "",
         "exworks_usd": 0.0,
@@ -231,7 +234,7 @@ def _blank_line() -> Dict[str, Any]:
         "surcharge_pct": 0.0,
         "vat_pct": 12.5,
         # C82-only fields (edited in the row drawer, dropdown-driven)
-        "country_of_origin": "TT",
+        "country_of_origin": "",
         "gross_kg": 0.0,
         "net_kg": 0.0,
         "supplementary_qty": 0,
@@ -602,7 +605,7 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
             "vatRate": 0,
             "duty": round(sum(_f(r.get("duty")) for r in rows), 2),
             "vat": round(sum(_f(r.get("vat")) for r in rows), 2),
-            "countryOfOrigin": rows[0].get("country_of_origin", "TT"),
+            "countryOfOrigin": rows[0].get("country_of_origin") or "",
             "natureOfTransaction": sheet.get("nature_of_transaction", "1"),
             "packageCount": sum(int(_f(r.get("package_count"), 1)) for r in rows),
             "packageType": rows[0].get("package_type", "PK"),
@@ -619,6 +622,17 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
             "relieved": all(r.get("relieved") for r in rows),
         })
     return rolled
+
+
+def missing_line_codes(sheet: Dict[str, Any]) -> List[str]:
+    """Lines that cannot go into XML: CPC or country of origin not chosen."""
+    out: List[str] = []
+    for ln in sheet.get("lines", []):
+        gaps = [label for key, label in (("cpc", "CPC"), ("country_of_origin", "country of origin"))
+                if not str(ln.get(key) or "").strip()]
+        if gaps:
+            out.append(f"Line {ln.get('line_no')}: {' and '.join(gaps)} not chosen")
+    return out
 
 
 def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
@@ -658,9 +672,18 @@ def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
         w.append("No line items — at least one is required.")
     for ln in lines:
         coo = (ln.get("country_of_origin") or "").strip().upper()
-        if not coo or coo == "TT":
-            w.append(f"Line {ln.get('line_no')}: country of origin is "
-                     f"'{coo or 'blank'}' — confirm it isn't defaulting.")
+        cpc = str(ln.get("cpc") or "").strip()
+        chosen = ln.get("field_sources") or {}
+        if not coo:
+            w.append(f"Line {ln.get('line_no')}: country of origin is blank — choose it.")
+        elif "country_of_origin" not in chosen:
+            w.append(f"Line {ln.get('line_no')}: country of origin '{coo}' was never "
+                     f"confirmed by a document or a person — check it isn't an old default.")
+        if not cpc:
+            w.append(f"Line {ln.get('line_no')}: CPC is blank — choose it.")
+        elif "cpc" not in chosen:
+            w.append(f"Line {ln.get('line_no')}: CPC {cpc} was never chosen by a person "
+                     f"— confirm it before filing.")
         if not (ln.get("hs_code") or "").strip():
             w.append(f"Line {ln.get('line_no')}: HS code is blank.")
         if _f(ln.get("gross_kg")) <= 0:
@@ -735,7 +758,8 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         for ln in sheet.get("lines", []):
             item = {
                 "cpc": ln.get("cpc"),
-                "extendedCustomsProcedure": int(_f(ln.get("cpc"), 4000)) or 4000,
+                # CPC is required per line (missing_line_codes gates XML), so no fallback.
+                "extendedCustomsProcedure": int(_f(ln.get("cpc"), 0)),
                 "nationalCustomsProcedure": 0,
                 "hsCode": ln.get("hs_code"),
                 "description": ln.get("description"),
