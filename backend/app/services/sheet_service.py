@@ -255,6 +255,9 @@ def _blank_line() -> Dict[str, Any]:
         "conc_duty_pct": None,             # rate concession: concessionary duty %
         "conc_vat_pct": None,              # rate concession: concessionary VAT %
         "mvt_ttd": 0.0,                    # vehicle: Motor Vehicle Tax in TT$
+        # provenance: {field: {"source": "extracted"|"manual", "doc"?, "by"?, "at"}}.
+        # A field with no entry holds a default nobody set. Server-owned.
+        "field_sources": {},
         # computed (filled by _compute_line)
         "freight_usd": 0.0, "cif_usd": 0.0, "cif_ttd": 0.0,
         "duty": 0.0, "surcharge": 0.0, "vat": 0.0, "mvt": 0.0, "total_tax": 0.0,
@@ -336,6 +339,8 @@ def _blank_sheet() -> Dict[str, Any]:
         },
         # data
         "cif_factor": 0.0,
+        # provenance of header fields, same shape as a line's field_sources
+        "field_sources": {},
         "lines": [],
         "totals": {},
         "broker_notes": "",
@@ -393,11 +398,11 @@ def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
     sheet = _blank_sheet()
     if payload:
         for k, v in payload.items():
-            if k in sheet and k not in ("id", "lines", "totals"):
+            if k in sheet and k not in ("id", "lines", "totals", "field_sources"):
                 sheet[k] = v
         for ln in payload.get("lines", []):
             row = _blank_line()
-            row.update({k: v for k, v in ln.items() if k in row})
+            row.update({k: v for k, v in ln.items() if k in row and k != "field_sources"})
             sheet["lines"].append(row)
         _renumber(sheet["lines"])
     recompute(sheet)
@@ -405,20 +410,35 @@ def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
     return sheet
 
 
-def update_header(sheet_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _stamp(source: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """A provenance record for this write, or None when the write is not attributable."""
+    if not source:
+        return None
+    return {**source, "at": _utcnow()}
+
+
+def update_header(sheet_id: str, patch: Dict[str, Any],
+                  source: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """Patch header fields. `source` (e.g. {"source": "manual", "by": ...}) is
+    recorded in field_sources for every field the patch actually wrote."""
     from ..repository import sheets_repo
+    record = _stamp(source)
 
     def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
         _migrate_sheet(sheet)
         for k, v in patch.items():
             if k in ("id", "lines", "totals", "created_at", "status",
-                     "status_history", "reviewed_at", "submitted_at"):
+                     "status_history", "reviewed_at", "submitted_at", "field_sources"):
                 continue
             # Deep-merge the concession block so partial updates don't wipe fields.
             if k == "concession" and isinstance(v, dict):
                 sheet.setdefault("concession", {}).update(v)
             elif k in sheet:
                 sheet[k] = v
+            else:
+                continue
+            if record:
+                sheet.setdefault("field_sources", {})[k] = record
         recompute(sheet)
         return sheet
 
@@ -464,13 +484,19 @@ def set_status(sheet_id: str, new_status: str, *, actor: str = "broker",
     return sheets_repo.update(sheet_id, _mutate)
 
 
-def add_line(sheet_id: str, payload: Dict[str, Any] | None = None) -> Optional[Dict[str, Any]]:
+def add_line(sheet_id: str, payload: Dict[str, Any] | None = None,
+             sources: Optional[Dict[str, Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
+    """Append a line. `sources` maps field -> provenance for the fields the
+    caller can vouch for (extraction passes only what the document carried)."""
     from ..repository import sheets_repo
+    now = _utcnow()
 
     def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
         row = _blank_line()
         if payload:
-            row.update({k: v for k, v in payload.items() if k in row})
+            row.update({k: v for k, v in payload.items() if k in row and k != "field_sources"})
+        if sources:
+            row["field_sources"] = {k: {**v, "at": now} for k, v in sources.items() if k in row}
         sheet["lines"].append(row)
         _renumber(sheet["lines"])
         recompute(sheet)
@@ -479,8 +505,10 @@ def add_line(sheet_id: str, payload: Dict[str, Any] | None = None) -> Optional[D
     return sheets_repo.update(sheet_id, _mutate)
 
 
-def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any],
+                source: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     from ..repository import sheets_repo
+    record = _stamp(source)
 
     class _NoLine(Exception):
         pass
@@ -490,8 +518,10 @@ def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[
         if not line:
             raise _NoLine
         for k, v in patch.items():
-            if k in line and k not in ("id", "line_no"):
+            if k in line and k not in ("id", "line_no", "field_sources"):
                 line[k] = v
+                if record:
+                    line.setdefault("field_sources", {})[k] = record
         recompute(sheet)
         return sheet
 

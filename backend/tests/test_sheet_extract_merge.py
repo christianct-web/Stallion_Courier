@@ -77,3 +77,50 @@ def test_extracted_zero_freight_is_written(monkeypatch):
     out = _upload(client, sheet["id"]).json()["sheet"]
 
     assert out["freight_usd"] == 0
+
+
+# ── provenance ───────────────────────────────────────────────────────────────
+
+def test_extracted_header_fields_record_their_document(monkeypatch):
+    sheet = sheet_service.create_sheet({"reference": "JOB-1"})
+    client = _client(monkeypatch, [{"invoiceNumber": "INV-881", "consigneeName": "Acme Ltd"}])
+
+    out = _upload(client, sheet["id"]).json()["sheet"]
+
+    src = out["field_sources"]
+    assert src["invoice_no"]["source"] == "extracted"
+    assert src["invoice_no"]["doc"] == "doc.pdf"
+    assert src["consignee"]["source"] == "extracted"
+    # The clerk's reference was not touched by the document.
+    assert "reference" not in src
+    # Fields the document did not carry stay unattributed.
+    assert "vessel" not in src
+
+
+def test_line_fallbacks_are_not_marked_extracted(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    client = _client(monkeypatch, [{"lineItems": [{"description": "Epoxy paint", "lineTotal": 100}]}])
+
+    out = _upload(client, sheet["id"]).json()["sheet"]
+
+    line_src = out["lines"][0]["field_sources"]
+    assert line_src["description"]["source"] == "extracted"
+    assert line_src["exworks_usd"]["source"] == "extracted"
+    # Origin was filled by the extractor's fallback, not by the document.
+    assert "country_of_origin" not in line_src
+    assert "hs_code" not in line_src
+
+
+def test_hand_edits_are_marked_manual_and_sources_are_server_owned(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {})
+    client = _client(monkeypatch, [])
+
+    r = client.patch(f"/sheets/{sheet['id']}", json={
+        "consignee_tin": "123", "field_sources": {"consignee_tin": {"source": "extracted"}},
+    })
+    out = r.json()
+    assert out["field_sources"]["consignee_tin"]["source"] == "manual"
+
+    out = client.patch(f"/sheets/{sheet['id']}/lines/1", json={"hs_code": "32089000"}).json()
+    assert out["lines"][0]["field_sources"]["hs_code"]["source"] == "manual"
