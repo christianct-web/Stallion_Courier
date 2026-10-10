@@ -185,22 +185,37 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
             "net_kg": parsed.get("netKg") or parsed.get("netWeightKg") or 0,
         })
 
-    patch = {
-        "consignee": parsed.get("consigneeName", ""),
-        "consignor": parsed.get("consignorName", ""),
-        "vessel": parsed.get("vesselOrFlight", ""),
-        "bl_number": parsed.get("blAwbNumber", ""),
-        "arrival_date": parsed.get("shippedOnBoardDate", ""),
-        "bl_date": parsed.get("blAwbDate") or parsed.get("shippedOnBoardDate", ""),
-        "rotation_no": parsed.get("rotationNumber", ""),
-        "invoice_no": parsed.get("invoiceNumber", ""),
-        "invoice_date": parsed.get("invoiceDate", ""),
-        "currency": parsed.get("currency", "USD"),
-        "mode_of_transport": parsed.get("modeOfTransport") or 1,
-        "export_country_code": parsed.get("exportCountryCode") or parsed.get("countryOfExport") or "US",
-        "freight_usd": parsed.get("freightCharges") or 0,
-        "reference": parsed.get("invoiceNumber") or s.get("reference") or "",
+    # Only write what this document actually yielded. A job can take several
+    # documents (invoice, then BL), so a field the current one doesn't carry
+    # must not blank out what an earlier one filled. Zero is a value: an
+    # extracted freight of 0 is written; an absent one is not.
+    def _first(*keys: str) -> Any:
+        for k in keys:
+            v = parsed.get(k)
+            if v is not None and v != "":
+                return v
+        return None
+
+    extracted = {
+        "consignee": _first("consigneeName"),
+        "consignor": _first("consignorName"),
+        "vessel": _first("vesselOrFlight"),
+        "bl_number": _first("blAwbNumber"),
+        "arrival_date": _first("shippedOnBoardDate"),
+        "bl_date": _first("blAwbDate", "shippedOnBoardDate"),
+        "rotation_no": _first("rotationNumber"),
+        "invoice_no": _first("invoiceNumber"),
+        "invoice_date": _first("invoiceDate"),
+        "currency": _first("currency"),
+        "mode_of_transport": _first("modeOfTransport"),
+        "export_country_code": _first("exportCountryCode", "countryOfExport"),
+        "freight_usd": _first("freightCharges"),
     }
+    patch = {k: v for k, v in extracted.items() if v is not None}
+    # The job reference is entered by the clerk when the job is opened; the
+    # invoice number only stands in for it when no reference was given.
+    if not (s.get("reference") or "").strip() and patch.get("invoice_no"):
+        patch["reference"] = patch["invoice_no"]
     sheet_service.update_header(sheet_id, patch)
 
     # Build the post-extraction checklist from the raw parsed object (which
