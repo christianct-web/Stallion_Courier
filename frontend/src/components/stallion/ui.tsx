@@ -3,8 +3,8 @@
  * Styling lives in styles/stallion.css (classes prefixed st-).
  */
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { AlertTriangle, Check, X } from "lucide-react";
-import type { ChecklistItem, RefOption } from "@/services/sheetApi";
+import { AlertTriangle, Check, FileText, PenLine, X } from "lucide-react";
+import type { ChecklistItem, FieldSource, RefOption } from "@/services/sheetApi";
 import {
   DECL_CHOICES, STATIONS, STATUS_LABEL, normStatus,
   type StationKey,
@@ -64,9 +64,27 @@ type FieldProps = {
   label: string; fieldKey?: string; className?: string; hint?: string;
   /** From the server report: "needed" = blocking, "check" = worth verifying. */
   flag?: "needed" | "check";
+  /** Where the stored value came from (server-recorded). */
+  source?: FieldSource;
 };
 
-function FieldShell({ label, flag, className, hint, htmlFor, children }: FieldProps & {
+/** "From invoice.pdf" / "Entered by Kevin": what a document said vs what a person typed. */
+export function SourceNote({ source, compact }: { source?: FieldSource; compact?: boolean }) {
+  if (!source) return null;
+  const when = new Date(source.at);
+  const stamp = Number.isNaN(when.getTime()) ? "" : when.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  const extracted = source.source === "extracted";
+  const text = extracted ? `From ${source.doc || "a document"}` : `Entered${source.by ? ` by ${source.by}` : " by hand"}`;
+  return (
+    <span className={`st-source st-source--${source.source}${compact ? " is-compact" : ""}`} title={`${text}${stamp ? ` · ${stamp}` : ""}`}>
+      {extracted ? <FileText aria-hidden="true" /> : <PenLine aria-hidden="true" />}
+      {!compact && <span>{text}</span>}
+      {compact && <span className="sr-only">{text}</span>}
+    </span>
+  );
+}
+
+function FieldShell({ label, flag, source, className, hint, htmlFor, children }: FieldProps & {
   htmlFor: string; children: ReactNode;
 }) {
   return (
@@ -75,6 +93,7 @@ function FieldShell({ label, flag, className, hint, htmlFor, children }: FieldPr
         {label}{flag && <span className="st-flag">· {flag}</span>}
       </label>
       {children}
+      <SourceNote source={source} />
       {hint && <span className="st-hint">{hint}</span>}
     </div>
   );

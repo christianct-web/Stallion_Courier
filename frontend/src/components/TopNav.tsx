@@ -25,7 +25,7 @@ export function TopNav({ rightSlot }: { rightSlot?: ReactNode }) {
       borderBottom: `1px solid ${voidBorder}`,
       display: "flex",
       alignItems: "center",
-      padding: "0 28px",
+      padding: "0 clamp(12px, 3vw, 28px)",
       gap: 4,
       flexShrink: 0,
       position: "sticky",
@@ -56,8 +56,13 @@ export function TopNav({ rightSlot }: { rightSlot?: ReactNode }) {
           aria-hidden="true"
         />
       </button>
-      <div style={{ width: 1, height: 14, background: voidBorder, marginRight: 8 }} />
+      <div style={{ width: 1, height: 14, background: voidBorder, marginRight: 8, flexShrink: 0 }} />
 
+      {/* On narrow screens the links scroll inside the bar instead of widening the page. */}
+      <nav aria-label="Main" className="stallion-topnav-links" style={{
+        display: "flex", gap: 4, alignItems: "center", minWidth: 0, flex: "1 1 auto",
+        overflowX: "auto", scrollbarWidth: "none",
+      }}>
       {NAV_LINKS.map(({ label, path }) => {
         const isActive = path === "/"
           ? pathname === "/"
@@ -66,7 +71,9 @@ export function TopNav({ rightSlot }: { rightSlot?: ReactNode }) {
           <button
             key={path}
             onClick={() => navigate(path)}
+            aria-current={isActive ? "page" : undefined}
             style={{
+              flexShrink: 0,
               padding: "6px 12px",
               background: isActive ? "#1F2430" : "transparent",
               border: `1px solid ${isActive ? voidBorder : "transparent"}`,
@@ -85,6 +92,7 @@ export function TopNav({ rightSlot }: { rightSlot?: ReactNode }) {
           </button>
         );
       })}
+      </nav>
 
       {rightSlot != null && (
         <div style={{ marginLeft: "auto" }}>

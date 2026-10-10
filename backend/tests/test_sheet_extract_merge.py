@@ -77,3 +77,201 @@ def test_extracted_zero_freight_is_written(monkeypatch):
     out = _upload(client, sheet["id"]).json()["sheet"]
 
     assert out["freight_usd"] == 0
+
+
+# ── provenance ───────────────────────────────────────────────────────────────
+
+def test_extracted_header_fields_record_their_document(monkeypatch):
+    sheet = sheet_service.create_sheet({"reference": "JOB-1"})
+    client = _client(monkeypatch, [{"invoiceNumber": "INV-881", "consigneeName": "Acme Ltd"}])
+
+    out = _upload(client, sheet["id"]).json()["sheet"]
+
+    src = out["field_sources"]
+    assert src["invoice_no"]["source"] == "extracted"
+    assert src["invoice_no"]["doc"] == "doc.pdf"
+    assert src["consignee"]["source"] == "extracted"
+    # The clerk's reference was not touched by the document.
+    assert "reference" not in src
+    # Fields the document did not carry stay unattributed.
+    assert "vessel" not in src
+
+
+def test_line_fallbacks_are_not_marked_extracted(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    client = _client(monkeypatch, [{"lineItems": [{"description": "Epoxy paint", "lineTotal": 100}]}])
+
+    out = _upload(client, sheet["id"]).json()["sheet"]
+
+    line_src = out["lines"][0]["field_sources"]
+    assert line_src["description"]["source"] == "extracted"
+    assert line_src["exworks_usd"]["source"] == "extracted"
+    # The document gave no origin: nothing is filled in for it, and nothing is attributed.
+    assert out["lines"][0]["country_of_origin"] == ""
+    assert "country_of_origin" not in line_src
+    assert "hs_code" not in line_src
+    # Extraction never chooses a CPC.
+    assert out["lines"][0]["cpc"] == ""
+    assert "cpc" not in line_src
+
+
+def test_hand_edits_are_marked_manual_and_sources_are_server_owned(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {})
+    client = _client(monkeypatch, [])
+
+    r = client.patch(f"/sheets/{sheet['id']}", json={
+        "consignee_tin": "123", "field_sources": {"consignee_tin": {"source": "extracted"}},
+    })
+    out = r.json()
+    assert out["field_sources"]["consignee_tin"]["source"] == "manual"
+
+    out = client.patch(f"/sheets/{sheet['id']}/lines/1", json={"hs_code": "32089000"}).json()
+    assert out["lines"][0]["field_sources"]["hs_code"]["source"] == "manual"
+
+
+# ── CPC and origin are chosen per line, never defaulted ─────────────────────
+
+def test_new_lines_have_no_cpc_or_origin_default():
+    sheet = sheet_service.create_sheet({})
+    out = sheet_service.add_line(sheet["id"], {})
+    line = out["lines"][0]
+    assert line["cpc"] == ""
+    assert line["country_of_origin"] == ""
+
+
+def test_presubmission_blocks_on_unchosen_cpc_and_origin(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {"hs_code": "32089000"})
+    client = _client(monkeypatch, [])
+
+    report = client.get(f"/sheets/{sheet['id']}/presubmission").json()["report"]
+    blocking = {i["field"] for i in report["items"] if i["severity"] == "critical" and i["status"] != "ok"}
+    assert {"cpc", "country_of_origin"} <= blocking
+    assert report["ready"] is False
+
+    client.patch(f"/sheets/{sheet['id']}/lines/1", json={"cpc": "4000", "country_of_origin": "US"})
+    report = client.get(f"/sheets/{sheet['id']}/presubmission").json()["report"]
+    blocking = {i["field"] for i in report["items"] if i["severity"] == "critical" and i["status"] != "ok"}
+    assert not ({"cpc", "country_of_origin"} & blocking)
+
+
+def test_xml_refuses_until_every_line_has_cpc_and_origin(monkeypatch):
+    sheet = sheet_service.create_sheet({})
+    sheet_service.add_line(sheet["id"], {"hs_code": "32089000", "country_of_origin": "US"})
+    client = _client(monkeypatch, [])
+
+    r = client.post(f"/sheets/{sheet['id']}/xml", json={})
+    assert r.status_code == 422
+    detail = r.json()["detail"]
+    assert "Line 1: CPC not chosen" in detail["lines"]
+
+
+# ── 9898 rollup takes the CPC chosen on its source lines ────────────────────
+
+def test_rolled_9898_line_uses_the_source_lines_cpc():
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "entry_mode": "relieved", "lines": [
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+    ]})
+    items = sheet_service.to_decl_inputs(sheet_service.get_sheet(sheet["id"]))["items"]
+    assert len(items) == 1
+    assert items[0]["cpc"] == "4070"
+    assert items[0]["extendedCustomsProcedure"] == 4070
+
+
+def test_xml_refuses_when_rolled_lines_disagree_on_cpc(monkeypatch):
+    sheet = sheet_service.create_sheet({"rollup_9898": True, "entry_mode": "relieved", "lines": [
+        {"cpc": "4070", "country_of_origin": "US", "effects_group": "household"},
+        {"cpc": "4000", "country_of_origin": "US", "effects_group": "household"},
+    ]})
+    client = _client(monkeypatch, [])
+
+    r = client.post(f"/sheets/{sheet['id']}/xml", json={})
+    assert r.status_code == 422
+    assert any("different CPCs" in m for m in r.json()["detail"]["lines"])
+
+
+def test_dutiable_entries_are_never_rolled_up(monkeypatch):
+    # rollup_9898 defaults on, but a dutiable (commercial) entry keeps its lines.
+    sheet = sheet_service.create_sheet({"lines": [
+        {"cpc": "4000", "country_of_origin": "US", "hs_code": "32089000"},
+        {"cpc": "4000", "country_of_origin": "CN", "hs_code": "38140000"},
+    ]})
+    stored = sheet_service.get_sheet(sheet["id"])
+    assert stored["rollup_9898"] is True and stored["entry_mode"] == "dutiable"
+
+    items = sheet_service.to_decl_inputs(stored)["items"]
+    assert [i["hsCode"] for i in items] == ["32089000", "38140000"]
+    # Disagreeing CPCs only matter when lines are rolled together.
+    assert sheet_service.rollup_cpc_conflicts(stored) == []
+
+
+
+# ── itemised XML never drops unclassified goods ─────────────────────────────
+
+def test_xml_refuses_an_itemised_line_without_a_valid_hs_code(monkeypatch):
+    sheet = sheet_service.create_sheet({"lines": [
+        {"cpc": "4000", "country_of_origin": "US", "hs_code": "32089000", "exworks_usd": 100},
+        {"cpc": "4000", "country_of_origin": "US", "hs_code": "", "exworks_usd": 200},
+    ]})
+    client = _client(monkeypatch, [])
+
+    r = client.post(f"/sheets/{sheet['id']}/xml", json={})
+    assert r.status_code == 422
+    assert any(m.startswith("Line 2:") and "valid HS code" in m for m in r.json()["detail"]["lines"])
+
+    report = client.get(f"/sheets/{sheet['id']}/presubmission").json()["report"]
+    assert any(i["field"] == "hs_code" and i["severity"] == "critical" for i in report["items"])
+
+
+def test_rolled_up_lines_do_not_need_their_own_hs_code():
+    sheet = sheet_service.create_sheet({"entry_mode": "relieved", "rollup_9898": True, "lines": [
+        {"cpc": "4070", "country_of_origin": "US", "hs_code": ""},
+    ]})
+    assert sheet_service.missing_line_codes(sheet_service.get_sheet(sheet["id"])) == []
+
+
+# ── fallback extraction defaults are not document facts ─────────────────────
+
+def test_fallback_defaults_are_neither_written_nor_attributed(monkeypatch):
+    sheet = sheet_service.create_sheet({"currency": "EUR"}, source={"source": "manual", "by": "Clerk"})
+    before = sheet_service.get_sheet(sheet["id"])["field_sources"]["currency"]
+
+    async def boom(files):
+        raise RuntimeError("API down")
+
+    monkeypatch.setattr(sheets_routes, "_extract_with_claude", boom)
+    monkeypatch.setattr(sheets_routes, "_fallback_extract", lambda f: {
+        "currency": "USD", "invoiceValueForeign": 0.0, "invoiceNumber": "INV-9",
+        "description": "", "hsCode": "", "notes": ["fallback"],
+    })
+    app = FastAPI()
+    app.include_router(sheets_routes.router)
+    out = _upload(TestClient(app), sheet["id"]).json()["sheet"]
+
+    assert out["currency"] == "EUR"
+    assert out["field_sources"]["currency"] == before          # provenance untouched
+    assert out["field_sources"]["invoice_no"]["source"] == "extracted"
+    assert "exworks_usd" not in out["lines"][0]["field_sources"]  # 0 was "not found"
+
+
+# ── values supplied on creation are a person's choice ───────────────────────
+
+def test_create_and_add_line_record_supplied_values_only(monkeypatch):
+    client = _client(monkeypatch, [])
+    out = client.post("/sheets", json={"reference": "JOB-7", "lines": [{"cpc": "4000", "country_of_origin": "US"}]}).json()
+    assert out["field_sources"]["reference"]["source"] == "manual"
+    assert "currency" not in out["field_sources"]                 # default, unattributed
+    line_src = out["lines"][0]["field_sources"]
+    assert line_src["cpc"]["source"] == "manual"
+    assert line_src["country_of_origin"]["source"] == "manual"
+    assert "hs_code" not in line_src
+
+    out = client.post(f"/sheets/{out['id']}/lines", json={"cpc": "4070"}).json()
+    added = out["lines"][1]["field_sources"]
+    assert added["cpc"]["source"] == "manual"
+    assert "country_of_origin" not in added
+    # Supplied CPC/origin no longer trip the "never chosen" preflight warning.
+    warnings = sheet_service.preflight_warnings(sheet_service.get_sheet(out["id"]))
+    assert not any("Line 1: CPC" in w and "never" in w for w in warnings)

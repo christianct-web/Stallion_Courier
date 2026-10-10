@@ -434,7 +434,7 @@ function SetupStep({ sheet, clients, locked, onPatch, onClient, onNext }: {
         <section className="st-panel">
           <div className="st-panel__body" style={{ paddingTop: 22 }}>
             <div className="st-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
-              <TextField label="Reference number" fieldKey="reference" value={sheet.reference}
+              <TextField label="Reference number" fieldKey="reference" value={sheet.reference} source={sheet.field_sources?.reference}
                 flag={sheet.reference?.trim() ? undefined : "needed"} onCommit={v => onPatch({ reference: v.trim() })} />
               <SelectField label="Client" value={sheet.client_id || ""} placeholder="No saved client"
                 options={clients.map(c => ({ code: c.id, label: c.name }))} onCommit={onClient}
@@ -586,6 +586,7 @@ function VerifyStep(p: {
   const { sheet: s, refData: r, missing: m, onPatch } = p;
   const num = (k: keyof Sheet) => (v: string) => onPatch({ [k]: Number(v) } as Partial<Sheet>);
   const txt = (k: keyof Sheet) => (v: string) => onPatch({ [k]: v } as Partial<Sheet>);
+  const src = (k: string) => s.field_sources?.[k];
   const countryName = (code: string) => r.countries.find(c => c.code === code)?.label || code;
   const open = (p.report?.items || []).filter(i => i.status !== "ok");
   const showConcession = (s.declaration_type === "c84" || s.concession?.active) && (r.concessions?.length ?? 0) > 0;
@@ -616,45 +617,55 @@ function VerifyStep(p: {
             <div className="st-subhead">Parties</div>
             <div className="st-grid">
               <SelectField label="Client" value={s.client_id || ""} placeholder="No saved client"
-                options={p.clients.map(c => ({ code: c.id, label: c.name }))} onCommit={p.onClient} />
-              <TextField label="Consignee" fieldKey="consignee" prose flag={m.get("consignee")} value={s.consignee} onCommit={txt("consignee")} />
-              <TextField label="Consignee TIN / code" fieldKey="consignee_tin" value={s.consignee_tin} onCommit={txt("consignee_tin")} />
-              <TextField label="Consignee address" className="span-2" prose value={s.consignee_address || ""} onCommit={txt("consignee_address")} />
-              <TextField label="Consignor / supplier" fieldKey="consignor" prose flag={m.get("consignor")} value={s.consignor} onCommit={txt("consignor")} />
-              <TextField label="Consignor address" className="span-2" prose value={s.consignor_address || ""} onCommit={txt("consignor_address")} />
-              <TextField label="Declarant name" prose value={s.declarant_name || ""} onCommit={txt("declarant_name")} />
-              <TextField label="Declarant TIN" value={s.declarant_tin || ""} onCommit={txt("declarant_tin")} />
+                options={p.clients.map(c => ({ code: c.id, label: c.name }))} source={src("client_id")} onCommit={p.onClient} />
+              <TextField label="Consignee" fieldKey="consignee" prose flag={m.get("consignee")} value={s.consignee} source={src("consignee")} onCommit={txt("consignee")} />
+              <TextField label="Consignee TIN / code" fieldKey="consignee_tin" value={s.consignee_tin} source={src("consignee_tin")} onCommit={txt("consignee_tin")} />
+              <TextField label="Consignee address" className="span-2" prose value={s.consignee_address || ""} source={src("consignee_address")} onCommit={txt("consignee_address")} />
+              <TextField label="Consignor / supplier" fieldKey="consignor" prose flag={m.get("consignor")} value={s.consignor} source={src("consignor")} onCommit={txt("consignor")} />
+              <TextField label="Consignor address" className="span-2" prose value={s.consignor_address || ""} source={src("consignor_address")} onCommit={txt("consignor_address")} />
+              <TextField label="Declarant name" prose value={s.declarant_name || ""} source={src("declarant_name")} onCommit={txt("declarant_name")} />
+              <TextField label="Declarant TIN" value={s.declarant_tin || ""} source={src("declarant_tin")} onCommit={txt("declarant_tin")} />
             </div>
 
             <div className="st-subhead">Shipment</div>
             <div className="st-grid">
-              <TextField label="Vessel / flight" value={s.vessel} onCommit={txt("vessel")} />
-              <TextField label="Bill of lading / AWB" fieldKey="bl_number" flag={m.get("bl_number")} value={s.bl_number} onCommit={txt("bl_number")} />
-              <TextField label="B/L date" type="date" value={s.bl_date || ""} onCommit={txt("bl_date")} />
-              <TextField label="Rotation no." value={s.rotation_no || ""} onCommit={txt("rotation_no")} />
+              <TextField label="Vessel / flight" value={s.vessel} source={src("vessel")} onCommit={txt("vessel")} />
+              <TextField label="Bill of lading / AWB" fieldKey="bl_number" flag={m.get("bl_number")} value={s.bl_number} source={src("bl_number")} onCommit={txt("bl_number")} />
+              <TextField label="B/L date" type="date" value={s.bl_date || ""} source={src("bl_date")} onCommit={txt("bl_date")} />
+              <TextField label="Rotation no." value={s.rotation_no || ""} source={src("rotation_no")} onCommit={txt("rotation_no")} />
               <SelectField label="Port" fieldKey="port" flag={m.get("port")} value={s.port} options={r.ports}
-                placeholder="Select port" onCommit={txt("port")} />
-              <TextField label="Arrival date" fieldKey="arrival_date" type="date" flag={m.get("arrival_date")} value={s.arrival_date} onCommit={txt("arrival_date")} />
+                placeholder="Select port" source={src("port")} onCommit={txt("port")} />
+              <TextField label="Arrival date" fieldKey="arrival_date" type="date" flag={m.get("arrival_date")} value={s.arrival_date} source={src("arrival_date")} onCommit={txt("arrival_date")} />
               <SelectField label="Transport mode" value={s.mode_of_transport ?? ""} options={TRANSPORT_MODES}
-                placeholder="Select mode" onCommit={v => onPatch({ mode_of_transport: Number(v) })} />
+                placeholder="Select mode" source={src("mode_of_transport")} onCommit={v => onPatch({ mode_of_transport: Number(v) })} />
             </div>
 
             <div className="st-subhead">Invoice &amp; valuation</div>
             <div className="st-grid">
-              <TextField label="Invoice no." fieldKey="invoice_no" flag={m.get("invoice_no")} value={s.invoice_no || ""} onCommit={txt("invoice_no")} />
-              <TextField label="Invoice date" type="date" value={s.invoice_date || ""} onCommit={txt("invoice_date")} />
-              <TextField label="Currency" fieldKey="currency" flag={m.get("currency")} value={s.currency || ""} onCommit={v => onPatch({ currency: v.toUpperCase() })} />
+              <TextField label="Invoice no." fieldKey="invoice_no" flag={m.get("invoice_no")} value={s.invoice_no || ""} source={src("invoice_no")} onCommit={txt("invoice_no")} />
+              <TextField label="Invoice date" type="date" value={s.invoice_date || ""} source={src("invoice_date")} onCommit={txt("invoice_date")} />
+              <TextField label="Currency" fieldKey="currency" flag={m.get("currency")} value={s.currency || ""} source={src("currency")} onCommit={v => onPatch({ currency: v.toUpperCase() })} />
               <SelectField label="Incoterm" fieldKey="incoterm" flag={m.get("incoterm")} value={s.incoterm} options={r.incoterms}
-                placeholder="Select incoterm" onCommit={txt("incoterm")} />
-              <TextField label="Exchange rate" type="number" align="right" value={s.exchange_rate} onCommit={num("exchange_rate")} />
-              <TextField label="Freight USD" fieldKey="freight_usd" type="number" align="right" flag={m.get("freight_usd")} value={s.freight_usd} onCommit={num("freight_usd")} />
-              <TextField label="Insurance USD" type="number" align="right" value={s.insurance_usd} onCommit={num("insurance_usd")} />
-              <TextField label="Gross weight kg" type="number" align="right" value={s.gross_weight} onCommit={num("gross_weight")} />
-              <TextField label="Total packages" type="number" align="right" value={s.total_packages} onCommit={num("total_packages")} />
-              <TextField label="Customs user fee" type="number" align="right" value={s.customs_user_fee} onCommit={num("customs_user_fee")} />
+                placeholder="Select incoterm" source={src("incoterm")} onCommit={txt("incoterm")} />
+              <TextField label="Exchange rate" type="number" align="right" value={s.exchange_rate} source={src("exchange_rate")} onCommit={num("exchange_rate")} />
+              <TextField label="Freight USD" fieldKey="freight_usd" type="number" align="right" flag={m.get("freight_usd")} value={s.freight_usd} source={src("freight_usd")} onCommit={num("freight_usd")} />
+              <TextField label="Insurance USD" type="number" align="right" value={s.insurance_usd} source={src("insurance_usd")} onCommit={num("insurance_usd")} />
+              <TextField label="Gross weight kg" type="number" align="right" value={s.gross_weight} source={src("gross_weight")} onCommit={num("gross_weight")} />
+              <TextField label="Total packages" type="number" align="right" value={s.total_packages} source={src("total_packages")} onCommit={num("total_packages")} />
+              <TextField label="Customs user fee" type="number" align="right" value={s.customs_user_fee} source={src("customs_user_fee")} onCommit={num("customs_user_fee")} />
               <SelectField label="Entry mode" value={s.entry_mode || "dutiable"}
                 options={[{ code: "dutiable", label: "Dutiable" }, { code: "relieved", label: "Relieved" }]}
-                onCommit={v => onPatch({ entry_mode: v as Sheet["entry_mode"] })} />
+                source={src("entry_mode")} onCommit={v => onPatch({ entry_mode: v as Sheet["entry_mode"] })} />
+              {s.entry_mode === "relieved" && (
+                <SelectField label="XML lines" className="span-2" value={s.rollup_9898 === false ? "itemised" : "rollup"}
+                  options={[
+                    { code: "rollup", label: "Roll up to 9898 household / personal effects" },
+                    { code: "itemised", label: "Keep every line itemised" },
+                  ]}
+                  source={src("rollup_9898")}
+                  hint="Relieved entries only. Dutiable entries are always itemised."
+                  onCommit={v => onPatch({ rollup_9898: v === "rollup" })} />
+              )}
               <div className="st-readout">
                 <span className="st-label">CIF factor</span>
                 <b>{(s.cif_factor ?? 0).toFixed(12)}</b>
@@ -664,18 +675,18 @@ function VerifyStep(p: {
             <div className="st-subhead">Countries &amp; payment</div>
             <div className="st-grid">
               <SelectField label="Export country" value={s.export_country_code || ""} options={r.countries} placeholder="Select country"
-                onCommit={v => onPatch({ export_country_code: v, export_country_name: countryName(v) })} />
+                source={src("export_country_code")} onCommit={v => onPatch({ export_country_code: v, export_country_name: countryName(v) })} />
               <SelectField label="Trading country" value={s.trading_country || ""} options={r.countries} placeholder="Select country"
-                onCommit={txt("trading_country")} />
+                source={src("trading_country")} onCommit={txt("trading_country")} />
               <SelectField label="First destination" value={s.country_first_destination || ""} options={r.countries} placeholder="Select country"
-                onCommit={txt("country_first_destination")} />
-              <TextField label="Origin name" prose value={s.country_of_origin_name || ""} onCommit={txt("country_of_origin_name")} />
-              <TextField label="Bank code" type="number" align="right" value={s.bank_code ?? ""} onCommit={num("bank_code")} />
+                source={src("country_first_destination")} onCommit={txt("country_first_destination")} />
+              <TextField label="Origin name" prose value={s.country_of_origin_name || ""} source={src("country_of_origin_name")} onCommit={txt("country_of_origin_name")} />
+              <TextField label="Bank code" type="number" align="right" value={s.bank_code ?? ""} source={src("bank_code")} onCommit={num("bank_code")} />
               <SelectField label="Payment" value={s.mode_of_payment || ""} placeholder="Select"
                 options={[{ code: "CASH", label: "CASH" }, { code: "CREDIT", label: "CREDIT" }, { code: "OTHER", label: "OTHER" }]}
-                onCommit={txt("mode_of_payment")} />
-              <TextField label="Terms code" type="number" align="right" value={s.terms_code ?? ""} onCommit={num("terms_code")} />
-              <TextField label="Terms description" value={s.terms_description || ""} onCommit={txt("terms_description")} />
+                source={src("mode_of_payment")} onCommit={txt("mode_of_payment")} />
+              <TextField label="Terms code" type="number" align="right" value={s.terms_code ?? ""} source={src("terms_code")} onCommit={num("terms_code")} />
+              <TextField label="Terms description" value={s.terms_description || ""} source={src("terms_description")} onCommit={txt("terms_description")} />
             </div>
           </div>
         </section>
@@ -685,7 +696,7 @@ function VerifyStep(p: {
         <section className="st-panel" aria-labelledby="lines-title">
           <div className="st-panel__head">
             <h3 id="lines-title" className="st-panel__title">Line items</h3>
-            <span className="st-panel__aside">Open a line for CPC, origin, packages and concession</span>
+            <span className="st-panel__aside">Every line needs a CPC and origin; open a line for packages, weights and concession</span>
           </div>
           <div style={{ marginTop: 12 }}>
             <LinesTable lines={s.lines || []} refData={r} locked={p.locked}
@@ -895,7 +906,11 @@ function XmlPanel({ sheet, refData, locked, onPatch, settle }: {
     <section className="st-panel" aria-labelledby="xml-title">
       <div className="st-panel__head">
         <h3 id="xml-title" className="st-panel__title">C82 XML</h3>
-        <span className="st-panel__aside">ASYCUDA SAD</span>
+        <span className="st-panel__aside">
+          {sheet.entry_mode === "relieved" && sheet.rollup_9898 !== false
+            ? "ASYCUDA SAD · lines rolled up to 9898 effects"
+            : `ASYCUDA SAD · ${(sheet.lines || []).length} itemised line${(sheet.lines || []).length === 1 ? "" : "s"}`}
+        </span>
         <p className="st-panel__lede">{locked
           ? "This job is locked, so these fields are read-only. Generating reads the stored declaration and changes nothing."
           : "Confirm the declaration-level fields (they save like any other field), then generate. The XML is previewed here before you download it."}</p>

@@ -133,7 +133,7 @@ def build(sheet: Dict[str, Any], fmt: str = "xlsx") -> Tuple[bytes, str, str]:
         rf = LINEG if idx % 2 == 0 else None
         rel = bool(ln.get("relieved"))
         _set(ws.cell(r, 1), idx, size=8, align="center", fill=rf)
-        _set(ws.cell(r, 2), ln.get("cpc", "4000"), size=8, align="center", fill=rf)
+        _set(ws.cell(r, 2), ln.get("cpc") or "", size=8, align="center", fill=rf)
         _set(ws.cell(r, 3), "000", size=8, align="center", fill=rf)
         _set(ws.cell(r, 4), ln.get("hs_code", ""), size=8, align="center", fill=rf)
         _set(ws.cell(r, 5), ln.get("description", ""), size=8, fill=rf, wrap=True)

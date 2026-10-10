@@ -342,3 +342,5 @@
 #root button {
   font-weight: 600;
 }
+
+.stallion-topnav-links::-webkit-scrollbar { display: none; }

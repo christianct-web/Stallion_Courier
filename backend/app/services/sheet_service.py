@@ -220,7 +220,10 @@ def _blank_line() -> Dict[str, Any]:
         "id": _new_id(),
         "line_no": 0,
         # grid fields
-        "cpc": "4000",
+        # No regulatory defaults: CPC and origin are chosen per line by the
+        # clerk/broker (approved by the broker, see docs/PROPOSAL_origin_defaults.md).
+        # XML generation refuses while either is blank.
+        "cpc": "",
         "hs_code": "",
         "description": "",
         "exworks_usd": 0.0,
@@ -231,7 +234,7 @@ def _blank_line() -> Dict[str, Any]:
         "surcharge_pct": 0.0,
         "vat_pct": 12.5,
         # C82-only fields (edited in the row drawer, dropdown-driven)
-        "country_of_origin": "TT",
+        "country_of_origin": "",
         "gross_kg": 0.0,
         "net_kg": 0.0,
         "supplementary_qty": 0,
@@ -255,6 +258,9 @@ def _blank_line() -> Dict[str, Any]:
         "conc_duty_pct": None,             # rate concession: concessionary duty %
         "conc_vat_pct": None,              # rate concession: concessionary VAT %
         "mvt_ttd": 0.0,                    # vehicle: Motor Vehicle Tax in TT$
+        # provenance: {field: {"source": "extracted"|"manual", "doc"?, "by"?, "at"}}.
+        # A field with no entry holds a default nobody set. Server-owned.
+        "field_sources": {},
         # computed (filled by _compute_line)
         "freight_usd": 0.0, "cif_usd": 0.0, "cif_ttd": 0.0,
         "duty": 0.0, "surcharge": 0.0, "vat": 0.0, "mvt": 0.0, "total_tax": 0.0,
@@ -313,7 +319,7 @@ def _blank_sheet() -> Dict[str, Any]:
         "customs_user_fee": 80.0,
         # entry treatment: "dutiable" (default) | "relieved" (returning resident)
         "entry_mode": "dutiable",
-        "rollup_9898": True,   # on XML, consolidate to 9898 personal/household codes
+        "rollup_9898": True,   # relieved entries only: on XML, consolidate to 9898 personal/household codes
         # declaration-level C82 fields (generate-XML modal)
         "customs_regime": "C4",
         "nature_of_transaction": "1",
@@ -336,6 +342,8 @@ def _blank_sheet() -> Dict[str, Any]:
         },
         # data
         "cif_factor": 0.0,
+        # provenance of header fields, same shape as a line's field_sources
+        "field_sources": {},
         "lines": [],
         "totals": {},
         "broker_notes": "",
@@ -388,16 +396,26 @@ def get_sheet(sheet_id: str) -> Optional[Dict[str, Any]]:
     return _migrate_sheet(s) if s else None
 
 
-def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+def create_sheet(payload: Dict[str, Any] | None = None,
+                 source: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Create a sheet. `source` is recorded as provenance for every header and
+    line value the caller supplied; defaults stay unattributed."""
     from ..repository import sheets_repo
+    record = _stamp(source)
     sheet = _blank_sheet()
     if payload:
         for k, v in payload.items():
-            if k in sheet and k not in ("id", "lines", "totals"):
+            if k in sheet and k not in ("id", "lines", "totals", "field_sources",
+                                        "created_at", "updated_at"):
                 sheet[k] = v
+                if record:
+                    sheet["field_sources"][k] = record
         for ln in payload.get("lines", []):
             row = _blank_line()
-            row.update({k: v for k, v in ln.items() if k in row})
+            given = {k: v for k, v in ln.items() if k in row and k not in ("field_sources", "id", "line_no")}
+            row.update(given)
+            if record:
+                row["field_sources"] = {k: record for k in given}
             sheet["lines"].append(row)
         _renumber(sheet["lines"])
     recompute(sheet)
@@ -405,20 +423,35 @@ def create_sheet(payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
     return sheet
 
 
-def update_header(sheet_id: str, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def _stamp(source: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """A provenance record for this write, or None when the write is not attributable."""
+    if not source:
+        return None
+    return {**source, "at": _utcnow()}
+
+
+def update_header(sheet_id: str, patch: Dict[str, Any],
+                  source: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+    """Patch header fields. `source` (e.g. {"source": "manual", "by": ...}) is
+    recorded in field_sources for every field the patch actually wrote."""
     from ..repository import sheets_repo
+    record = _stamp(source)
 
     def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
         _migrate_sheet(sheet)
         for k, v in patch.items():
             if k in ("id", "lines", "totals", "created_at", "status",
-                     "status_history", "reviewed_at", "submitted_at"):
+                     "status_history", "reviewed_at", "submitted_at", "field_sources"):
                 continue
             # Deep-merge the concession block so partial updates don't wipe fields.
             if k == "concession" and isinstance(v, dict):
                 sheet.setdefault("concession", {}).update(v)
             elif k in sheet:
                 sheet[k] = v
+            else:
+                continue
+            if record:
+                sheet.setdefault("field_sources", {})[k] = record
         recompute(sheet)
         return sheet
 
@@ -464,13 +497,19 @@ def set_status(sheet_id: str, new_status: str, *, actor: str = "broker",
     return sheets_repo.update(sheet_id, _mutate)
 
 
-def add_line(sheet_id: str, payload: Dict[str, Any] | None = None) -> Optional[Dict[str, Any]]:
+def add_line(sheet_id: str, payload: Dict[str, Any] | None = None,
+             sources: Optional[Dict[str, Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
+    """Append a line. `sources` maps field -> provenance for the fields the
+    caller can vouch for (extraction passes only what the document carried)."""
     from ..repository import sheets_repo
+    now = _utcnow()
 
     def _mutate(sheet: Dict[str, Any]) -> Dict[str, Any]:
         row = _blank_line()
         if payload:
-            row.update({k: v for k, v in payload.items() if k in row})
+            row.update({k: v for k, v in payload.items() if k in row and k != "field_sources"})
+        if sources:
+            row["field_sources"] = {k: {**v, "at": now} for k, v in sources.items() if k in row}
         sheet["lines"].append(row)
         _renumber(sheet["lines"])
         recompute(sheet)
@@ -479,8 +518,10 @@ def add_line(sheet_id: str, payload: Dict[str, Any] | None = None) -> Optional[D
     return sheets_repo.update(sheet_id, _mutate)
 
 
-def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any],
+                source: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
     from ..repository import sheets_repo
+    record = _stamp(source)
 
     class _NoLine(Exception):
         pass
@@ -490,8 +531,10 @@ def update_line(sheet_id: str, line_no: int, patch: Dict[str, Any]) -> Optional[
         if not line:
             raise _NoLine
         for k, v in patch.items():
-            if k in line and k not in ("id", "line_no"):
+            if k in line and k not in ("id", "line_no", "field_sources"):
                 line[k] = v
+                if record:
+                    line.setdefault("field_sources", {})[k] = record
         recompute(sheet)
         return sheet
 
@@ -536,16 +579,44 @@ HS_HOUSEHOLD_EFFECTS = "9898.03.00.201"   # Used Household Effects
 HS_PERSONAL_EFFECTS  = "9898.02.00.000"   # Used Personal Effects
 
 
+def rollup_active(sheet: Dict[str, Any]) -> bool:
+    """The 9898 effects rollup applies only to relieved (returning-resident)
+    entries with the rollup switched on. Every other entry keeps its itemised
+    lines and real HS codes in the XML (approved 2026-10-10)."""
+    return bool(sheet.get("rollup_9898")) and sheet.get("entry_mode") == "relieved"
+
+
+def _rollup_groups(sheet: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    groups: Dict[str, List[Dict[str, Any]]] = {"household": [], "personal": []}
+    for ln in sheet.get("lines", []):
+        g = ln.get("effects_group", "household")
+        groups.get(g, groups["household"]).append(ln)
+    return groups
+
+
+def rollup_cpc_conflicts(sheet: Dict[str, Any]) -> List[str]:
+    """A rolled 9898 line takes the CPC chosen on its source lines, so every
+    source line in a group must carry the same CPC. Returns one message per
+    group whose lines disagree (only when the rollup is on)."""
+    if not rollup_active(sheet):
+        return []
+    out: List[str] = []
+    for key, rows in _rollup_groups(sheet).items():
+        cpcs = sorted({str(r.get("cpc") or "").strip() for r in rows} - {""})
+        if len(cpcs) > 1:
+            lines = ", ".join(str(r.get("line_no")) for r in rows)
+            out.append(f"{key} effects lines ({lines}) have different CPCs ({' / '.join(cpcs)}); "
+                       f"they roll into one 9898 line, so choose one CPC for all of them")
+    return out
+
+
 def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Consolidate itemized lines into the two ACE 9898 effects lines for the XML.
     Grid stays itemized; only the XML payload is rolled up. Groups by each
     line's effects_group (household|personal).
     """
-    groups = {"household": [], "personal": []}
-    for ln in sheet.get("lines", []):
-        g = ln.get("effects_group", "household")
-        groups.get(g, groups["household"]).append(ln)
+    groups = _rollup_groups(sheet)
 
     rolled: List[Dict[str, Any]] = []
     spec = [
@@ -556,10 +627,13 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
         rows = groups[key]
         if not rows:
             continue
+        # The CPC chosen on the source lines (approved; one per group, enforced
+        # by rollup_cpc_conflicts before XML is generated).
+        cpc = next((str(r.get("cpc") or "").strip() for r in rows if str(r.get("cpc") or "").strip()), "")
         rolled.append({
-            "cpc": "4000",
+            "cpc": cpc,
             "additionalCpc": "000",
-            "extendedCustomsProcedure": 4000,
+            "extendedCustomsProcedure": int(_f(cpc, 0)),
             "nationalCustomsProcedure": 0,
             "hsCode": hs,
             "description": desc,
@@ -572,7 +646,7 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
             "vatRate": 0,
             "duty": round(sum(_f(r.get("duty")) for r in rows), 2),
             "vat": round(sum(_f(r.get("vat")) for r in rows), 2),
-            "countryOfOrigin": rows[0].get("country_of_origin", "TT"),
+            "countryOfOrigin": rows[0].get("country_of_origin") or "",
             "natureOfTransaction": sheet.get("nature_of_transaction", "1"),
             "packageCount": sum(int(_f(r.get("package_count"), 1)) for r in rows),
             "packageType": rows[0].get("package_type", "PK"),
@@ -589,6 +663,29 @@ def _rollup_9898(sheet: Dict[str, Any]) -> List[Dict[str, Any]]:
             "relieved": all(r.get("relieved") for r in rows),
         })
     return rolled
+
+
+def hs_code_ok(code: Any) -> bool:
+    """An HS code the declaration builder will emit: at least 8 digits. The
+    builder silently drops a line whose code has no digits, which would leave
+    goods (and their value) out of the XML while the invoice total stays."""
+    return sum(ch.isdigit() for ch in str(code or "")) >= 8
+
+
+def missing_line_codes(sheet: Dict[str, Any]) -> List[str]:
+    """Lines that cannot go into XML: CPC or country of origin not chosen, or
+    (itemised entries) no valid HS code. Rolled 9898 lines take the 9898 code."""
+    out: List[str] = []
+    itemised = not rollup_active(sheet)
+    for ln in sheet.get("lines", []):
+        gaps = [label for key, label in (("cpc", "CPC"), ("country_of_origin", "country of origin"))
+                if not str(ln.get(key) or "").strip()]
+        parts = [f"{' and '.join(gaps)} not chosen"] if gaps else []
+        if itemised and not hs_code_ok(ln.get("hs_code")):
+            parts.append("no valid HS code (8+ digits)")
+        if parts:
+            out.append(f"Line {ln.get('line_no')}: {'; '.join(parts)}")
+    return out
 
 
 def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
@@ -628,9 +725,18 @@ def preflight_warnings(sheet: Dict[str, Any]) -> List[str]:
         w.append("No line items — at least one is required.")
     for ln in lines:
         coo = (ln.get("country_of_origin") or "").strip().upper()
-        if not coo or coo == "TT":
-            w.append(f"Line {ln.get('line_no')}: country of origin is "
-                     f"'{coo or 'blank'}' — confirm it isn't defaulting.")
+        cpc = str(ln.get("cpc") or "").strip()
+        chosen = ln.get("field_sources") or {}
+        if not coo:
+            w.append(f"Line {ln.get('line_no')}: country of origin is blank — choose it.")
+        elif "country_of_origin" not in chosen:
+            w.append(f"Line {ln.get('line_no')}: country of origin '{coo}' was never "
+                     f"confirmed by a document or a person — check it isn't an old default.")
+        if not cpc:
+            w.append(f"Line {ln.get('line_no')}: CPC is blank — choose it.")
+        elif "cpc" not in chosen:
+            w.append(f"Line {ln.get('line_no')}: CPC {cpc} was never chosen by a person "
+                     f"— confirm it before filing.")
         if not (ln.get("hs_code") or "").strip():
             w.append(f"Line {ln.get('line_no')}: HS code is blank.")
         if _f(ln.get("gross_kg")) <= 0:
@@ -645,8 +751,9 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
     Build the (header, worksheet, items, containers) tuple-shaped dict that
     declaration_service.build_complete_declaration expects.
 
-    If rollup_9898 is on, items are consolidated into the two ACE 9898 effects
-    lines; otherwise every grid line is emitted individually.
+    For a relieved entry with rollup_9898 on (rollup_active), items are
+    consolidated into the two ACE 9898 effects lines; otherwise every grid
+    line is emitted individually.
     """
     t = sheet.get("totals", {})
     nature = sheet.get("nature_of_transaction", "1")
@@ -696,7 +803,7 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         "grossWeight": _f(sheet.get("gross_weight")),
     }
 
-    if sheet.get("rollup_9898"):
+    if rollup_active(sheet):
         items = _rollup_9898(sheet)
     else:
         conc = sheet.get("concession", {}) or {}
@@ -705,7 +812,8 @@ def to_decl_inputs(sheet: Dict[str, Any]) -> Dict[str, Any]:
         for ln in sheet.get("lines", []):
             item = {
                 "cpc": ln.get("cpc"),
-                "extendedCustomsProcedure": int(_f(ln.get("cpc"), 4000)) or 4000,
+                # CPC is required per line (missing_line_codes gates XML), so no fallback.
+                "extendedCustomsProcedure": int(_f(ln.get("cpc"), 0)),
                 "nationalCustomsProcedure": 0,
                 "hsCode": ln.get("hs_code"),
                 "description": ln.get("description"),

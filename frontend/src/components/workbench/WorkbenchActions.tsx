@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { STALLION_BASE_URL, generateCostingFromWorksheet, withKey } from "@/services/stallionApi";
+import { STALLION_BASE_URL, generateCostingFromWorksheet } from "@/services/stallionApi";
+import { SecureDownloadLink } from "@/components/SecureDownloadLink";
 
 interface PreflightResult {
   status: "pass" | "fail";
@@ -175,15 +176,13 @@ function PackResult({ packResult }: { packResult: any }) {
       </div>
       <div style={{ display: "flex", flexWrap: "wrap" }}>
         {links.map(d => (
-          <a
+          <SecureDownloadLink
             key={d.name}
-            href={withKey(`${STALLION_BASE_URL}${d.url}`)}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={`${STALLION_BASE_URL}${d.url}`}
             className="wb-download-link"
           >
             {d.name}
-          </a>
+          </SecureDownloadLink>
         ))}
       </div>
       {packResult.preflight && (
@@ -292,15 +291,13 @@ export function WorkbenchActions({
           )}
 
           {costingDocId && (
-            <a
-              href={withKey(`${STALLION_BASE_URL}/pack/file/${costingDocId}`)}
-              target="_blank"
-              rel="noreferrer"
+            <SecureDownloadLink
+              href={`${STALLION_BASE_URL}/pack/file/${costingDocId}`}
               className="wb-download-link"
               style={{ fontFamily: "var(--wb-font-mono)", fontSize: 11 }}
             >
               ↓ Download Costing PDF
-            </a>
+            </SecureDownloadLink>
           )}
 
           {packResult && (

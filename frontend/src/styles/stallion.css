@@ -99,7 +99,7 @@
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(194, 87, 27, 0.18);
 }
 .st-input[aria-invalid="true"], .st-select[aria-invalid="true"] {
-  border-color: var(--accent); background: #FFF8F2;
+  border-color: var(--accent); background-color: #FFF8F2;
 }
 .st-input:disabled, .st-select:disabled, .st-textarea:disabled {
   background: var(--sheet); color: var(--ink-2); border-color: var(--line); cursor: default;
@@ -121,7 +121,7 @@
 }
 .st-field.is-needed > label, .st-field.is-needed .st-flag { color: var(--accent-ink); }
 .st-field.is-check > label, .st-field.is-check .st-flag { color: var(--warn); }
-.st-input[data-flag="check"], .st-select[data-flag="check"] { border-color: #C9A24A; background: #FFFBEF; }
+.st-input[data-flag="check"], .st-select[data-flag="check"] { border-color: #C9A24A; background-color: #FFFBEF; }
 .st-field .st-hint { font-size: 12px; color: var(--ink-3); font-family: var(--sans); }
 
 .st-grid { display: grid; gap: 14px 16px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
@@ -520,3 +520,30 @@
 }
 .st-col-desc { min-width: 340px; }
 @media (max-width: 640px) { .st-col-desc { min-width: 220px; } }
+
+/* provenance: what a document said vs what a person entered */
+.st-source { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.st-source svg { width: 12px; height: 12px; flex: none; }
+.st-source span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-source--extracted svg { color: var(--ok); }
+.st-source--manual svg { color: var(--ink-2); }
+.st-source.is-compact { display: inline-grid; place-items: center; }
+
+/* line items as cards on phones */
+.st-lcards { list-style: none; margin: 0; padding: 0; }
+.st-lcard { padding: 14px 16px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.st-lcard:first-child { border-top: 0; }
+.st-lcard__head { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.st-lcard__head b { color: var(--ink); }
+.st-lcard__head .spacer { flex: 1; }
+.st-lcard__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.st-lcard__num { display: flex; flex-direction: column; gap: 4px; }
+.st-lcard__num b { font-family: var(--mono); font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink); }
+.st-lcard__num.total b { font-weight: 700; }
+.st-lcard__drawer { background: var(--paper); margin: 0 -16px -16px; padding: 14px 16px 16px; border-top: 1px solid var(--line); }
+
+/* per-line codes a person must choose: CPC + origin */
+.st-linecodes { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; margin-top: 8px; }
+.st-linecodes .st-field > label { font-size: 9.5px; }
+.st-linecodes .st-select { min-height: 32px; padding-top: 5px; padding-bottom: 5px; font-size: 12px; }
+.st-table td .st-linecodes { margin-bottom: 4px; }

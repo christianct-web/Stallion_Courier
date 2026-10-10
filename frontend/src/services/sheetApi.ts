@@ -21,6 +21,14 @@ export interface RefData {
   concessions?: ConcessionOption[]; vehicle_cap_bands?: VehicleCapBand[];
 }
 
+/** Server-recorded provenance of a field. No entry = a default nobody set. */
+export interface FieldSource {
+  source: "extracted" | "manual";
+  doc?: string;   // extracted: the uploaded file's name
+  by?: string;    // manual: who entered it
+  at: string;
+}
+
 export interface SheetLine {
   id: string; line_no: number;
   cpc: string; hs_code: string; description: string;
@@ -35,6 +43,7 @@ export interface SheetLine {
   relieved_override?: boolean;
   effects_group?: "household" | "personal";
   relieved?: boolean;
+  field_sources?: Record<string, FieldSource>;
   // C84 concession
   concession_code?: string;
   engine_cc?: number;
@@ -91,6 +100,7 @@ export interface Sheet {
   rollup_9898?: boolean;
   total_packages: number; gross_weight: number;
   cif_factor?: number; lines: SheetLine[]; totals: SheetTotals;
+  field_sources?: Record<string, FieldSource>;
   broker_notes: string; created_at: string; updated_at: string;
 }
 

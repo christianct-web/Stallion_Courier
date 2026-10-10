@@ -31,10 +31,21 @@ from ..services import sheet_service
 from ..services import tariff_service
 from ..services import declaration_service
 from ..services import checklist_service
+from ..auth import current_user
 from .extract import _extract_with_claude, _fallback_extract
 from .reference_data import REFERENCE
 
 router = APIRouter(prefix="/sheets", tags=["sheets"])
+
+
+def _manual() -> Dict[str, Any]:
+    """Provenance for a write made by hand through the API."""
+    user = current_user()
+    return {"source": "manual", "by": user.name if user else ""}
+
+
+def _given(v: Any) -> bool:
+    return v is not None and v != ""
 
 
 # ── reference dropdowns ──────────────────────────────────────────────────────
@@ -51,7 +62,7 @@ def sheets_list():
 
 @router.post("")
 def sheets_create(req: Dict[str, Any] | None = None):
-    return sheet_service.create_sheet(req or {})
+    return sheet_service.create_sheet(req or {}, source=_manual())
 
 
 @router.get("/{sheet_id}")
@@ -64,7 +75,7 @@ def sheets_get(sheet_id: str):
 
 @router.patch("/{sheet_id}")
 def sheets_update(sheet_id: str, req: Dict[str, Any]):
-    s = sheet_service.update_header(sheet_id, req)
+    s = sheet_service.update_header(sheet_id, req, source=_manual())
     if not s:
         raise HTTPException(404, "Sheet not found")
     return s
@@ -110,7 +121,11 @@ def sheets_recompute(sheet_id: str):
 # ── line ops ─────────────────────────────────────────────────────────────────
 @router.post("/{sheet_id}/lines")
 def lines_add(sheet_id: str, req: Dict[str, Any] | None = None):
-    s = sheet_service.add_line(sheet_id, req or {})
+    req = req or {}
+    # Values the caller supplied are a person's choice; defaults stay unattributed.
+    who = _manual()
+    s = sheet_service.add_line(sheet_id, req, sources={
+        k: who for k in req if k not in ("field_sources", "id", "line_no")})
     if not s:
         raise HTTPException(404, "Sheet not found")
     return s
@@ -118,7 +133,7 @@ def lines_add(sheet_id: str, req: Dict[str, Any] | None = None):
 
 @router.patch("/{sheet_id}/lines/{line_no}")
 def lines_update(sheet_id: str, line_no: int, req: Dict[str, Any]):
-    s = sheet_service.update_line(sheet_id, line_no, req)
+    s = sheet_service.update_line(sheet_id, line_no, req, source=_manual())
     if not s:
         raise HTTPException(404, "Sheet or line not found")
     return s
@@ -160,6 +175,18 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
         parsed = await _extract_with_claude([file])
     except Exception:
         parsed = _fallback_extract(file)
+        # The text fallback never reads a currency (it always says USD) and
+        # reports 0 when it finds no amount. Neither is something the document
+        # said, so neither is written or attributed to it.
+        parsed.pop("currency", None)
+        if not parsed.get("invoiceValueForeign"):
+            parsed.pop("invoiceValueForeign", None)
+
+    doc = {"source": "extracted", "doc": file.filename or "document"}
+
+    def _sources(found: Dict[str, bool]) -> Dict[str, Dict[str, Any]]:
+        # Only fields the document actually carried; fallbacks stay unattributed.
+        return {k: doc for k, ok in found.items() if ok}
 
     line_items = parsed.get("lineItems") or []
     if line_items:
@@ -168,22 +195,37 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
                 "description": li.get("description") or "",
                 "hs_code": li.get("hsCode") or "",
                 "exworks_usd": li.get("lineTotal") or li.get("unitPrice") or 0,
-                "country_of_origin": li.get("countryOfOrigin") or parsed.get("countryOfOrigin") or "TT",
+                "country_of_origin": li.get("countryOfOrigin") or parsed.get("countryOfOrigin") or "",
                 "gross_kg": li.get("grossKg") or li.get("grossWeightKg") or 0,
                 "net_kg": li.get("netKg") or li.get("netWeightKg") or 0,
             }
             if li.get("quantity") not in (None, ""):
                 payload["supplementary_qty"] = li.get("quantity")
-            sheet_service.add_line(sheet_id, payload)
+            sheet_service.add_line(sheet_id, payload, sources=_sources({
+                "description": _given(li.get("description")),
+                "hs_code": _given(li.get("hsCode")),
+                "exworks_usd": _given(li.get("lineTotal")) or _given(li.get("unitPrice")),
+                "country_of_origin": _given(li.get("countryOfOrigin")) or _given(parsed.get("countryOfOrigin")),
+                "gross_kg": _given(li.get("grossKg")) or _given(li.get("grossWeightKg")),
+                "net_kg": _given(li.get("netKg")) or _given(li.get("netWeightKg")),
+                "supplementary_qty": _given(li.get("quantity")),
+            }))
     else:
         sheet_service.add_line(sheet_id, {
             "description": parsed.get("description", ""),
             "hs_code": parsed.get("hsCode", ""),
             "exworks_usd": parsed.get("invoiceValueForeign", 0),
-            "country_of_origin": parsed.get("countryOfOrigin", "TT"),
+            "country_of_origin": parsed.get("countryOfOrigin") or "",
             "gross_kg": parsed.get("grossKg") or parsed.get("grossWeightKg") or 0,
             "net_kg": parsed.get("netKg") or parsed.get("netWeightKg") or 0,
-        })
+        }, sources=_sources({
+            "description": _given(parsed.get("description")),
+            "hs_code": _given(parsed.get("hsCode")),
+            "exworks_usd": _given(parsed.get("invoiceValueForeign")),
+            "country_of_origin": _given(parsed.get("countryOfOrigin")),
+            "gross_kg": _given(parsed.get("grossKg")) or _given(parsed.get("grossWeightKg")),
+            "net_kg": _given(parsed.get("netKg")) or _given(parsed.get("netWeightKg")),
+        }))
 
     # Only write what this document actually yielded. A job can take several
     # documents (invoice, then BL), so a field the current one doesn't carry
@@ -216,7 +258,7 @@ async def extract_to_sheet(sheet_id: str, file: UploadFile = File(...)):
     # invoice number only stands in for it when no reference was given.
     if not (s.get("reference") or "").strip() and patch.get("invoice_no"):
         patch["reference"] = patch["invoice_no"]
-    sheet_service.update_header(sheet_id, patch)
+    sheet_service.update_header(sheet_id, patch, source=doc)
 
     # Build the post-extraction checklist from the raw parsed object (which
     # carries confidence, the model's notes, and which fields came back null)
@@ -276,7 +318,13 @@ def generate_xml(sheet_id: str, req: Dict[str, Any] | None = None):
         raise HTTPException(404, "Sheet not found")
     # the generate modal may pass last-minute declaration-level fields
     if req:
-        s = sheet_service.update_header(sheet_id, req) or s
+        s = sheet_service.update_header(sheet_id, req, source=_manual()) or s
+
+    # CPC and origin are chosen per line by a person; never filled for them.
+    gaps = sheet_service.missing_line_codes(s) + sheet_service.rollup_cpc_conflicts(s)
+    if gaps:
+        raise HTTPException(422, {"message": "Every line needs a CPC, a country of origin and (unless rolled up to 9898) a valid HS code before XML is generated. "
+                                  + "; ".join(gaps) + ".", "lines": gaps})
 
     inputs = sheet_service.to_decl_inputs(s)
     decl = declaration_service.build_complete_declaration(
