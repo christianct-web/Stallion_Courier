@@ -16,12 +16,9 @@ the line was extracted or not** (no 4000 default).
   ("never confirmed") rather than blocks.
 - Worksheet XLSX shows the line's CPC as stored (blank if blank), not 4000.
 
-### Still open (not changed)
-- The returning-resident 9898 rollup (`entry_mode: relieved`, `rollup_9898`)
-  emits its consolidated household / personal effects lines with a fixed
-  CPC 4000 in `sheet_service.to_decl_inputs`. That is the rollup's own rule,
-  not a per-item default, so it was left as is. Should the rolled line take
-  the CPC chosen on its source lines (e.g. 4070 returning resident) instead?
+- The 9898 rollup's consolidated household / personal effects lines take the
+  CPC chosen on their source lines (approved 2026-10-10). Lines in one group
+  that disagree block XML until a person picks one CPC for all of them.
 
 ---
 
