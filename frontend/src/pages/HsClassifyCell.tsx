@@ -26,8 +26,17 @@ import {
   ThnSuggestion,
 } from "@/services/courierApi";
 import { SheetLine } from "@/services/sheetApi";
-import { C, ratePillStyle, thnConfidenceStyle } from "@/components/courier/tokens";
+import { C as COURIER, ratePillStyle, thnConfidenceStyle } from "@/components/courier/tokens";
 import { MaintainTariffDialog } from "@/components/courier/MaintainTariffDialog";
+
+// Stallion trade-module palette (styles/stallion.css) for the popover, which is
+// portalled outside the .st scope. Confidence and rate colours stay semantic.
+const C = {
+  ...COURIER,
+  paper: "#F8F4ED", paperAlt: "#EFE9DF", paperBorder: "#DCD2C4", paperMid: "#C3B5A3",
+  ink: "#1A1512", inkMid: "#3D342D", inkLight: "#66594D",
+  amber: "#B5501A", green: "#1F5232",
+};
 
 type Props = {
   line: SheetLine;
@@ -47,12 +56,9 @@ function DescInput({ value, onCommit }: { value: string; onCommit: (v: string) =
       onChange={(e) => setV(e.target.value)}
       onBlur={() => v !== value && onCommit(v)}
       onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-      placeholder="describe the item…"
-      style={{
-        width: "100%", fontFamily: "'Fraunces', serif", fontSize: 13,
-        padding: "5px 7px", border: `1px solid ${C.paperBorder}`, borderRadius: 3,
-        background: "#fff", color: C.ink, outline: "none",
-      }}
+      placeholder="Describe the item"
+      aria-label="Item description"
+      className="st-input prose"
     />
   );
 }
@@ -220,17 +226,18 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
         }
         style={{
           fontFamily: lbl, fontSize: 12, fontWeight: 700,
-          color: style.fg, background: style.bg,
-          padding: "4px 8px", border: `1px solid ${style.border}`, borderRadius: 3,
-          cursor: "pointer", minWidth: 104, display: "inline-flex",
+          color: line.hs_code ? style.fg : C.amber, background: line.hs_code ? style.bg : "#FFFDF9",
+          padding: "0 10px", minHeight: 32, borderRadius: 4,
+          border: `1px ${line.hs_code ? "solid" : "dashed"} ${line.hs_code ? style.border : C.amber}`,
+          cursor: "pointer", minWidth: 112, display: "inline-flex",
           alignItems: "center", gap: 6, textAlign: "left", whiteSpace: "nowrap",
         }}
       >
-        <span>{line.hs_code || "— HS —"}</span>
-        <span style={{
+        <span>{line.hs_code || "Classify"}</span>
+        {line.hs_code && <span style={{
           fontSize: 9, letterSpacing: "0.08em", background: "rgba(0,0,0,0.06)",
           padding: "1px 4px", borderRadius: 2, fontWeight: 600,
-        }}>{style.label}</span>
+        }}>{style.label}</span>}
       </button>
 
       {open && createPortal(
@@ -264,7 +271,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                 >✎ Maintain {line.hs_code}</button>
               )}
             </div>
-            <div style={{ fontFamily: "'Fraunces', serif", fontSize: 13, color: C.ink }}>
+            <div style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", fontSize: 13, color: C.ink }}>
               {line.description || "(no description)"}
             </div>
           </div>
@@ -301,8 +308,8 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                         <span style={{ fontFamily: lbl, fontSize: 9, color: conf.fg, background: conf.bg, padding: "1px 5px", borderRadius: 2, letterSpacing: "0.06em", fontWeight: 600 }}>{Math.round((s.confidence ?? 0) * 100)}%</span>
                         {isCurrent && <span style={{ fontFamily: lbl, fontSize: 9, color: C.green, letterSpacing: "0.08em", marginLeft: "auto", fontWeight: 700 }}>CURRENT</span>}
                       </div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid, marginBottom: 1, lineHeight: 1.3 }}>{s.description}</div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 10, color: C.inkLight, fontStyle: "italic" }}>{s.match_reason}</div>
+                      <div style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", fontSize: 11, color: C.inkMid, marginBottom: 1, lineHeight: 1.3 }}>{s.description}</div>
+                      <div style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", fontSize: 10, color: C.inkLight, fontStyle: "italic" }}>{s.match_reason}</div>
                     </button>
                   );
                 })}
@@ -343,7 +350,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                           {Math.round((s.confidence ?? 0) * 100)}%{s.needs_review ? " · REVIEW" : ""}
                         </span>
                       </div>
-                      <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid }}>{s.description || s.match_reason}</div>
+                      <div style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", fontSize: 11, color: C.inkMid }}>{s.description || s.match_reason}</div>
                     </button>
                   );
                 })}
@@ -367,7 +374,7 @@ export function HsClassifyCell({ line, onUpdate, onReload }: Props) {
                 style={{ padding: "6px 14px", fontFamily: lbl, fontSize: 10, background: C.ink, color: C.paper, border: `1px solid ${C.ink}`, borderRadius: 3, letterSpacing: "0.06em", cursor: "pointer", fontWeight: 600, textTransform: "uppercase" }}>Apply</button>
             </div>
             {manualLookup && (
-              <div style={{ fontFamily: "'Fraunces', serif", fontSize: 11, color: C.inkMid, background: C.paperAlt, padding: "6px 8px", borderRadius: 3 }}>
+              <div style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", fontSize: 11, color: C.inkMid, background: C.paperAlt, padding: "6px 8px", borderRadius: 3 }}>
                 <strong>{manualLookup.description}</strong> —{" "}
                 {manualLookup.exemption_class === "full_exempt" ? "Exempt"
                   : manualLookup.exemption_class === "duty_free_only" ? "Duty-free"
