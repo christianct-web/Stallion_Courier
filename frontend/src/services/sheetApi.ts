@@ -114,7 +114,7 @@ async function fetchWith404Fallback(path: string, init?: RequestInit): Promise<R
   return authFetch(`${FALLBACK_BASE}${path}`, init);
 }
 
-export const setStatus = (id: string, status: string, extra?: { notes?: string; receipt_number?: string }): Promise<Sheet> =>
+export const setStatus = (id: string, status: string, extra?: { notes?: string; receipt_number?: string; actor?: string }): Promise<Sheet> =>
   fetchWith404Fallback(`/${id}/status`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status, ...(extra || {}) }),
@@ -161,6 +161,27 @@ export const generateXml = async (id: string, patch?: Partial<Sheet>): Promise<v
   const a = document.createElement("a");
   a.href = url; a.download = `C82_${id}.xml`; a.click();
   URL.revokeObjectURL(url);
+};
+
+// Same endpoint as generateXml, but hands the XML back for an in-app preview
+// instead of triggering a download. A 422 carries the preflight report.
+export const fetchXml = async (id: string, patch?: Partial<Sheet>): Promise<{ xml: string; filename: string }> => {
+  const r = await authFetch(`${BASE}/${id}/xml`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch || {}),
+  });
+  if (!r.ok) {
+    let msg = `XML generation failed (${r.status})`;
+    try {
+      const body = await r.json();
+      const d = body?.detail;
+      if (typeof d === "string") msg = d;
+      else if (d?.message) msg = d.message;
+    } catch {}
+    throw new Error(msg);
+  }
+  const cd = r.headers.get("Content-Disposition") || "";
+  const m = /filename="?([^";]+)"?/.exec(cd);
+  return { xml: await r.text(), filename: m?.[1] || `C82_${id}.xml` };
 };
 
 // ── Checklist / pre-submission report ────────────────────────────────────────
