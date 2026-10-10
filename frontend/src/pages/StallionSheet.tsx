@@ -656,6 +656,16 @@ function VerifyStep(p: {
               <SelectField label="Entry mode" value={s.entry_mode || "dutiable"}
                 options={[{ code: "dutiable", label: "Dutiable" }, { code: "relieved", label: "Relieved" }]}
                 source={src("entry_mode")} onCommit={v => onPatch({ entry_mode: v as Sheet["entry_mode"] })} />
+              {s.entry_mode === "relieved" && (
+                <SelectField label="XML lines" className="span-2" value={s.rollup_9898 === false ? "itemised" : "rollup"}
+                  options={[
+                    { code: "rollup", label: "Roll up to 9898 household / personal effects" },
+                    { code: "itemised", label: "Keep every line itemised" },
+                  ]}
+                  source={src("rollup_9898")}
+                  hint="Relieved entries only. Dutiable entries are always itemised."
+                  onCommit={v => onPatch({ rollup_9898: v === "rollup" })} />
+              )}
               <div className="st-readout">
                 <span className="st-label">CIF factor</span>
                 <b>{(s.cif_factor ?? 0).toFixed(12)}</b>
@@ -896,7 +906,11 @@ function XmlPanel({ sheet, refData, locked, onPatch, settle }: {
     <section className="st-panel" aria-labelledby="xml-title">
       <div className="st-panel__head">
         <h3 id="xml-title" className="st-panel__title">C82 XML</h3>
-        <span className="st-panel__aside">ASYCUDA SAD</span>
+        <span className="st-panel__aside">
+          {sheet.entry_mode === "relieved" && sheet.rollup_9898 !== false
+            ? "ASYCUDA SAD · lines rolled up to 9898 effects"
+            : `ASYCUDA SAD · ${(sheet.lines || []).length} itemised line${(sheet.lines || []).length === 1 ? "" : "s"}`}
+        </span>
         <p className="st-panel__lede">{locked
           ? "This job is locked, so these fields are read-only. Generating reads the stored declaration and changes nothing."
           : "Confirm the declaration-level fields (they save like any other field), then generate. The XML is previewed here before you download it."}</p>
